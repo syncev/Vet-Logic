@@ -11,7 +11,8 @@ class TurneroPage(tk.Frame):
 
         self._build_widgets()
         self._build_layout()
-
+#LOGICA
+#date stepper es el widget que permite cambiar de dia de 1 en 1 en el turnero
     def _build_date_stepper(self):
         self.date_stepper = tk.Frame(self)
         timezone = ZoneInfo("America/Argentina/Buenos_Aires")
@@ -41,17 +42,20 @@ class TurneroPage(tk.Frame):
             self.date_stepper,
             text=">",
         )
-
+#tabla de turnos
+#WIDGETS
     def _build_widgets(self):
+        #importa el searchbar que es un widget reciclable
         self.searchbar = Searchbar(self)
 
         self._build_date_stepper()
-
+        
+        #boton de agregar turno
         self.add_appointment_button = tk.Button(
             self,
             text="+ Agregar Turno",
         )
-
+#LAYOUT
     def _build_layout(self):
         self.searchbar.pack(fill="x", padx=40, pady=30)
         self.date_stepper.pack()
