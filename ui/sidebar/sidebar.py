@@ -61,6 +61,9 @@ class Sidebar(tk.Frame):
             highlightthickness=0
         )
 
+
+        self.botones["turnero"].config(bg="#8A2BE2", fg="white")
+
     def _build_layout(self):
         self.nav_frame.pack(fill="x", padx=12, pady=12)
         self.titulo_label.pack(fill="x", pady=(10, 20))

@@ -49,6 +49,28 @@ class TurneroPage(tk.Frame):
     def _build_appointments_table(self):
         self.appointments_frame = tk.Frame(self)
 
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure(
+            "Treeview",
+            background="white",
+            fieldbackground="white",
+            rowheight=40,
+            borderwidth=0,
+            font=("Arial", 10),
+        )
+        style.configure(
+            "Treeview.Heading",
+            background="white",
+            font=("Arial", 10, "bold"),
+            borderwidth=0,
+        )
+        style.map(
+            "Treeview",
+            background=[("selected", "#F0F0F0")],
+            foreground=[("selected", "black")],
+        )
+
         self.appointments_table = ttk.Treeview(
             self.appointments_frame,
             columns=(
