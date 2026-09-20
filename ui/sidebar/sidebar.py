@@ -31,6 +31,7 @@ class Sidebar(tk.Frame):
             self.nav_frame,
             text="Turnero",
             relief="flat", 
+            bd=0,
             bg="#E0E0E0",
             command=lambda: self.navegar_y_pintar("turnero", self.turnero_button)
         )
@@ -40,6 +41,7 @@ class Sidebar(tk.Frame):
             self.nav_frame,
             text="Historias clinicas",
             relief="flat",
+            bd=0,
             bg="#E0E0E0",
             command=lambda: self.navegar_y_pintar("historias", self.historias_button)
         )
@@ -49,6 +51,7 @@ class Sidebar(tk.Frame):
             self.nav_frame,
             text="Usuarios",
             relief="flat",
+            bd=0,
             bg="#E0E0E0",
             command=lambda: self.navegar_y_pintar("usuarios", self.usuario_button)
         )
@@ -60,6 +63,9 @@ class Sidebar(tk.Frame):
             bd=0,             
             highlightthickness=0
         )
+
+
+        self.botones["turnero"].config(bg="#8A2BE2", fg="white")
 
     def _build_layout(self):
         self.nav_frame.pack(fill="x", padx=12, pady=12)
