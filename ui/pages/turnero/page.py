@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import tkinter as tk
 from tkinter import ttk
 
@@ -8,6 +10,38 @@ class TurneroPage(tk.Frame):
 
         self._build_widgets()
         self._build_layout()
+
+    # LOGICA
+    # date stepper es el widget que permite cambiar de dia de 1 en 1 en el turnero
+    def _build_date_stepper(self):
+        self.date_stepper = tk.Frame(self)
+        timezone = ZoneInfo("America/Argentina/Buenos_Aires")
+
+        # logca para que los dias se sumen sin pasar de 31 a 32
+        today = datetime.now(timezone)
+        tomorrow = today + timedelta(days=1)
+        next_day = today + timedelta(days=2)
+
+        self.previous_button = tk.Button(
+            self.date_stepper,
+            text="<",
+        )
+        self.today_button = tk.Button(
+            self.date_stepper,
+            text=str(today.day),
+        )
+        self.tomorrow_button = tk.Button(
+            self.date_stepper,
+            text=str(tomorrow.day),
+        )
+        self.next_day_button = tk.Button(
+            self.date_stepper,
+            text=str(next_day.day),
+        )
+        self.next_button = tk.Button(
+            self.date_stepper,
+            text=">",
+        )
 
     # tabla de turnos
     def _build_appointments_table(self):
@@ -122,106 +156,38 @@ class TurneroPage(tk.Frame):
 
     # WIDGETS
     def _build_widgets(self):
+        # importa el searchbar que es un widget reciclable
+        self.searchbar = Searchbar(self)
+
+        self._build_date_stepper()
+
+        # boton de agregar turno
+        self.add_appointment_button = tk.Button(
+            self,
+            text="+ Agregar Turno",
+            bg="#A8D5BA",
+            fg="#1D3525",
+            font=("Arial", 11, "bold"),
+            relief="flat",
+            cursor="hand2",
+        )
+
         self._build_appointments_table()
 
     # LAYOUT
     def _build_layout(self):
-        top_frame = tk.Frame(self, bg="white")
-        top_frame.pack(fill="x", padx=20, pady=20)
-
-        left_controls = tk.Frame(top_frame, bg="white")
-        left_controls.pack(side="left")
-        self.entrada = tk.Entry(
-            left_controls,
-            width=40,
-            relief="flat",
-            highlightthickness=1,
-            highlightbackground="#CCCCCC",
-            highlightcolor="#8A2BE2",
+        self.searchbar.pack(
+            fill="x",
+            padx=40,
+            pady=30,
         )
-        self.dropdown = ttk.Combobox(
-            left_controls,
-            values=[
-                "Todos",
-                "Cliente",
-                "Paciente",
-                "Especie",
-                "Motivo",
-                "HC",
-                "Telefono",
-            ],
-            state="readonly",
-            width=18,
-        )
-        self.dropdown.set("Todos")
-        self.entrada.pack(side="left", padx=(0, 10))
-        self.dropdown.pack(side="left")
-
-        right_controls = tk.Frame(top_frame, bg="white")
-        right_controls.pack(side="right")
-        paginador_frame = tk.Frame(right_controls, bg="white")
-        paginador_frame.pack(side="left", padx=(0, 20))
-
-        self.btn_agregar = tk.Button(
-            right_controls,
-            text="+ Agregar Turno",
-            font=("Arial", 11, "bold"),
-            bg="#A8D5BA",
-            fg="#1D3525",
-            relief="flat",
-            cursor="hand2",
-            padx=15,
-            pady=5,
-        )
-
-        fuente_pag = ("Arial", 11, "bold")
-        tk.Button(
-            paginador_frame,
-            text="<",
-            font=fuente_pag,
-            bg="#F0F0F0",
-            relief="flat",
-            width=3,
-            cursor="hand2",
-        ).pack(side="left", padx=2)
-        tk.Button(
-            paginador_frame,
-            text="20",
-            font=fuente_pag,
-            bg="#F0F0F0",
-            relief="flat",
-            width=3,
-            cursor="hand2",
-        ).pack(side="left", padx=2)
-        tk.Button(
-            paginador_frame,
-            text="21",
-            font=fuente_pag,
-            bg="#E6D0F5",
-            relief="flat",
-            width=3,
-            cursor="hand2",
-        ).pack(side="left", padx=2)
-        tk.Button(
-            paginador_frame,
-            text="22",
-            font=fuente_pag,
-            bg="#F0F0F0",
-            relief="flat",
-            width=3,
-            cursor="hand2",
-        ).pack(side="left", padx=2)
-        tk.Button(
-            paginador_frame,
-            text=">",
-            font=fuente_pag,
-            bg="#F0F0F0",
-            relief="flat",
-            width=3,
-            cursor="hand2",
-        ).pack(side="left", padx=2)
-
-        self.btn_agregar.pack(side="left")
+        self.date_stepper.pack()
+        self.previous_button.pack(side="left")
+        self.today_button.pack(side="left")
+        self.tomorrow_button.pack(side="left")
+        self.next_day_button.pack(side="left")
+        self.next_button.pack(side="left")
+        self.add_appointment_button.pack(side="right", ipadx=15, ipady=8)
         self.appointments_frame.pack(
             fill="both",
             expand=True,
@@ -232,7 +198,3 @@ class TurneroPage(tk.Frame):
             fill="both",
             expand=True,
         )
-
-
-
-
