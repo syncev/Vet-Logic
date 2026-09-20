@@ -28,7 +28,7 @@ class LoginView(tk.Frame):
         self.frame_inputs = tk.Frame(
             self,
             width=525,
-            height=488,
+            height=458,
             bg="#D9D9D9",
         )
         # inputs
