@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 
 from screeninfo import get_monitors
 
@@ -9,6 +10,16 @@ from app.shell import Shell
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
+
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure(
+            "Treeview.Heading",
+            background="white",
+            font=("Arial", 10, "bold"),
+            borderwidth=0,
+            relief="flat",
+        )
 
         # VARIABLES
 
