@@ -2,9 +2,10 @@ import tkinter as tk
 
 
 class LoginView(tk.Frame):
-    def __init__(self, master, **kwargs):
+    def __init__(self, master,on_login, **kwargs):
         kwargs.setdefault("bg", "white")
         super().__init__(master, **kwargs)
+        self.on_login = on_login
         self._build_widgets()
         self._build_layout()
 
@@ -28,7 +29,7 @@ class LoginView(tk.Frame):
         self.frame_inputs = tk.Frame(
             self,
             width=525,
-            height=458,
+            height=488,
             bg="#D9D9D9",
         )
         # inputs
@@ -70,7 +71,8 @@ class LoginView(tk.Frame):
                 -32,
                 
             ),
-            fg="white"
+            fg="white",
+            command=self.login,
         )
 
         # LAYOUT
@@ -87,3 +89,7 @@ class LoginView(tk.Frame):
         self.password_label.pack(pady=(31, 0))
         self.password_entry.pack()
         self.login_button.pack(pady=(78, 0))
+
+        # LOGICA
+    def login(self):
+        self.on_login()

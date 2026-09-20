@@ -27,6 +27,15 @@ class App(tk.Tk):
         self.configure(bg="white")
         self.title("Vet Logic")
 
-
-        self.login_view = LoginView(self)
+        # trae la funcion de login_view
+        self.login_view = LoginView(
+            self,
+            on_login=self.show_turnero)
+        
+        
         self.login_view.pack()
+
+    def show_turnero(self):
+        self.login_view.destroy()
+        self.turnero_view = TurneroPage(self)
+        self.turnero_view.pack(fill="both", expand=True)
