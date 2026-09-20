@@ -232,3 +232,7 @@ class TurneroPage(tk.Frame):
             fill="both",
             expand=True,
         )
+
+
+
+
