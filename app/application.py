@@ -3,6 +3,7 @@ import tkinter as tk
 from screeninfo import get_monitors
 
 from ui.login_view import LoginView
+from ui.pages.turnero.page import TurneroPage
 
 
 class App(tk.Tk):
@@ -28,13 +29,10 @@ class App(tk.Tk):
         self.title("Vet Logic")
 
         # trae la funcion de login_view
-        self.login_view = LoginView(
-            self,
-            on_login=self.show_turnero)
-        
-        
-        self.login_view.pack()
+        self.login_view = LoginView(self, on_login=self.show_turnero)
 
+        self.login_view.pack()
+        #logica para mostrar la pagina de turnero
     def show_turnero(self):
         self.login_view.destroy()
         self.turnero_view = TurneroPage(self)
