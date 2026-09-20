@@ -2,6 +2,7 @@ import tkinter as tk
 
 from ui.sidebar.sidebar import Sidebar
 from ui.pages.turnero.page import TurneroPage
+from ui.pages.turnero.aside import TurneroAside
 from ui.pages.historias.page import HistoriasPage
 from ui.pages.usuarios.page import UsuariosPage
 
@@ -32,17 +33,19 @@ class Shell(tk.Frame):
 
     def _build_routes(self):
         self.routes = {
-            "turnero": TurneroPage,
-            "historias": HistoriasPage,
-            "usuarios": UsuariosPage
+            "turnero": (TurneroPage, TurneroAside),
+            "historias": (HistoriasPage, None), # Cambiar esto despues cuando tengamos HistoriasAside
+            "usuarios": (UsuariosPage, None),
         }
         
 
     def show_page(self, page_name):
-        page_class = self.routes.get(page_name)
+        route = self.routes.get(page_name)
 
-        if page_class is None:
+        if route is None:
             raise ValueError(f"Pagina no encontrada: {page_name}")
+
+        page_class, aside_class = route
 
         if self.current_page is not None:
             self.current_page.destroy()
@@ -55,3 +58,4 @@ class Shell(tk.Frame):
             fill="both",
             expand=True,
         )
+        self.sidebar.set_context(aside_class)

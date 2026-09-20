@@ -1,9 +1,8 @@
 import tkinter as tk
 
-
 class Sidebar(tk.Frame):
     def __init__(self, master,on_navigate, **kwargs):
-        super().__init__(master, width=240, **kwargs)
+        super().__init__(master, width=240, bg="white", **kwargs)
 
         self.on_navigate = on_navigate
         self.context_view = None
@@ -15,13 +14,14 @@ class Sidebar(tk.Frame):
     def _build_widgets(self):
         self.nav_frame = tk.Frame(
             self,
+            bg="white"
         )
 
         self.titulo_label = tk.Label(
                     self.nav_frame,
                     text="Vet Logic",
                     font=("Arial", 18, "bold"),
-                    bg="#F9F9F9",
+                    bg="white",
                     anchor="w"
         )
 
@@ -56,40 +56,31 @@ class Sidebar(tk.Frame):
 
         self.context_slot = tk.Frame(
             self,
-            bg="#303030"
+            bg="white",       
+            bd=0,             
+            highlightthickness=0
         )
 
     def _build_layout(self):
-        self.nav_frame.pack(
-            fill="x",
-            padx=12,
-            pady=12,
-        )
-        self.titulo_label.pack(
-            fill="x",
-            pady=4
-        )
-        self.turnero_button.pack(
-            fill="x",
-            pady=4
-        )
-        
-        self.historias_button.pack(
-            fill="x",
-            pady=4
-        )
-        self.usuario_button.pack(
-            fill="x",
-            pady=4
-        )
-        self.context_slot.pack(
-            fill="x",
-            expand=True
-        )
+        self.nav_frame.pack(fill="x", padx=12, pady=12)
+        self.titulo_label.pack(fill="x", pady=(10, 20))
 
-    def set_context(self,context_class):
+        self.turnero_button.pack(fill="x", pady=4, ipady=4)
+        self.historias_button.pack(fill="x", pady=4, ipady=4)
+        self.usuario_button.pack(fill="x", pady=4, ipady=4)
+
+        separador = tk.Frame(self, bg="#E0E0E0", height=1)
+        separador.pack(fill="x", padx=20, pady=15)
+
+        self.context_slot.pack(fill="x", expand=True)
+
+    def set_context(self, context_class):
         if self.context_view is not None:
             self.context_view.destroy()
+            self.context_view = None
+
+        if context_class is None:
+            return
 
         self.context_view = context_class(self.context_slot)
         self.context_view.pack(
