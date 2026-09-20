@@ -167,6 +167,11 @@ class TurneroPage(tk.Frame):
         self.add_appointment_button = tk.Button(
             self,
             text="+ Agregar Turno",
+            bg="#A8D5BA",
+            fg="#1D3525",
+            font=("Arial", 11, "bold"),
+            relief="flat",
+            cursor="hand2",
         )
 
         self._build_appointments_table()
@@ -184,7 +189,7 @@ class TurneroPage(tk.Frame):
         self.tomorrow_button.pack(side="left")
         self.next_day_button.pack(side="left")
         self.next_button.pack(side="left")
-        self.add_appointment_button.pack()
+        self.add_appointment_button.pack(side="right", ipadx=15, ipady=8)
         self.appointments_frame.pack(
             fill="both",
             expand=True,
