@@ -17,23 +17,42 @@ class Sidebar(tk.Frame):
             self,
         )
 
+        self.titulo_label = tk.Label(
+                    self.nav_frame,
+                    text="Vet Logic",
+                    font=("Arial", 18, "bold"),
+                    bg="#F9F9F9",
+                    anchor="w"
+        )
+
+        self.botones = {}
+
         self.turnero_button = tk.Button(
             self.nav_frame,
             text="Turnero",
-            command=lambda: self.on_navigate("turnero")
+            relief="flat", 
+            bg="#E0E0E0",
+            command=lambda: self.navegar_y_pintar("turnero", self.turnero_button)
         )
+        self.botones["turnero"] = self.turnero_button
 
         self.historias_button = tk.Button(
             self.nav_frame,
             text="Historias clinicas",
-            command=lambda: self.on_navigate("historias")
+            relief="flat",
+            bg="#E0E0E0",
+            command=lambda: self.navegar_y_pintar("historias", self.historias_button)
         )
+        self.botones["historias"] = self.historias_button
 
         self.usuario_button = tk.Button(
             self.nav_frame,
             text="Usuarios",
-            command=lambda: self.on_navigate("usuarios")
+            relief="flat",
+            bg="#E0E0E0",
+            command=lambda: self.navegar_y_pintar("usuarios", self.usuario_button)
         )
+        self.botones["usuarios"] = self.usuario_button
 
         self.context_slot = tk.Frame(
             self,
@@ -45,6 +64,10 @@ class Sidebar(tk.Frame):
             fill="x",
             padx=12,
             pady=12,
+        )
+        self.titulo_label.pack(
+            fill="x",
+            pady=4
         )
         self.turnero_button.pack(
             fill="x",
@@ -73,3 +96,13 @@ class Sidebar(tk.Frame):
             fill="both",
             expand=True,
         )
+
+    def navegar_y_pintar(self, page_name, button):
+        self.on_navigate(page_name)
+
+        color_base = "#E0E0E0"
+        for btn in self.botones.values():
+            btn.config(bg=color_base, fg="black")
+
+        color_violeta= "#8A2BE2"
+        button.config(bg=color_violeta, fg="white")
