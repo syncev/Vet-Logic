@@ -5,6 +5,7 @@ from ui.pages.turnero.page import TurneroPage
 from ui.pages.turnero.aside import TurneroAside
 from ui.pages.historias.page import HistoriasPage
 from ui.pages.usuarios.page import UsuariosPage
+from ui.pages.historias.aside import AgregarHC
 
 
 class Shell(tk.Frame):
@@ -34,7 +35,7 @@ class Shell(tk.Frame):
     def _build_routes(self):
         self.routes = {
             "turnero": (TurneroPage, TurneroAside),
-            "historias": (HistoriasPage, None), # Cambiar esto despues cuando tengamos HistoriasAside
+            "historias": (HistoriasPage, AgregarHC), # Cambiar esto despues cuando tengamos HistoriasAside
             "usuarios": (UsuariosPage, None),
         }
         
