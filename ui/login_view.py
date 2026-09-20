@@ -41,9 +41,12 @@ class LoginView(tk.Frame):
         )
         self.name_entry = tk.Entry(
             self.frame_inputs,
-            bd=0,
             width=45,
             bg="white",
+            relief="flat",
+            highlightthickness=1,
+            highlightbackground="#CCCCCC",
+            highlightcolor="#8A2BE2",
         )
 
         self.password_label = tk.Label(
@@ -54,11 +57,13 @@ class LoginView(tk.Frame):
         )
         self.password_entry = tk.Entry(
             self.frame_inputs,
-            bd=0,
             width=45,
-            
             bg="white",
             show="*",
+            relief="flat",
+            highlightthickness=1,
+            highlightbackground="#CCCCCC",
+            highlightcolor="#8A2BE2",
         )
         # login button
         self.login_button = tk.Button(
@@ -72,6 +77,8 @@ class LoginView(tk.Frame):
                 
             ),
             fg="white",
+            relief="flat",
+            bd=0,
             command=self.login,
         )
 

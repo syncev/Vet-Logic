@@ -27,11 +27,15 @@ class Searchbar(tk.Frame):
         self.search_entry = tk.Entry(
             self.search_frame,
             width=40,
-        
+            relief="flat",
+            highlightthickness=1,
+            highlightbackground="#CCCCCC",
+            highlightcolor="#8A2BE2",
         )
         self.search_button = tk.Button(
             self.search_frame,
-                
+            relief="flat",
+            bd=0,
         )
 # filtros
     def _build_filter(self):

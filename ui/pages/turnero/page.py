@@ -27,22 +27,32 @@ class TurneroPage(tk.Frame):
         self.previous_button = tk.Button(
             self.date_stepper,
             text="<",
+            relief="flat",
+            bd=0,
         )
         self.today_button = tk.Button(
             self.date_stepper,
             text=str(today.day),
+            relief="flat",
+            bd=0,
         )
         self.tomorrow_button = tk.Button(
             self.date_stepper,
             text=str(tomorrow.day),
+            relief="flat",
+            bd=0,
         )
         self.next_day_button = tk.Button(
             self.date_stepper,
             text=str(next_day.day),
+            relief="flat",
+            bd=0,
         )
         self.next_button = tk.Button(
             self.date_stepper,
             text=">",
+            relief="flat",
+            bd=0,
         )
 
     # tabla de turnos
@@ -171,6 +181,7 @@ class TurneroPage(tk.Frame):
             fg="#1D3525",
             font=("Arial", 11, "bold"),
             relief="flat",
+            bd=0,
             cursor="hand2",
         )
 

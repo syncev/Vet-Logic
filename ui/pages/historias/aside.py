@@ -14,7 +14,11 @@ class AgregarHC(tk.Frame):
             self,
             text="+ Agregar HC",
             font=("Inter", -24),
-          
+            bg="#A8D5BA",
+            fg="#1D3525",
+            relief="flat",
+            bd=0,
+            cursor="hand2",
         )
 
     def _build_layout(self):
