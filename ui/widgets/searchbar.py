@@ -12,7 +12,15 @@ class Searchbar(tk.Frame):
     def _build_search_widget(self):
         self.search_widget = tk.Frame(
             self,
+            height=80,
         )
+        self.search_widget.pack_propagate(False)
+
+        self.controls_frame = tk.Frame(
+            self.search_widget,
+            height=28,
+        )
+        self.controls_frame.pack_propagate(False)
 
     def _build_title(self):
         self.title_frame = tk.Frame(
@@ -32,24 +40,49 @@ class Searchbar(tk.Frame):
 # barra de busqueda
     def _build_search(self):
         self.search_frame = tk.Frame(
-            self.search_widget
-            
+            self.controls_frame,
+            height=28,
         )
+        self.search_frame.pack_propagate(True)
+
+        self.search_button_frame = tk.Frame(
+            self.search_frame,
+            width=28,
+            height=28,
+        )
+        self.search_button_frame.pack_propagate(False)
+        
         self.search_entry = tk.Entry(
             self.search_frame,
             width=40,
-        
         )
         self.search_button = tk.Button(
-            self.search_frame,
-                
+            self.search_button_frame,
+            text="🔍",
+            relief="flat",
+            bd=0,
+            bg="#E0E0E0",
+            fg="black",
+            activebackground="#8A2BE2",
+            activeforeground="white",
+            command=self.search,
         )
+
+    def search(self):
+        self.search_button.config(
+            bg="#8A2BE2",
+            fg="white",
+        )
+
 # filtros
     def _build_filter(self):
         self.filter_frame = tk.Frame(
-            self.search_widget
-
+            self.controls_frame,
+            width=130,
+            height=28,
         )
+        self.filter_frame.pack_propagate(False)
+
         self.filter_options = ttk.Combobox(
             self.filter_frame,
             values=[
@@ -82,12 +115,50 @@ class Searchbar(tk.Frame):
             pady=(22, 0),
         )
         self.search_title.pack()
-        
-        self.search_frame.pack(fill="x")
-        self.search_button.pack(side="left")
-        self.search_entry.pack(side="left")
 
-        self.filter_frame.pack(fill="x")
-        self.filter_options.pack(side="right")
+        self.controls_frame.place(
+            relx=0,
+            rely=0,
+            relwidth=0.5,
+            y=52,
+            height=28,
+        )
+
+        self.controls_frame.columnconfigure(
+            1,
+            weight=1,
+        )
+
+        self.search_frame.grid(
+            row=0,
+            column=1,
+            padx=(0, 8),
+            sticky="ew",
+        )
+
+        self.filter_frame.grid(
+            row=0,
+            column=2,
+            sticky="nsew",
+        )
+
+        self.search_button_frame.pack(
+            side="left",
+            padx=(0, 8),
+        )
         
+        self.search_button.pack(
+            fill="both",
+            expand=True,
+        )
+
+        self.search_entry.pack(
+            fill="both",
+            expand=True,
+        )
+        
+        self.filter_options.pack(
+            fill="both",
+            expand=True,
+        )
 
