@@ -3,7 +3,7 @@ from tkinter import ttk
 
 class Searchbar(tk.Frame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, bg="white", **kwargs)
 
         self._build_widgets()
         self._build_layout()
@@ -13,12 +13,14 @@ class Searchbar(tk.Frame):
         self.search_widget = tk.Frame(
             self,
             height=80,
+            bg="white",
         )
         self.search_widget.pack_propagate(False)
 
         self.controls_frame = tk.Frame(
             self.search_widget,
             height=28,
+            bg="white",
         )
         self.controls_frame.pack_propagate(False)
 
@@ -27,6 +29,7 @@ class Searchbar(tk.Frame):
             self.search_widget,
             width=96,
             height=30,
+            bg="white",
         )
         self.title_frame.pack_propagate(False)
 
