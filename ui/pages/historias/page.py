@@ -73,12 +73,20 @@ class HistoriasPage(tk.Frame):
             bg="white"
         )
     def _build_widgets(self):
-        self.searchbar = Searchbar(self)
+        self.searchbar = Searchbar(
+            self,
+            controls_relwidth=1.0,
+            title_text="Búsqueda de Historia Clínica",
+            )
         self._build_historia_clinica_card()
         
 
     def _build_layout(self):
-        self.searchbar.pack(pady=10, padx=10, fill="x")
+        self.searchbar.pack(
+            pady=(0, 10),
+            padx=40,
+            fill="x",
+        )
         self.historia_clinica_frame.pack(pady=10, padx=10, fill="x")
         self.hc_header_frame.pack(pady=5, padx=5, fill="x")
         self.HC_title_label.pack(side="left")

@@ -2,10 +2,19 @@ import tkinter as tk
 from tkinter import ttk
 
 class Searchbar(tk.Frame):
-    def __init__(self, master, on_search=None, **kwargs):
+    def __init__(
+        self,
+        master,
+        on_search=None,
+        controls_relwidth=0.85,
+        title_text="Búsqueda",
+        **kwargs
+    ):
         super().__init__(master, bg="white", **kwargs)
 
         self.on_search = on_search
+        self.controls_relwidth = controls_relwidth
+        self.title_text = title_text
 
         self._build_widgets()
         self._build_layout()
@@ -29,18 +38,17 @@ class Searchbar(tk.Frame):
     def _build_title(self):
         self.title_frame = tk.Frame(
             self.search_widget,
-            width=96,
             height=30,
             bg="white",
         )
-        self.title_frame.pack_propagate(False)
 
         self.search_title = tk.Label(
             self.title_frame,
-            text="Búsqueda",
+            text=self.title_text,
             font=("Arial", 14, "bold"),
             fg="black",
             bg="white",
+            anchor="w",
         )
 
 # barra de busqueda
@@ -132,12 +140,14 @@ class Searchbar(tk.Frame):
             padx=0,
             pady=(22, 0),
         )
-        self.search_title.pack()
+        self.search_title.pack(
+            anchor="w",
+        )
 
         self.controls_frame.place(
             relx=0,
             rely=0,
-            relwidth=0.85,
+            relwidth=self.controls_relwidth,
             y=52,
             height=28,
         )
