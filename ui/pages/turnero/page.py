@@ -181,7 +181,7 @@ class TurneroPage(tk.Frame):
         self.searchbar.pack(
             fill="x",
             padx=40,
-            pady=30,
+            pady=(0, 30),
         )
         self.date_stepper.pack()
         self.previous_button.pack(side="left")

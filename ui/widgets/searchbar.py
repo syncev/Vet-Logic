@@ -13,11 +13,22 @@ class Searchbar(tk.Frame):
         self.search_widget = tk.Frame(
             self,
         )
-# titulo
+
     def _build_title(self):
-        self.search_title = tk.Label(
-            self.search_widget
+        self.title_frame = tk.Frame(
+            self.search_widget,
+            width=96,
+            height=30,
         )
+        self.title_frame.pack_propagate(False)
+
+        self.search_title = tk.Label(
+            self.title_frame,
+            text="Búsqueda",
+            font=("Arial", 14, "bold"),
+            fg="black",
+        )
+
 # barra de busqueda
     def _build_search(self):
         self.search_frame = tk.Frame(
@@ -57,13 +68,20 @@ class Searchbar(tk.Frame):
 #WIDGETS
     def _build_widgets(self):
         self._build_search_widget()
-
+        self._build_title()
         self._build_search()
         self._build_filter()
 
 # LAYOUT
     def _build_layout(self):
         self.search_widget.pack(fill="x")
+
+        self.title_frame.pack(
+            anchor="w",
+            padx=0,
+            pady=(22, 0),
+        )
+        self.search_title.pack()
         
         self.search_frame.pack(fill="x")
         self.search_button.pack(side="left")
