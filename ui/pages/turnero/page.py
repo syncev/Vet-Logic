@@ -66,9 +66,21 @@ class TurneroPage(tk.Frame):
         self.appointments_table.column("hc", width=70, anchor="center")
         self.appointments_table.column("ultimo turno", width=150, anchor="center")
         
+        # Citas hardcodeadas sacadas del diseño de Figma
         appointments = [
-            ("08:00", "Juan Perez", "Firulais", "Perro", "Clinica", "12345", "2025-09-01"),
-            ("09:00", "Maria Lopez", "Lord Pulgoso", "Perro", "Peluqueria", "67890", "2026-03-02"),
+            ("09:00", "Silvia Moreno", "Luna", "Gato", "Clinica", "12651", "08/08/2024"),
+            ("09:30", "Martin Sanchez", "Milo", "Gato", "Clinica", "15644", "04/05/2023"),
+            ("10:00", "Calvin Klein", "Thor", "Perro", "Clinica", "65111", "20/05/2026"),
+            ("10:30", "Clark Kent", "Homero", "Perro", "Peluqueria", "32155", "27/08/2026"),
+            ("10:30", "Maria del Barrio", "Otto", "Gato", "Clinica", "75465", "07/12/2023"),
+            ("11:00", "Esteban Caracas", "Rafa", "Perro", "Clinica", "84223", "30/02/2026"),
+            ("11:30", "Philomena Cunk", "Ara", "Gato", "Clinica", "51511", "01/02/2025"),
+            ("11:30", "Lydia Deetz", "Uma", "Perro", "Peluqueria", "21578", "05/11/2025"),
+            ("12:00", "Sabrina Carpintero", "Corcho", "Perro", "Clinica", "35698", "06/07/2025"),
+            ("12:30", "Britney Lanzas", "Simba", "Gato", "Clinica", "32151", "29/07/2026"),
+            ("13:00", "Martin Pescador", "Max", "Perro", "Clinica", "35169", "15/07/2025"),
+            ("13:15", "Alberto Cazador", "Sasha", "Perro", "Peluqueria", "32169", "21/04/2025"),
+            ("13:30", "Dustin Henderson", "Rocky", "Gato", "Clinica", "11458", "19/10/2025")
         ]
         for appointment in appointments:
             self.appointments_table.insert("", "end", values=appointment)
