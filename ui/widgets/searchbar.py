@@ -2,8 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 
 class Searchbar(tk.Frame):
-    def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+    def __init__(self, master, on_search=None, **kwargs):
+        super().__init__(master, bg="white", **kwargs)
+
+        self.on_search = on_search
 
         self._build_widgets()
         self._build_layout()
@@ -13,12 +15,14 @@ class Searchbar(tk.Frame):
         self.search_widget = tk.Frame(
             self,
             height=80,
+            bg="white",
         )
         self.search_widget.pack_propagate(False)
 
         self.controls_frame = tk.Frame(
             self.search_widget,
             height=28,
+            bg="white",
         )
         self.controls_frame.pack_propagate(False)
 
@@ -27,6 +31,7 @@ class Searchbar(tk.Frame):
             self.search_widget,
             width=96,
             height=30,
+            bg="white",
         )
         self.title_frame.pack_propagate(False)
 
@@ -35,6 +40,7 @@ class Searchbar(tk.Frame):
             text="Búsqueda",
             font=("Arial", 14, "bold"),
             fg="black",
+            bg="white",
         )
 
 # barra de busqueda
@@ -56,6 +62,12 @@ class Searchbar(tk.Frame):
             self.search_frame,
             width=40,
         )
+
+        self.search_entry.bind(
+            "<Return>",
+            lambda event: self.search(),
+            )
+        
         self.search_button = tk.Button(
             self.search_button_frame,
             text="🔍",
@@ -73,6 +85,12 @@ class Searchbar(tk.Frame):
             bg="#8A2BE2",
             fg="white",
         )
+
+        query = self.search_entry.get().strip()
+        selected_filter = self.filter_options.get()
+
+        if self.on_search is not None:
+            self.on_search(query, selected_filter)
 
 # filtros
     def _build_filter(self):
@@ -119,7 +137,7 @@ class Searchbar(tk.Frame):
         self.controls_frame.place(
             relx=0,
             rely=0,
-            relwidth=0.5,
+            relwidth=0.85,
             y=52,
             height=28,
         )
