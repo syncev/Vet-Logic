@@ -127,28 +127,25 @@ class TurneroPage(tk.Frame):
 
     # LAYOUT
     def _build_layout(self):
-        # 1. Empaquetamos cabecera
-        self.top_frame.pack(fill="x", padx=20, pady=(20, 10))
-
-        # 2. Controles izquierdos
-        self.left_controls.pack(side="left")
-        self.entrada.pack(side="left", padx=(0, 10))
-        self.dropdown.pack(side="left")
-
-        # 3. Controles derechos
-        self.right_controls.pack(side="right")
-        
-        # Paginador pegado a la izquierda dentro del bloque derecho
-        self.date_stepper.pack(side="left", padx=(0, 20))
-        self.previous_button.pack(side="left", padx=2)
-        self.today_button.pack(side="left", padx=2)
-        self.tomorrow_button.pack(side="left", padx=2)
-        self.next_day_button.pack(side="left", padx=2)
-        self.next_button.pack(side="left", padx=2)
-        
-        # Botón verde pegado a la derecha del paginador
-        self.add_appointment_button.pack(side="left", ipadx=15, ipady=8)
-
-        # 4. Tabla ocupando el resto
-        self.appointments_frame.pack(fill="both", expand=True, padx=20, pady=(10, 20))
-        self.appointments_table.pack(fill="both", expand=True)
+        self.searchbar.pack(
+            fill="x",
+            padx=40,
+            pady=(0, 30),
+        )
+        self.date_stepper.pack()
+        self.previous_button.pack(side="left")
+        self.today_button.pack(side="left")
+        self.tomorrow_button.pack(side="left")
+        self.next_day_button.pack(side="left")
+        self.next_button.pack(side="left")
+        self.add_appointment_button.pack(side="right", ipadx=15, ipady=8)
+        self.appointments_frame.pack(
+            fill="both",
+            expand=True,
+            padx=20,
+            pady=20,
+        )
+        self.appointments_table.pack(
+            fill="both",
+            expand=True,
+        )
