@@ -3,10 +3,12 @@ from zoneinfo import ZoneInfo
 import tkinter as tk
 from tkinter import ttk
 
+from ui.widgets.searchbar import Searchbar
+
 
 class TurneroPage(tk.Frame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, bg="white", **kwargs)
+        super().__init__(master, **kwargs)
 
         self._build_widgets()
         self._build_layout()

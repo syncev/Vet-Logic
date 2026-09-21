@@ -10,7 +10,7 @@ from ui.pages.historias.aside import AgregarHC
 
 class Shell(tk.Frame):
     def __init__(self, master):
-        super().__init__(master, bg="white")
+        super().__init__(master)
 
         self.current_page = None
 
@@ -29,10 +29,7 @@ class Shell(tk.Frame):
             fill="y"
             )
 
-        self.sidebar_separator = tk.Frame(self, bg="#E0E0E0", width=1)
-        self.sidebar_separator.pack(side="left", fill="y")
-
-        self.content = tk.Frame(self, bg="white")
+        self.content = tk.Frame(self)
         self.content.pack(side="left", fill="both", expand=True)
 
     def _build_routes(self):
