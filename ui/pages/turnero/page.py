@@ -3,88 +3,53 @@ from zoneinfo import ZoneInfo
 import tkinter as tk
 from tkinter import ttk
 
-from ui.widgets.searchbar import Searchbar
-
+# Asumiendo que tenés la barra de búsqueda importada si la usás, 
+# aunque en tu código vi que creaste el Entry directo. Podés borrar esto si no lo usás.
+from ui.widgets.searchbar import Searchbar 
 
 class TurneroPage(tk.Frame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+        # Aseguramos el fondo blanco general
+        super().__init__(master, bg="white", **kwargs)
 
         self._build_widgets()
         self._build_layout()
 
     # LOGICA
-    # date stepper es el widget que permite cambiar de dia de 1 en 1 en el turnero
     def _build_date_stepper(self):
-        self.date_stepper = tk.Frame(self)
+        # EL ARREGLO ESTÁ ACÁ: Le asignamos self.right_controls como padre
+        self.date_stepper = tk.Frame(self.right_controls, bg="white")
         timezone = ZoneInfo("America/Argentina/Buenos_Aires")
 
-        # logca para que los dias se sumen sin pasar de 31 a 32
         today = datetime.now(timezone)
         tomorrow = today + timedelta(days=1)
         next_day = today + timedelta(days=2)
 
-        self.previous_button = tk.Button(
-            self.date_stepper,
-            text="<",
-        )
-        self.today_button = tk.Button(
-            self.date_stepper,
-            text=str(today.day),
-        )
-        self.tomorrow_button = tk.Button(
-            self.date_stepper,
-            text=str(tomorrow.day),
-        )
-        self.next_day_button = tk.Button(
-            self.date_stepper,
-            text=str(next_day.day),
-        )
-        self.next_button = tk.Button(
-            self.date_stepper,
-            text=">",
-        )
+        fuente_pag = ("Arial", 11, "bold")
+
+        self.previous_button = tk.Button(self.date_stepper, text="<", font=fuente_pag, bg="#F0F0F0", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2")
+        self.today_button = tk.Button(self.date_stepper, text=str(today.day), font=fuente_pag, bg="#E6D0F5", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2")
+        self.tomorrow_button = tk.Button(self.date_stepper, text=str(tomorrow.day), font=fuente_pag, bg="#F0F0F0", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2")
+        self.next_day_button = tk.Button(self.date_stepper, text=str(next_day.day), font=fuente_pag, bg="#F0F0F0", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2")
+        self.next_button = tk.Button(self.date_stepper, text=">", font=fuente_pag, bg="#F0F0F0", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2")
 
     # tabla de turnos
     def _build_appointments_table(self):
-        self.appointments_frame = tk.Frame(self)
+        # Aseguramos el fondo blanco detrás de la tabla
+        self.appointments_frame = tk.Frame(self, bg="white")
 
         style = ttk.Style()
         style.theme_use("clam")
-        style.configure(
-            "Treeview",
-            background="white",
-            fieldbackground="white",
-            rowheight=40,
-            borderwidth=0,
-            font=("Arial", 10),
-        )
-        style.configure(
-            "Treeview.Heading",
-            background="white",
-            font=("Arial", 10, "bold"),
-            borderwidth=0,
-        )
-        style.map(
-            "Treeview",
-            background=[("selected", "#F0F0F0")],
-            foreground=[("selected", "black")],
-        )
+        style.configure("Treeview", background="white", fieldbackground="white", rowheight=40, borderwidth=0, font=("Arial", 10))
+        style.configure("Treeview.Heading", background="white", font=("Arial", 10, "bold"), borderwidth=0)
+        style.map("Treeview", background=[("selected", "#F0F0F0")], foreground=[("selected", "black")])
 
         self.appointments_table = ttk.Treeview(
             self.appointments_frame,
-            columns=(
-                "hora",
-                "cliente",
-                "pacliente",
-                "especie",
-                "motivo",
-                "hc",
-                "ultimo turno",
-            ),
+            columns=("hora", "cliente", "pacliente", "especie", "motivo", "hc", "ultimo turno"),
             show="headings",
         )
-        # esto ata el encabezado de la tabla con el nombre de la columna
+        
         self.appointments_table.heading("hora", text="Hora")
         self.appointments_table.heading("cliente", text="Cliente", anchor="w")
         self.appointments_table.heading("pacliente", text="Paciente", anchor="w")
@@ -92,86 +57,70 @@ class TurneroPage(tk.Frame):
         self.appointments_table.heading("motivo", text="Motivo")
         self.appointments_table.heading("hc", text="HC")
         self.appointments_table.heading("ultimo turno", text="Último Turno")
-        # config de las columnas
-        self.appointments_table.column(
-            "hora",
-            width=50,
-        )
-        self.appointments_table.column(
-            "cliente",
-            width=150,
-            anchor="w",
-        )
-        self.appointments_table.column(
-            "pacliente",
-            width=100,
-            anchor="w",
-        )
-        self.appointments_table.column(
-            "especie",
-            width=80,
-            anchor="center",
-
-        )
-        self.appointments_table.column(
-            "motivo",
-            width=100,
-            anchor="center",
-        )
-        self.appointments_table.column(
-            "hc",
-            width=70,
-            anchor="center",
-        )
-        self.appointments_table.column(
-            "ultimo turno",
-            width=150,
-            anchor="center",
-        )
-        # citas harcodeadadas TODO reemplazar por acceso a la base de datos
+        
+        self.appointments_table.column("hora", width=50)
+        self.appointments_table.column("cliente", width=150, anchor="w")
+        self.appointments_table.column("pacliente", width=100, anchor="w")
+        self.appointments_table.column("especie", width=80, anchor="center")
+        self.appointments_table.column("motivo", width=100, anchor="center")
+        self.appointments_table.column("hc", width=70, anchor="center")
+        self.appointments_table.column("ultimo turno", width=150, anchor="center")
+        
+        # Citas hardcodeadas sacadas del diseño de Figma
         appointments = [
-            (
-                "08:00",
-                "Juan Perez",
-                "Firulais",
-                "Perro",
-                "Clinica",
-                "12345",
-                "2025-09-01",
-            ),
-            (
-                "09:00",
-                "Maria Lopez",
-                "Lord Pulgoso",
-                "Perro",
-                "Peluqueria",
-                "67890",
-                "2026-03-02",
-            ),
+            ("09:00", "Silvia Moreno", "Luna", "Gato", "Clinica", "12651", "08/08/2024"),
+            ("09:30", "Martin Sanchez", "Milo", "Gato", "Clinica", "15644", "04/05/2023"),
+            ("10:00", "Calvin Klein", "Thor", "Perro", "Clinica", "65111", "20/05/2026"),
+            ("10:30", "Clark Kent", "Homero", "Perro", "Peluqueria", "32155", "27/08/2026"),
+            ("10:30", "Maria del Barrio", "Otto", "Gato", "Clinica", "75465", "07/12/2023"),
+            ("11:00", "Esteban Caracas", "Rafa", "Perro", "Clinica", "84223", "30/02/2026"),
+            ("11:30", "Philomena Cunk", "Ara", "Gato", "Clinica", "51511", "01/02/2025"),
+            ("11:30", "Lydia Deetz", "Uma", "Perro", "Peluqueria", "21578", "05/11/2025"),
+            ("12:00", "Sabrina Carpintero", "Corcho", "Perro", "Clinica", "35698", "06/07/2025"),
+            ("12:30", "Britney Lanzas", "Simba", "Gato", "Clinica", "32151", "29/07/2026"),
+            ("13:00", "Martin Pescador", "Max", "Perro", "Clinica", "35169", "15/07/2025"),
+            ("13:15", "Alberto Cazador", "Sasha", "Perro", "Peluqueria", "32169", "21/04/2025"),
+            ("13:30", "Dustin Henderson", "Rocky", "Gato", "Clinica", "11458", "19/10/2025")
         ]
         for appointment in appointments:
-            self.appointments_table.insert(
-                "",
-                "end",
-                values=appointment,
-            )
+            self.appointments_table.insert("", "end", values=appointment)
 
     # WIDGETS
     def _build_widgets(self):
-        # importa el searchbar que es un widget reciclable
-        self.searchbar = Searchbar(self)
+        self.top_frame = tk.Frame(self, bg="white")
+        self.left_controls = tk.Frame(self.top_frame, bg="white")
+        self.right_controls = tk.Frame(self.top_frame, bg="white")
 
+        self.entrada = tk.Entry(
+            self.left_controls,
+            width=28,
+            font=("Arial", 10),
+            bd=1,
+            relief="solid",
+        )
+        self.dropdown = ttk.Combobox(
+            self.left_controls,
+            values=["Todos", "Cliente", "Paciente", "Especie", "Motivo", "HC"],
+            state="readonly",
+            width=17,
+        )
+        self.dropdown.set("Todos")
+
+        # Construimos el paginador (ahora se aloja en right_controls)
         self._build_date_stepper()
 
-        # boton de agregar turno
         self.add_appointment_button = tk.Button(
-            self,
+            self.right_controls,
             text="+ Agregar Turno",
             bg="#A8D5BA",
             fg="#1D3525",
             font=("Arial", 11, "bold"),
             relief="flat",
+            borderwidth=0,
+            highlightthickness=0,
             cursor="hand2",
+            padx=15,
+            pady=5,
         )
 
         self._build_appointments_table()
