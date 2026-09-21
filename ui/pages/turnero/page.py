@@ -67,7 +67,7 @@ class TurneroPage(tk.Frame):
         self.appointments_table.column("ultimo turno", width=150, anchor="center")
         
         # Citas hardcodeadas sacadas del diseño de Figma
-        appointments = [
+        self.appointments = [
             ("09:00", "Silvia Moreno", "Luna", "Gato", "Clinica", "12651", "08/08/2024"),
             ("09:30", "Martin Sanchez", "Milo", "Gato", "Clinica", "15644", "04/05/2023"),
             ("10:00", "Calvin Klein", "Thor", "Perro", "Clinica", "65111", "20/05/2026"),
@@ -82,13 +82,56 @@ class TurneroPage(tk.Frame):
             ("13:15", "Alberto Cazador", "Sasha", "Perro", "Peluqueria", "32169", "21/04/2025"),
             ("13:30", "Dustin Henderson", "Rocky", "Gato", "Clinica", "11458", "19/10/2025")
         ]
-        for appointment in appointments:
+        for appointment in self.appointments:
             self.appointments_table.insert("", "end", values=appointment)
+    
+    def search_appointments(self, query, selected_filter):
+        query = query.lower()
+
+        filter_columns = {
+            "Cliente": [1],
+            "Paciente": [2],
+            "Especie": [3],
+            "Motivo": [4],
+            "HC": [5]   
+        }
+
+        if selected_filter == "Todos":
+            columns_to_search = range(len(self.appointments[0]))
+        else:
+            columns_to_search = filter_columns.get(selected_filter, [])
+
+        filtered_appointments = []
+
+        for appointment in self.appointments:
+            if any(
+                query in str(appointment[column]).lower()
+                for column in columns_to_search
+            ):
+                filtered_appointments.append(appointment)
+
+        for item in self.appointments_table.get_children():
+            self.appointments_table.delete(item) 
+
+        for appointment in filtered_appointments:
+            self.appointments_table.insert(
+                "",
+                "end",
+                values=appointment,
+        )           
 
     # WIDGETS
     def _build_widgets(self):
-        self.searchbar = Searchbar(self)
-        self.top_frame = tk.Frame(self, bg="white")
+        self.top_frame = tk.Frame(
+            self,
+            height=80,
+            bg="white",
+            )
+        self.top_frame.pack_propagate(False)
+        self.searchbar = Searchbar(
+            self.top_frame,
+            on_search=self.search_appointments,
+            )
         self.left_controls = tk.Frame(self.top_frame, bg="white")
         self.right_controls = tk.Frame(self.top_frame, bg="white")
 
@@ -129,19 +172,23 @@ class TurneroPage(tk.Frame):
     # LAYOUT
         
     def _build_layout(self):
-        self.searchbar.pack(
-            fill="x",
-            padx=40,
-            pady=(0, 10),
-        )
-
         self.top_frame.pack(
             fill="x",
             padx=40,
             pady=(0, 10),
         )
 
-        self.right_controls.pack(side="right")
+        self.searchbar.pack(
+            side="left",
+            fill="both",
+            expand=True,
+        )
+
+        self.right_controls.pack(
+            side="right",
+            anchor="nw",
+            pady=(52, 0),
+            )
 
         self.date_stepper.pack(side="left", padx=(0, 20))
 
