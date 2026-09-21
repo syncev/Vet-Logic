@@ -28,8 +28,7 @@ class LoginView(tk.Frame):
         # input wrapper
         self.frame_inputs = tk.Frame(
             self,
-            width=525,
-            height=488,
+          
             bg="#D9D9D9",
         )
         # inputs
@@ -80,7 +79,13 @@ class LoginView(tk.Frame):
     def _build_layout(self):
         self.title.pack(pady=(75, 0))
         self.subtitle.pack()
-        self.frame_inputs.pack(pady=(150, 0))
+        self.frame_inputs.place(
+            relx=0.5,
+            rely=0.58,
+            relwidth=0.48,
+            relheight=0.55,
+            anchor="center",
+        )
         self.frame_inputs.pack_propagate(
             False
         )  # Evita que el frame se ajuste al tamaño de sus hijos
