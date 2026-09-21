@@ -127,25 +127,39 @@ class TurneroPage(tk.Frame):
         self._build_appointments_table()
 
     # LAYOUT
+        
     def _build_layout(self):
         self.searchbar.pack(
             fill="x",
             padx=40,
-            pady=(0, 30),
+            pady=(0, 10),
         )
-        self.date_stepper.pack()
+
+        self.top_frame.pack(
+            fill="x",
+            padx=40,
+            pady=(0, 10),
+        )
+
+        self.right_controls.pack(side="right")
+
+        self.date_stepper.pack(side="left", padx=(0, 20))
+
         self.previous_button.pack(side="left")
         self.today_button.pack(side="left")
         self.tomorrow_button.pack(side="left")
         self.next_day_button.pack(side="left")
         self.next_button.pack(side="left")
-        self.add_appointment_button.pack(side="right", ipadx=15, ipady=8)
+
+        self.add_appointment_button.pack(side="left", padx=(20, 0))
+
         self.appointments_frame.pack(
             fill="both",
             expand=True,
             padx=20,
             pady=20,
         )
+
         self.appointments_table.pack(
             fill="both",
             expand=True,
