@@ -87,6 +87,7 @@ class TurneroPage(tk.Frame):
 
     # WIDGETS
     def _build_widgets(self):
+        self.searchbar = Searchbar(self)
         self.top_frame = tk.Frame(self, bg="white")
         self.left_controls = tk.Frame(self.top_frame, bg="white")
         self.right_controls = tk.Frame(self.top_frame, bg="white")
