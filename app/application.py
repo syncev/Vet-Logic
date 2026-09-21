@@ -31,7 +31,10 @@ class App(tk.Tk):
         # trae la funcion de login_view
         self.login_view = LoginView(self, on_login=self.show_shell)
 
-        self.login_view.pack()
+        self.login_view.pack(
+            fill="both",
+            expand=True,
+        )
 
         # logica para traer el shell que muestra las paignas
 
