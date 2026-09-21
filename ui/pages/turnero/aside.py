@@ -3,7 +3,7 @@ import tkinter as tk
 
 
 class TurneroAside(tk.Frame):
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, bg="white", **kwargs):
         super().__init__(master, bg="white", **kwargs)
         self._build_calendar()
 
