@@ -8,6 +8,7 @@ class Searchbar(tk.Frame):
         on_search=None,
         controls_relwidth=0.85,
         title_text="Búsqueda",
+        filter_values=None,
         **kwargs
     ):
         super().__init__(master, bg="white", **kwargs)
@@ -15,6 +16,15 @@ class Searchbar(tk.Frame):
         self.on_search = on_search
         self.controls_relwidth = controls_relwidth
         self.title_text = title_text
+        self.filter_values = filter_values or [
+            "Todos",
+            "Cliente",
+            "Paciente",
+            "Especie",
+            "Motivo",
+            "HC",
+            "Telefono",
+        ]
 
         self._build_widgets()
         self._build_layout()
@@ -111,15 +121,7 @@ class Searchbar(tk.Frame):
 
         self.filter_options = ttk.Combobox(
             self.filter_frame,
-            values=[
-                "Todos",
-                "Cliente",
-                "Paciente",
-                "Especie",
-                "Motivo",
-                "HC",
-                "Telefono"
-            ],
+            values=self.filter_values,
             state="readonly",
             width=18
         )
