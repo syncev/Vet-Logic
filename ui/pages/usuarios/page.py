@@ -3,10 +3,10 @@ from tkinter import ttk
 
 from ui.widgets.searchbar import Searchbar
 
-class UsuariosPage(ttk.Frame):
+class UsuariosPage(tk.Frame):
 
     def __init__(self, parent):
-        super().__init__(parent, padding=0)
+        super().__init__(parent, bg="white")
 
         # --- BARRA DE BÚSQUEDA ---
         self.searchbar = Searchbar(
@@ -28,7 +28,7 @@ class UsuariosPage(ttk.Frame):
 
 
         # --- TABLA DE PROFESIONALES ---
-        frame_tabla = ttk.Frame(self)
+        frame_tabla = tk.Frame(self, bg="white")
         frame_tabla.pack(fill="both", expand=True)
 
         columnas = ("profesional", "matricula", "area", "estado")
