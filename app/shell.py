@@ -29,7 +29,7 @@ class Shell(tk.Frame):
             fill="y"
             )
 
-        self.content = tk.Frame(self)
+        self.content = tk.Frame(self, bg="white")
         self.content.pack(side="left", fill="both", expand=True)
 
     def _build_routes(self):

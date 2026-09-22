@@ -66,6 +66,7 @@ class Searchbar(tk.Frame):
         self.search_frame = tk.Frame(
             self.controls_frame,
             height=28,
+            bg = "white",
         )
         self.search_frame.pack_propagate(True)
 
@@ -73,6 +74,7 @@ class Searchbar(tk.Frame):
             self.search_frame,
             width=28,
             height=28,
+            bg="white",
         )
         self.search_button_frame.pack_propagate(False)
         
@@ -116,6 +118,7 @@ class Searchbar(tk.Frame):
             self.controls_frame,
             width=130,
             height=28,
+            bg="white",
         )
         self.filter_frame.pack_propagate(False)
 
