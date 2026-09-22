@@ -4,7 +4,7 @@ from ui.widgets.searchbar import Searchbar
 
 class HistoriasPage(tk.Frame):
     def __init__(self, parent, **kwargs):
-        super().__init__(parent, **kwargs)
+        super().__init__(parent, bg="white", **kwargs)
 
         self._build_widgets()
         self._build_layout()
@@ -87,6 +87,10 @@ class HistoriasPage(tk.Frame):
             padx=40,
             fill="x",
         )
+
+        separador = tk.Frame(self, height=1, bg="#E0E0E0")
+        separador.pack(fill="x", padx=20, pady=(0, 15))
+
         self.historia_clinica_frame.pack(pady=10, padx=10, fill="x")
         self.hc_header_frame.pack(pady=5, padx=5, fill="x")
         self.HC_title_label.pack(side="left")
