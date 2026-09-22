@@ -1,34 +1,31 @@
 import tkinter as tk
 from tkinter import ttk
 
+from ui.widgets.searchbar import Searchbar
 
 class UsuariosPage(ttk.Frame):
 
     def __init__(self, parent):
-        super().__init__(parent, padding=(30, 20))
+        super().__init__(parent, padding=0)
 
-        # --- ENCABEZADO Y TÍTULO ---
-        lbl_titulo = ttk.Label(
+        # --- BARRA DE BÚSQUEDA ---
+        self.searchbar = Searchbar(
             self,
-            text="Busqueda De Profesionales",
-            font=("Segoe UI", 14, "bold"),
+            controls_relwidth=1.0,
+            title_text="Búsqueda de Profesionales",
+            filter_values=[
+                "Todos",
+                "Nombre",
+                "Apellido",
+                "Matrícula",
+            ],
         )
-        lbl_titulo.pack(anchor="w", pady=(0, 15))
-
-        # --- BARRA DE BÚSQUEDA Y BOTÓN DE FILTROS ---
-        frame_busqueda = ttk.Frame(self)
-        frame_busqueda.pack(fill="x", pady=(0, 20))
-
-        # Entrada de búsqueda estándar (sin dependencia externa)
-        self.entry_buscar = ttk.Entry(frame_busqueda, font=("Segoe UI", 10))
-        self.entry_buscar.insert(0, "Britney")
-        self.entry_buscar.pack(
-            side="left", fill="x", expand=True, ipady=3, padx=(0, 10)
+        self.searchbar.pack(
+            pady=(0, 10),
+            padx=40,
+            fill="x",
         )
 
-        # Botón Filtros
-        btn_filtros = ttk.Button(frame_busqueda, text="Y  Filtros")
-        btn_filtros.pack(side="right")
 
         # --- TABLA DE PROFESIONALES ---
         frame_tabla = ttk.Frame(self)
