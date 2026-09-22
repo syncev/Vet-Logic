@@ -11,7 +11,13 @@ class HistoriasPage(tk.Frame):
 
 
     def _build_historia_clinica_card(self):
-        self.historia_clinica_frame = tk.Frame(self, bg="white")
+        self.historia_clinica_frame = tk.Frame(
+            self, 
+            bg="white",
+            highlightbackground="#E0E0E0",
+            highlightthickness=1
+
+        )
 #contiene el numero y cliente de HC
         self.hc_header_frame = tk.Frame(self.historia_clinica_frame, bg="white")
 
@@ -91,7 +97,7 @@ class HistoriasPage(tk.Frame):
         separador = tk.Frame(self, height=1, bg="#E0E0E0")
         separador.pack(fill="x", padx=20, pady=(0, 15))
 
-        self.historia_clinica_frame.pack(pady=10, padx=10, fill="x")
+        self.historia_clinica_frame.pack(pady=(30, 10), padx=10, fill="x")
         self.hc_header_frame.pack(pady=5, padx=5, fill="x")
         self.HC_title_label.pack(side="left")
         self.HC_number_label.pack(side="left", padx=5)
