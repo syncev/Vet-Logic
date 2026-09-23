@@ -13,7 +13,6 @@ La aplicación utiliza Tkinter, la biblioteca gráfica incluida con Python, y
 - Belen Vassel
 - Ignacio Faerman
 - Guevara Aylen
-- Paola Argento
 
 ## Requisitos
 
