@@ -33,40 +33,9 @@ class TurneroPage(tk.Frame):
         self.next_day_button = tk.Button(self.date_stepper, text=str(next_day.day), font=fuente_pag, bg="#F0F0F0", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2")
         self.next_button = tk.Button(self.date_stepper, text=">", font=fuente_pag, bg="#F0F0F0", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2")
 
-    # tabla de turnos
     def _build_appointments_table(self):
-        # Aseguramos el fondo blanco detrás de la tabla
         self.appointments_frame = tk.Frame(self, bg="white")
 
-        style = ttk.Style()
-        style.theme_use("clam")
-        style.configure("Treeview", background="white", fieldbackground="white", rowheight=40, borderwidth=0, font=("Arial", 10))
-        style.configure("Treeview.Heading", background="white", font=("Arial", 10, "bold"), borderwidth=0)
-        style.map("Treeview", background=[("selected", "#F0F0F0")], foreground=[("selected", "black")])
-
-        self.appointments_table = ttk.Treeview(
-            self.appointments_frame,
-            columns=("hora", "cliente", "pacliente", "especie", "motivo", "hc", "ultimo turno"),
-            show="headings",
-        )
-        
-        self.appointments_table.heading("hora", text="Hora")
-        self.appointments_table.heading("cliente", text="Cliente", anchor="w")
-        self.appointments_table.heading("pacliente", text="Paciente", anchor="w")
-        self.appointments_table.heading("especie", text="Especie")
-        self.appointments_table.heading("motivo", text="Motivo")
-        self.appointments_table.heading("hc", text="HC")
-        self.appointments_table.heading("ultimo turno", text="Último Turno")
-        
-        self.appointments_table.column("hora", width=50)
-        self.appointments_table.column("cliente", width=150, anchor="w")
-        self.appointments_table.column("pacliente", width=100, anchor="w")
-        self.appointments_table.column("especie", width=80, anchor="center")
-        self.appointments_table.column("motivo", width=100, anchor="center")
-        self.appointments_table.column("hc", width=70, anchor="center")
-        self.appointments_table.column("ultimo turno", width=150, anchor="center")
-        
-        # Citas hardcodeadas sacadas del diseño de Figma
         self.appointments = [
             ("09:00", "Silvia Moreno", "Luna", "Gato", "Clinica", "12651", "08/08/2024"),
             ("09:30", "Martin Sanchez", "Milo", "Gato", "Clinica", "15644", "04/05/2023"),
@@ -82,9 +51,90 @@ class TurneroPage(tk.Frame):
             ("13:15", "Alberto Cazador", "Sasha", "Perro", "Peluqueria", "32169", "21/04/2025"),
             ("13:30", "Dustin Henderson", "Rocky", "Gato", "Clinica", "11458", "19/10/2025")
         ]
-        for appointment in self.appointments:
-            self.appointments_table.insert("", "end", values=appointment)
-    
+
+        self._render_appointments(self.appointments)
+
+        
+    def _render_appointments(self, appointments):
+        for widget in self.appointments_frame.winfo_children():
+            widget.destroy()
+
+        columns = (
+            ("Hora", 50, "center"),
+            ("Cliente", 150, "w"),
+            ("Paciente", 100, "w"),
+            ("Especie", 80, "center"),
+            ("Motivo", 100, "center"),
+            ("HC", 70, "center"),
+            ("Último Turno", 150, "center"),
+        )
+
+        for column_index, (_, width, _) in enumerate(columns):
+            self.appointments_frame.grid_columnconfigure(
+                column_index,
+                minsize=width,
+            )
+
+        for column_index, (title, _, anchor) in enumerate(columns):
+            heading = tk.Label(
+                self.appointments_frame,
+                text=title,
+                font=("Arial", 10, "bold"),
+                bg="white",
+                anchor=anchor,
+                padx=4,
+                pady=8,
+            )
+            heading.grid(row=0, column=column_index, sticky="nsew")
+
+        for row_index in range(1, len(self.appointments) + 1):
+            self.appointments_frame.grid_rowconfigure(row_index, minsize=0)
+
+
+        for row_index, appointment in enumerate(appointments, start=1):
+            self.appointments_frame.grid_rowconfigure(row_index, minsize=40)
+
+            for column_index, value in enumerate(appointment):
+                _, _, anchor = columns[column_index]
+                is_hc = column_index == 5
+
+                if is_hc:
+                    cell = tk.Canvas(
+                        self.appointments_frame,
+                        width=70,
+                        height=40,
+                        bg="white",
+                        highlightthickness=0,
+                        bd=0,
+                    )
+                    purple = "#E6D0F5"
+                    cell.create_oval(9, 7, 35, 33, fill=purple, outline=purple)
+                    cell.create_rectangle(22, 7, 48, 33, fill=purple, outline=purple)
+                    cell.create_oval(35, 7, 61, 33, fill=purple, outline=purple)
+                    cell.create_text(
+                        35,
+                        20,
+                        text=str(value),
+                        fill="#333333",
+                        font=("Arial", 10, "bold"),
+                    )
+                else:
+                    cell = tk.Label(
+                        self.appointments_frame,
+                        text=str(value),
+                        font=("Arial", 10),
+                        bg="white",
+                        anchor=anchor,
+                        padx=4,
+                        pady=8,
+                    )
+
+                cell.grid(
+                    row=row_index,
+                    column=column_index,
+                    sticky="nsew" if not is_hc else "",
+                )
+
     def search_appointments(self, query, selected_filter):
         query = query.lower()
 
@@ -110,15 +160,7 @@ class TurneroPage(tk.Frame):
             ):
                 filtered_appointments.append(appointment)
 
-        for item in self.appointments_table.get_children():
-            self.appointments_table.delete(item) 
-
-        for appointment in filtered_appointments:
-            self.appointments_table.insert(
-                "",
-                "end",
-                values=appointment,
-        )           
+        self._render_appointments(filtered_appointments)
 
     # WIDGETS
     def _build_widgets(self):
@@ -205,9 +247,4 @@ class TurneroPage(tk.Frame):
             expand=True,
             padx=20,
             pady=20,
-        )
-
-        self.appointments_table.pack(
-            fill="both",
-            expand=True,
         )
