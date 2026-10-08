@@ -44,6 +44,11 @@ CREATE TABLE paciente (
         REFERENCES cliente (dni)
 );
 
+INSERT INTO paciente (raza, especie, nombre, sexo, fecha_nacimiento, peso, estado_reproductivo, dni) 
+VALUES ('Caniche', 'Perro', 'Bobby', 'Macho', '2023-05-10', '5.2', 'Entero', '11222333');
+
+INSERT INTO paciente (raza, especie, nombre, sexo, fecha_nacimiento, peso, estado_reproductivo, dni) 
+VALUES ('Siames', 'Gato', 'Mia', 'Hembra', '2022-08-15', '3.1', 'Castrada', '44555666');
 
 -- ============================================================
 -- 3. VETERINARIO
