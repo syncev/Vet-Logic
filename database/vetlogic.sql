@@ -18,6 +18,11 @@ CREATE TABLE cliente (
     domicilio VARCHAR(150)
 );
 
+INSERT INTO cliente (dni, nombre_y_apellido, telefono, mail, domicilio) 
+VALUES ('11222333', 'Juan Pérez', '3511234567', 'juan@mail.com', 'Centro 123');
+
+INSERT INTO cliente (dni, nombre_y_apellido, telefono, mail, domicilio) 
+VALUES ('44555666', 'María Gómez', '3519876543', 'maria@mail.com', 'Alberdi 456');
 
 -- ============================================================
 -- 2. PACIENTE
