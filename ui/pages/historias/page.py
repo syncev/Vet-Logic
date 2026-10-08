@@ -99,3 +99,4 @@ class HistoriasPage(tk.Frame):
         self.patient_sex_label.pack(side="left", padx=5)
         self.patient_neutered_label.pack(side="left", padx=5)
         self.patient_weight_label.pack(side="left", padx=5) 
+        
