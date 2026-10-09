@@ -59,6 +59,18 @@ CREATE TABLE turno (
     )),
     CONSTRAINT ck_turno_motivo CHECK (motivo IN ('CLINICA', 'VACUNACION', 'CIRUGIA', 'OTROS')),
     CONSTRAINT ck_turno_estado CHECK (estado IN ('PENDIENTE', 'ATENDIDO', 'CANCELADO', 'AUSENTE'))
+    matricula_veterinario VARCHAR(20) NOT NULL,
+
+    CONSTRAINT turno_id_paciente_fkey
+        FOREIGN KEY (id_paciente)
+        REFERENCES paciente (id_paciente),
+
+    CONSTRAINT turno_matricula_veterinario_fkey
+        FOREIGN KEY (matricula_veterinario)
+        REFERENCES veterinario (matricula_veterinario),
+
+    CONSTRAINT turno_hora_fin_posterior_inicio_check
+        CHECK (hora_fin > hora_inicio)
 );
 
 -- Un solo turno activo por fecha y horario. CANCELADO libera el horario.
