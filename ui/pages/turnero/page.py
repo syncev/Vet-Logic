@@ -49,7 +49,8 @@ class TurneroPage(tk.Frame):
             columns=("hora", "cliente", "pacliente", "especie", "motivo", "hc", "ultimo turno"),
             show="headings",
         )
-        
+        self.appointments_table.tag_configure("cirugia", background="#EFE8F8")
+
         self.appointments_table.heading("hora", text="Hora")
         self.appointments_table.heading("cliente", text="Cliente", anchor="w")
         self.appointments_table.heading("pacliente", text="Paciente", anchor="w")
@@ -70,7 +71,7 @@ class TurneroPage(tk.Frame):
         self.appointments = [
             ("09:00", "Silvia Moreno", "Luna", "Gato", "Clinica", "12651", "08/08/2024"),
             ("09:30", "Martin Sanchez", "Milo", "Gato", "Clinica", "15644", "04/05/2023"),
-            ("10:00", "Calvin Klein", "Thor", "Perro", "Clinica", "65111", "20/05/2026"),
+            ("10:00", "Calvin Klein", "Thor", "Perro", "Cirugia", "65111", "20/05/2026"),
             ("10:30", "Clark Kent", "Homero", "Perro", "Peluqueria", "32155", "27/08/2026"),
             ("10:30", "Maria del Barrio", "Otto", "Gato", "Clinica", "75465", "07/12/2023"),
             ("11:00", "Esteban Caracas", "Rafa", "Perro", "Clinica", "84223", "30/02/2026"),
@@ -83,7 +84,8 @@ class TurneroPage(tk.Frame):
             ("13:30", "Dustin Henderson", "Rocky", "Gato", "Clinica", "11458", "19/10/2025")
         ]
         for appointment in self.appointments:
-            self.appointments_table.insert("", "end", values=appointment)
+            tag = ("cirugia",) if appointment[4] in ["Cirugia", "Cirugía"] else ()
+            self.appointments_table.insert("", "end", values=appointment, tags=tag)
     
     def search_appointments(self, query, selected_filter):
         query = query.lower()
@@ -114,10 +116,12 @@ class TurneroPage(tk.Frame):
             self.appointments_table.delete(item) 
 
         for appointment in filtered_appointments:
+            tag = ("cirugia",) if appointment[4] in ["Cirugia", "Cirugía"] else ()
+            
             self.appointments_table.insert(
                 "",
                 "end",
-                values=appointment,
+                values=appointment, tags=tag
         )           
 
     # WIDGETS
