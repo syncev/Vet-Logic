@@ -25,7 +25,7 @@ class UsuariosAside(tk.Frame):
         )
 
     def _build_widgets(self):
-        self.professionals_button = self._build_action_button("Profesionales")
+        self.professionals_button = self._build_action_button("Perfiles")
         self.password_button = self._build_action_button("Cambiar contraseña")
 
     def _build_layout(self):
