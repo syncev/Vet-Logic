@@ -29,6 +29,7 @@ class UsuariosAside(tk.Frame):
             activeforeground="#1F1F1F",
         )
     def _select_section(self,section):
+        # Resalta la opción pulsada y avisa a la página qué vista mostrar.
         self._set_active(section)
 
         if self.on_select_section is not None:

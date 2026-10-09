@@ -8,9 +8,30 @@ class UsuariosPage(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, bg="white")
 
+        # --- FRAMES DE VISTAS DE SUB MENU ---
+        self.profiles_view = tk.Frame(self, bg= "white")
+        self.add_professional_view = tk.Frame(self, bg= "white")
+
+        self._build_profiles_view()
+        self.show_section("perfiles")  # Mostrar la vista de perfiles por defecto
+
+    def show_section(self, section):
+        # Oculta ambas vistas y deja visible únicamente la sección elegida.
+        self.profiles_view.pack_forget()
+        self.add_professional_view.pack_forget()
+
+        if section == "perfiles":
+            self.profiles_view.pack(fill="both", expand=True)
+        elif section == "agregar_profesional":
+            self.add_professional_view.pack(fill="both", expand=True)
+        else:
+            raise ValueError(f"Sección de Usuarios desconocida: {section}")
+
+    def _build_profiles_view(self):
+
         # --- BARRA DE BÚSQUEDA ---
         self.searchbar = Searchbar(
-            self,
+            self.profiles_view,
             controls_relwidth=1.0,
             title_text="Búsqueda de Profesionales",
             filter_values=[
@@ -28,7 +49,7 @@ class UsuariosPage(tk.Frame):
 
 
         # --- TABLA DE PROFESIONALES ---
-        frame_tabla = tk.Frame(self, bg="white")
+        frame_tabla = tk.Frame(self.profiles_view, bg="white")
         frame_tabla.pack(fill="both", expand=True)
 
         columnas = ("profesional", "matricula", "estado", "rol", "contacto", "usuario")
