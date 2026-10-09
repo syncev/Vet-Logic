@@ -1,2 +1,3 @@
 screeninfo
 tzdata
+psycopg[binary]
