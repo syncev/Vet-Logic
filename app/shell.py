@@ -60,7 +60,7 @@ class Shell(tk.Frame):
             expand=True,
         )
         # Usuarios necesita el callback para que su aside cambie la vista central.
-        if page_name == "usuarios":
+        if page_name in ["usuarios", "historias"]:
             self.sidebar.set_context(aside_class, on_select_section=self.current_page.show_section)
         else:   
             self.sidebar.set_context(aside_class)
