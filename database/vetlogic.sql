@@ -80,7 +80,10 @@ CREATE TABLE turno (
 
     CONSTRAINT turno_matricula_veterinario_fkey
         FOREIGN KEY (matricula_veterinario)
-        REFERENCES veterinario (matricula_veterinario)
+        REFERENCES veterinario (matricula_veterinario),
+
+    CONSTRAINT turno_hora_fin_posterior_inicio_check
+        CHECK (hora_fin > hora_inicio)
 );
 
 
