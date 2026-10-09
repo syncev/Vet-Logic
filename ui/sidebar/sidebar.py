@@ -77,7 +77,8 @@ class Sidebar(tk.Frame):
 
         self.context_slot.pack(fill="x", expand=True)
 
-    def set_context(self, context_class):
+    def set_context(self, context_class, **context_kwargs):
+        # Reenvía opciones específicas al aside, como el callback de submenús.
         if self.context_view is not None:
             self.context_view.destroy()
             self.context_view = None
@@ -85,7 +86,7 @@ class Sidebar(tk.Frame):
         if context_class is None:
             return
 
-        self.context_view = context_class(self.context_slot)
+        self.context_view = context_class(self.context_slot, **context_kwargs,)
         self.context_view.pack(
             fill="both",
             expand=True,
