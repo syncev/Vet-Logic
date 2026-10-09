@@ -31,7 +31,7 @@ class UsuariosPage(tk.Frame):
         frame_tabla = tk.Frame(self, bg="white")
         frame_tabla.pack(fill="both", expand=True)
 
-        columnas = ("profesional", "matricula", "area", "estado")
+        columnas = ("profesional", "matricula", "estado", "rol", "contacto", "usuario")
         self.tabla = ttk.Treeview(
             frame_tabla, columns=columnas, show="headings", height=8
         )
@@ -39,14 +39,18 @@ class UsuariosPage(tk.Frame):
         # Encabezados
         self.tabla.heading("profesional", text="Profeesionales", anchor="w")
         self.tabla.heading("matricula", text="Matricula", anchor="w")
-        self.tabla.heading("area", text="Area", anchor="w")
         self.tabla.heading("estado", text="Activo/Inactivo", anchor="center")
+        self.tabla.heading("rol", text="Rol", anchor="w")
+        self.tabla.heading("contacto", text="Contacto", anchor="w")
+        self.tabla.heading("usuario", text="Usuario", anchor="w")
 
         # Anchos de columna
         self.tabla.column("profesional", width=220, anchor="w")
         self.tabla.column("matricula", width=120, anchor="w")
-        self.tabla.column("area", width=120, anchor="w")
         self.tabla.column("estado", width=120, anchor="center")
+        self.tabla.column("rol", width=120, anchor="w")
+        self.tabla.column("contacto", width=120, anchor="w")
+        self.tabla.column("usuario", width=120, anchor="w")
 
         # Estilo morado para Activo
         self.tabla.tag_configure("activo", foreground="#6200EE")
@@ -58,15 +62,15 @@ class UsuariosPage(tk.Frame):
 
     def cargar_datos_prueba(self):
         datos = [
-            ("Britney Lanzas", "A4738294", "AREA A", "Activo"),
-            ("Raul Marian", "A4738293", "AREA B", "Activo"),
+            ("Britney Lanzas", "A4738294", "Activo", "Veterinario", "britney.lanzas@email.com", "britneyl"),
+            ("Raul Marian", "A4738293", "Activo", "Asistente", "raul.marian@email.com", "raulm"),
         ]
 
-        for prof, mat, area, estado in datos:
+        for prof, mat, estado, rol, contacto, usuario in datos:
             self.tabla.insert(
                 "",
                 "end",
-                values=(prof, mat, area, estado),
+                values=(prof, mat, estado, rol, contacto, usuario),
                 tags=("activo" if estado == "Activo" else "inactivo",),
             )
 
