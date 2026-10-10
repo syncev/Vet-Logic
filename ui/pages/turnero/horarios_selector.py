@@ -51,12 +51,26 @@ class HorariosSelector(tk.Frame):
         tk.Button(
             self.navigation_frame,
             text="<",
+            bg="#E0E0E0",
+            relief="flat",
+            bd=0,
+            highlightthickness=0,
+            font=("Arial", 14, "bold"),
+            width=3,
+            height=2,
             command=lambda: self._move_days(-1),
         ).pack(side="left")
 
         tk.Button(
             self.navigation_frame,
             text=">",
+            bg="#E0E0E0",
+            relief="flat",
+            bd=0,
+            highlightthickness=0,
+            font=("Arial", 14, "bold"),
+            width=3,
+            height=2,
             command=lambda: self._move_days(1),
         ).pack(side="right")
 
@@ -81,9 +95,12 @@ class HorariosSelector(tk.Frame):
             tk.Label(
                 day_frame,
                 text=day.strftime("%d/%m"),
-                bg="white",
-                font=("Arial", 10, "bold"),
-            ).pack(fill="x", pady=4)
+                bg="#FCE4E4" if day == now.date() else "white",
+                font=("Arial", 12, "bold"),
+                anchor="center",
+                relief="solid",
+                bd=1,
+            ).pack(fill="x", pady=4, ipady=2)
 
             for hour in self.HORARIOS:
                 hour_frame = tk.Frame(day_frame, bg="white")
@@ -92,6 +109,7 @@ class HorariosSelector(tk.Frame):
                 tk.Label(
                     hour_frame,
                     text=hour,
+                    font=("Arial", 11),
                     bg="white",
                     width=6,
                 ).pack(side="left")
@@ -106,14 +124,19 @@ class HorariosSelector(tk.Frame):
 
                 tk.Button(
                     hour_frame,
-                    text="+" if available else "",
+                    text="+" if available and not selected else "",
                     bg="#BDBDBD" if selected else (
-                        "#78C77D"if available else "#999999"
+                        "#61D161"if available else "#999999"
                     ),
                     state=tk.NORMAL if available else tk.DISABLED,
+                    relief="flat",
+                    bd=0,
+                    highlightthickness=0,
+                    font=("Arial", 14, "bold"),
+                    fg="white",
                     command=lambda select_day=day, select_hour=hour:
                         self._select_slot(select_day, select_hour),
-                ).pack(side="right", fill="x", expand=True, padx=2, pady=1)
+                ).pack(side="right", fill="x", expand=True, padx=2, pady=1, ipady=2)
 
     def _move_days(self, amount):
         self.fecha_base += timedelta(days=amount)
