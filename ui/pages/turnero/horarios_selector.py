@@ -31,6 +31,7 @@ class HorariosSelector(tk.Frame):
         super().__init__(master, **kwargs)
 
         self.fecha_base = fecha_base
+        self.horario_seleccionado = None
         self.horarios_ocupados = (
             horarios_ocupados if horarios_ocupados is not None else set()
         )
@@ -101,11 +102,14 @@ class HorariosSelector(tk.Frame):
                     day == now.date() and hour_minutes <= current_minutes
                 )    
                 available = not occupied and not past
+                selected = self.horario_seleccionado == (day, hour)
 
                 tk.Button(
                     hour_frame,
                     text="+" if available else "",
-                    bg="#78C77D" if available else "#999999",
+                    bg="#BDBDBD" if selected else (
+                        "#78C77D"if available else "#999999"
+                    ),
                     state=tk.NORMAL if available else tk.DISABLED,
                     command=lambda select_day=day, select_hour=hour:
                         self._select_slot(select_day, select_hour),
@@ -120,6 +124,10 @@ class HorariosSelector(tk.Frame):
         self._render_grid()
 
     def _select_slot(self, day, hour):
+        self.horario_seleccionado = (day, hour)
+        self._render_grid()
+
         if self.on_horario_seleccionado is not None:
-            self.on_horario_seleccionado(day, hour)    
+            self.on_horario_seleccionado(day, hour)
+
 
