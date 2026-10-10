@@ -1,111 +1,136 @@
 import tkinter as tk
+from tkinter import ttk
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
 from ui.widgets.searchbar import Searchbar
 
 
-class HistoriasPage(tk.Frame):
-    def __init__(self, parent, **kwargs):
-        super().__init__(parent, bg="white", **kwargs)
+class TurneroPage(tk.Frame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, bg="white", **kwargs)
 
         self._build_widgets()
         self._build_layout()
 
+    def abrir_formulario_turno(self):
+        ventana = tk.Toplevel(self)
+        ventana.title("Agregar turno")
+        ventana.geometry("420x420")
+        ventana.resizable(False, False)
+        ventana.transient(self.winfo_toplevel())
+        ventana.grab_set()
 
-    def _build_historia_clinica_card(self):
-        self.historia_clinica_frame = tk.Frame(
-            self, 
-            bg="white",
-            highlightbackground="#E0E0E0",
-            highlightthickness=1
+        frame = tk.Frame(ventana, padx=20, pady=20, bg="white")
+        frame.pack(fill="both", expand=True)
 
-        )
-#contiene el numero y cliente de HC
-        self.hc_header_frame = tk.Frame(self.historia_clinica_frame, bg="white")
+        tk.Label(frame, text="Hora", bg="white", font=("Arial", 10, "bold")).pack(anchor="w")
+        hora_entry = tk.Entry(frame, width=30)
+        hora_entry.pack(fill="x", pady=(0, 10))
 
-        self.HC_title_label = tk.Label(
-            self.hc_header_frame,
-            text="Historia Clínica Nº",
-            font=("Inter", -24, "bold"),
-            bg="white"
-        )
-        self.HC_number_label = tk.Label(
-            self.hc_header_frame,
-            text="123456",
-            font=("Inter", -24),
-            bg="white"
-        )
-        self.HC_client_label = tk.Label(
-            self.historia_clinica_frame,
-            text="Cliente: Juan Pérez",
-            font=("Inter", -16),
-            bg="white"
-        )
-#contiene datos principales del paciente
-        self.hc_patient_info_frame = tk.Frame(self.historia_clinica_frame, bg="white")
+        tk.Label(frame, text="Cliente", bg="white", font=("Arial", 10, "bold")).pack(anchor="w")
+        cliente_entry = tk.Entry(frame, width=30)
+        cliente_entry.pack(fill="x", pady=(0, 10))
 
-        self.patient_name_label = tk.Label(
-            self.hc_patient_info_frame,
-            text="Paciente: Fido",
-            font=("Inter", -16),
-            bg="white"
-        )
-        self.patient_species_label = tk.Label(
-            self.hc_patient_info_frame,
-            text="Especie: Canino",
-            font=("Inter", -16),
-            bg="white"
-        )
-        self.patient_age_label = tk.Label(
-            self.hc_patient_info_frame,
-            text="Edad: 5 años",
-            font=("Inter", -16),
-            bg="white"
-        )
-        self.patient_sex_label = tk.Label(
-            self.hc_patient_info_frame,
-            text="Sexo: Macho",
-            font=("Inter", -16),
-            bg="white"
-        )   
-        self.patient_neutered_label = tk.Label(
-            self.hc_patient_info_frame,
-            text="Castrado: Sí",
-            font=("Inter", -16),
-            bg="white"
-        )
-        self.patient_weight_label = tk.Label(
-            self.hc_patient_info_frame,
-            text="Peso: 20 kg",
-            font=("Inter", -16),
-            bg="white"
-        )
+        tk.Label(frame, text="Paciente", bg="white", font=("Arial", 10, "bold")).pack(anchor="w")
+        paciente_entry = tk.Entry(frame, width=30)
+        paciente_entry.pack(fill="x", pady=(0, 10))
+
+        tk.Label(frame, text="Especie", bg="white", font=("Arial", 10, "bold")).pack(anchor="w")
+        especie_entry = tk.Entry(frame, width=30)
+        especie_entry.pack(fill="x", pady=(0, 10))
+
+        tk.Label(frame, text="Motivo", bg="white", font=("Arial", 10, "bold")).pack(anchor="w")
+        motivo_entry = tk.Entry(frame, width=30)
+        motivo_entry.pack(fill="x", pady=(0, 10))
+
+        tk.Label(frame, text="HC", bg="white", font=("Arial", 10, "bold")).pack(anchor="w")
+        hc_entry = tk.Entry(frame, width=30)
+        hc_entry.pack(fill="x", pady=(0, 10))
+
+        def guardar_turno():
+            hora = hora_entry.get().strip()
+            cliente = cliente_entry.get().strip()
+            paciente = paciente_entry.get().strip()
+            especie = especie_entry.get().strip()
+            motivo = motivo_entry.get().strip()
+            hc = hc_entry.get().strip()
+
+            if not all([hora, cliente, paciente, especie, motivo, hc]):
+                return
+
+            nuevo_turno = (hora, cliente, paciente, especie, motivo, hc, "Hoy")
+            self.appointments.append(nuevo_turno)
+            self.appointments_table.insert("", "end", values=nuevo_turno)
+            ventana.destroy()
+
+        tk.Button(
+            frame,
+            text="Guardar",
+            bg="#8A2BE2",
+            fg="white",
+            font=("Arial", 10, "bold"),
+            command=guardar_turno,
+        ).pack(fill="x", pady=(10, 0))
+
     def _build_widgets(self):
+        self.top_frame = tk.Frame(self, height=80, bg="white")
+        self.top_frame.pack_propagate(False)
+
         self.searchbar = Searchbar(
-            self,
-            controls_relwidth=1.0,
-            title_text="Búsqueda de Historia Clínica",
-            )
-        self._build_historia_clinica_card()
-        
+            self.top_frame,
+            on_search=self.search_appointments,
+        )
+
+        self.left_controls = tk.Frame(self.top_frame, bg="white")
+        self.right_controls = tk.Frame(self.top_frame, bg="white")
+
+        self.entrada = tk.Entry(
+            self.left_controls,
+            width=28,
+            font=("Arial", 10),
+            bd=1,
+            relief="solid",
+        )
+
+        self.dropdown = ttk.Combobox(
+            self.left_controls,
+            values=["Todos", "Cliente", "Paciente", "Especie", "Motivo", "HC"],
+            state="readonly",
+            width=17,
+        )
+        self.dropdown.set("Todos")
+
+        self._build_date_stepper()
+
+        self.add_appointment_button = tk.Button(
+            self.right_controls,
+            text="+ Agregar Turno",
+            bg="#A8D5BA",
+            fg="#1D3525",
+            font=("Arial", 11, "bold"),
+            relief="flat",
+            borderwidth=0,
+            highlightthickness=0,
+            cursor="hand2",
+            padx=15,
+            pady=5,
+            command=self.abrir_formulario_turno,
+        )
+
+        self._build_appointments_table()
 
     def _build_layout(self):
-        self.searchbar.pack(
-            pady=(0, 10),
-            padx=40,
-            fill="x",
-        )
+        self.top_frame.pack(fill="x", padx=40, pady=(0, 10))
+        self.searchbar.pack(side="left", fill="both", expand=True)
+        self.right_controls.pack(side="right", anchor="nw", pady=(52, 0))
+        self.date_stepper.pack(side="left", padx=(0, 20))
+        self.previous_button.pack(side="left")
+        self.today_button.pack(side="left")
+        self.tomorrow_button.pack(side="left")
+        self.next_day_button.pack(side="left")
+        self.next_button.pack(side="left")
+        self.add_appointment_button.pack(side="left", padx=(20, 0))
 
-        separador = tk.Frame(self, height=1, bg="#E0E0E0")
-        separador.pack(fill="x", padx=20, pady=(0, 15))
-
-        self.historia_clinica_frame.pack(pady=(30, 10), padx=10, fill="x")
-        self.hc_header_frame.pack(pady=5, padx=5, fill="x")
-        self.HC_title_label.pack(side="left")
-        self.HC_number_label.pack(side="left", padx=5)
-        self.HC_client_label.pack(pady=5, padx=5, fill="x")
-        self.hc_patient_info_frame.pack(pady=5, padx=5, fill="x")
-        self.patient_name_label.pack(side="left", padx=5)
-        self.patient_species_label.pack(side="left", padx=5)
-        self.patient_age_label.pack(side="left", padx=5)
-        self.patient_sex_label.pack(side="left", padx=5)
-        self.patient_neutered_label.pack(side="left", padx=5)
-        self.patient_weight_label.pack(side="left", padx=5) 
+        self.appointments_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        self.appointments_table.pack(fill="both", expand=True)

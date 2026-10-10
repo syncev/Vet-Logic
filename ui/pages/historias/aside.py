@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 
 
 class AgregarHC(tk.Frame):
@@ -7,6 +8,11 @@ class AgregarHC(tk.Frame):
 
         self._build_widgets()
         self._build_layout()
+    def _open_create_hc_dialog(self):
+        messagebox.showinfo(
+            "Historia Clínica",
+            "Funcionalidad de agregar historia clínica en desarrollo.",
+        )
 
     def _build_add_hc_button(self):
         self.add_hc_button = tk.Button(
@@ -23,6 +29,7 @@ class AgregarHC(tk.Frame):
             padx=20,
             pady=12,
             cursor="hand2",
+            command=self._open_create_hc_dialog,
         )
 
     def _build_widgets(self):
@@ -30,3 +37,5 @@ class AgregarHC(tk.Frame):
 
     def _build_layout(self):
         self.add_hc_button.pack(fill="x", padx=10, pady=10)
+
+        
