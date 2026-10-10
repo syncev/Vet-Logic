@@ -9,21 +9,29 @@ class UsuariosPage(tk.Frame):
         super().__init__(parent, bg="white")
 
         # --- FRAMES DE VISTAS DE SUB MENU ---
-        self.profiles_view = tk.Frame(self, bg= "white")
-        self.add_professional_view = tk.Frame(self, bg= "white")
+        self.profiles_view = tk.Frame(self, bg="white")
+        self.add_professional_view = tk.Frame(self, bg="white")
+        # 1. Agregamos el nuevo frame para ver el detalle del perfil
+        self.profile_detail_view = tk.Frame(self, bg="white")
 
         self._build_profiles_view()
+        self._build_profile_detail_view() # 2. Llamamos a la construcción del diseño
+        
         self.show_section("perfiles")  # Mostrar la vista de perfiles por defecto
 
     def show_section(self, section):
-        # Oculta ambas vistas y deja visible únicamente la sección elegida.
+        # Oculta todas las vistas
         self.profiles_view.pack_forget()
         self.add_professional_view.pack_forget()
+        self.profile_detail_view.pack_forget() # Ocultamos la nueva vista
 
+        # Muestra únicamente la sección elegida
         if section == "perfiles":
             self.profiles_view.pack(fill="both", expand=True)
         elif section == "agregar_profesional":
             self.add_professional_view.pack(fill="both", expand=True)
+        elif section == "ver_perfil":
+            self.profile_detail_view.pack(fill="both", expand=True) # Mostramos la nueva vista
         else:
             raise ValueError(f"Sección de Usuarios desconocida: {section}")
 
@@ -80,6 +88,9 @@ class UsuariosPage(tk.Frame):
 
         # Cargar datos de prueba
         self.cargar_datos_prueba()
+
+        # Conectar el evento de "Doble Clic" en la tabla para abrir el detalle
+        self.tabla.bind("<Double-1>", lambda event: self.show_section("ver_perfil"))
 
     def cargar_datos_prueba(self):
         datos = [
