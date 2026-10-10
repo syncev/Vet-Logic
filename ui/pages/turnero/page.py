@@ -3,9 +3,7 @@ from zoneinfo import ZoneInfo
 import tkinter as tk
 from tkinter import ttk
 
-# Asumiendo que tenés la barra de búsqueda importada si la usás, 
-# aunque en tu código vi que creaste el Entry directo. Podés borrar esto si no lo usás.
-from ui.widgets.searchbar import Searchbar 
+from ui.widgets.searchbar import Searchbar
 
 class TurneroPage(tk.Frame):
     def __init__(self, master, **kwargs):
@@ -49,7 +47,8 @@ class TurneroPage(tk.Frame):
             columns=("hora", "cliente", "pacliente", "especie", "motivo", "hc", "ultimo turno"),
             show="headings",
         )
-        
+        self.appointments_table.tag_configure("cirugia", background="#EFE8F8")
+
         self.appointments_table.heading("hora", text="Hora")
         self.appointments_table.heading("cliente", text="Cliente", anchor="w")
         self.appointments_table.heading("pacliente", text="Paciente", anchor="w")
@@ -70,7 +69,7 @@ class TurneroPage(tk.Frame):
         self.appointments = [
             ("09:00", "Silvia Moreno", "Luna", "Gato", "Clinica", "12651", "08/08/2024"),
             ("09:30", "Martin Sanchez", "Milo", "Gato", "Clinica", "15644", "04/05/2023"),
-            ("10:00", "Calvin Klein", "Thor", "Perro", "Clinica", "65111", "20/05/2026"),
+            ("10:00", "Calvin Klein", "Thor", "Perro", "Cirugia", "65111", "20/05/2026"),
             ("10:30", "Clark Kent", "Homero", "Perro", "Peluqueria", "32155", "27/08/2026"),
             ("10:30", "Maria del Barrio", "Otto", "Gato", "Clinica", "75465", "07/12/2023"),
             ("11:00", "Esteban Caracas", "Rafa", "Perro", "Clinica", "84223", "30/02/2026"),
@@ -83,7 +82,8 @@ class TurneroPage(tk.Frame):
             ("13:30", "Dustin Henderson", "Rocky", "Gato", "Clinica", "11458", "19/10/2025")
         ]
         for appointment in self.appointments:
-            self.appointments_table.insert("", "end", values=appointment)
+            tag = ("cirugia",) if appointment[4] in ["Cirugia", "Cirugía"] else ()
+            self.appointments_table.insert("", "end", values=appointment, tags=tag)
     
     def search_appointments(self, query, selected_filter):
         query = query.lower()
@@ -114,71 +114,13 @@ class TurneroPage(tk.Frame):
             self.appointments_table.delete(item) 
 
         for appointment in filtered_appointments:
+            tag = ("cirugia",) if appointment[4] in ["Cirugia", "Cirugía"] else ()
+            
             self.appointments_table.insert(
                 "",
                 "end",
-                values=appointment,
-        )
-
-    def abrir_formulario_turno(self):
-        ventana = tk.Toplevel(self)
-        ventana.title("Agregar turno")
-        ventana.geometry("420x420")
-        ventana.resizable(False, False)
-        ventana.transient(self.winfo_toplevel())
-        ventana.grab_set()
-
-        frame = tk.Frame(ventana, padx=20, pady=20, bg="white")
-        frame.pack(fill="both", expand=True)
-
-        tk.Label(frame, text="Hora", bg="white", font=("Arial", 10, "bold")).pack(anchor="w")
-        hora_entry = tk.Entry(frame, width=30)
-        hora_entry.pack(fill="x", pady=(0, 10))
-
-        tk.Label(frame, text="Cliente", bg="white", font=("Arial", 10, "bold")).pack(anchor="w")
-        cliente_entry = tk.Entry(frame, width=30)
-        cliente_entry.pack(fill="x", pady=(0, 10))
-
-        tk.Label(frame, text="Paciente", bg="white", font=("Arial", 10, "bold")).pack(anchor="w")
-        paciente_entry = tk.Entry(frame, width=30)
-        paciente_entry.pack(fill="x", pady=(0, 10))
-
-        tk.Label(frame, text="Especie", bg="white", font=("Arial", 10, "bold")).pack(anchor="w")
-        especie_entry = tk.Entry(frame, width=30)
-        especie_entry.pack(fill="x", pady=(0, 10))
-
-        tk.Label(frame, text="Motivo", bg="white", font=("Arial", 10, "bold")).pack(anchor="w")
-        motivo_entry = tk.Entry(frame, width=30)
-        motivo_entry.pack(fill="x", pady=(0, 10))
-
-        tk.Label(frame, text="HC", bg="white", font=("Arial", 10, "bold")).pack(anchor="w")
-        hc_entry = tk.Entry(frame, width=30)
-        hc_entry.pack(fill="x", pady=(0, 10))
-
-        def guardar_turno():
-            hora = hora_entry.get().strip()
-            cliente = cliente_entry.get().strip()
-            paciente = paciente_entry.get().strip()
-            especie = especie_entry.get().strip()
-            motivo = motivo_entry.get().strip()
-            hc = hc_entry.get().strip()
-
-            if not all([hora, cliente, paciente, especie, motivo, hc]):
-                return
-
-            nuevo_turno = (hora, cliente, paciente, especie, motivo, hc, datetime.now().strftime("%d/%m/%Y"))
-            self.appointments.append(nuevo_turno)
-            self.appointments_table.insert("", "end", values=nuevo_turno)
-            ventana.destroy()
-
-        tk.Button(
-            frame,
-            text="Guardar",
-            bg="#8A2BE2",
-            fg="white",
-            font=("Arial", 10, "bold"),
-            command=guardar_turno,
-        ).pack(fill="x", pady=(10, 0))
+                values=appointment, tags=tag
+        )           
 
     # WIDGETS
     def _build_widgets(self):
@@ -225,7 +167,6 @@ class TurneroPage(tk.Frame):
             cursor="hand2",
             padx=15,
             pady=5,
-            command=self.abrir_formulario_turno,
         )
 
         self._build_appointments_table()
