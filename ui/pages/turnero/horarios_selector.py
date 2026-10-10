@@ -42,7 +42,7 @@ class HorariosSelector(tk.Frame):
     def actualizar_datos(self, fecha_base: date, horarios_ocupados):
         self.fecha_base = fecha_base
         self.horarios_ocupados = set(horarios_ocupados)
-        self._render_grid()    
+        self._render_grid()
 
     def _build_grid(self):
         self.navigation_frame = tk.Frame(self, bg="white")
@@ -118,7 +118,7 @@ class HorariosSelector(tk.Frame):
                 hour_minutes = int(hour[:2]) * 60 + int(hour[3:])
                 past = day < now.date() or(
                     day == now.date() and hour_minutes <= current_minutes
-                )    
+                )
                 available = not occupied and not past
                 selected = self.horario_seleccionado == (day, hour)
 
@@ -152,5 +152,3 @@ class HorariosSelector(tk.Frame):
 
         if self.on_horario_seleccionado is not None:
             self.on_horario_seleccionado(day, hour)
-
-
