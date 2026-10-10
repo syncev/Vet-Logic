@@ -89,8 +89,7 @@ class UsuariosPage(tk.Frame):
         # Cargar datos de prueba
         self.cargar_datos_prueba()
 
-        # Conectar el evento de "Doble Clic" en la tabla para abrir el detalle
-        self.tabla.bind("<Double-1>", lambda event: self.show_section("ver_perfil"))
+        self.tabla.bind("<Double-1>", self._open_profile_detail)
 
     def cargar_datos_prueba(self):
         datos = [
@@ -106,5 +105,114 @@ class UsuariosPage(tk.Frame):
                 tags=("activo" if estado == "Activo" else "inactivo",),
             )
 
+    def _open_profile_detail(self, event):
+        item_id = self.tabla.identify_row(event.y)
+        if not item_id:
+            return "break"
+
+        values = self.tabla.item(item_id, "values")
+        if not values:
+            return "break"
+
+        self._update_profile_detail(values)
+        self.show_section("ver_perfil")
+        return "break"
+
+    def _update_profile_detail(self, values):
+        name, registration, status, role, contact, username = values
+        extra_details = {
+            "britneyl": {
+                "specialty": "Oftalmología felina",
+                "active_since": "07-02-2026",
+                "address": "Av. Siempreviva 742",
+                "contact": "35162947390",
+                "emergency_contact": "35162947392",
+            }
+        }.get(username, {})
+
+        self.profile_detail_labels["username"].config(text=f"Usuario: {username}")
+        self.profile_detail_labels["role"].config(text=f"Rol: {role}")
+        self.profile_detail_labels["registration"].config(text=registration)
+        self.profile_detail_labels["specialty"].config(
+            text=f"Especialidad: {extra_details.get('specialty', 'No disponible')}"
+        )
+        self.profile_detail_labels["active_since"].config(
+            text=f"Activo desde: {extra_details.get('active_since', 'No disponible')}"
+        )
+        self.profile_detail_labels["name"].config(text=f"Nombre: {name}")
+        self.profile_detail_labels["address"].config(
+            text=f"Domicilio: {extra_details.get('address', 'No disponible')}"
+        )
+        self.profile_detail_labels["contact"].config(
+            text=f"Contacto: {extra_details.get('contact', 'No disponible')}"
+        )
+        self.profile_detail_labels["email"].config(text=f"Correo: {contact}")
+        self.profile_detail_labels["emergency_contact"].config(
+            text=f"Contacto de emergencia: {extra_details.get('emergency_contact', 'No disponible')}"
+        )
+        self.profile_detail_labels["status"].config(text=f"Estado: {status}")
+
     def filtrar_profesionales(self, texto):
         pass
+
+    def _build_profile_detail_view(self):
+        self.profile_detail_labels = {}
+        left_frame = tk.Frame(self.profile_detail_view, bg="white", padx=20, pady=20)
+        left_frame.pack(side="left", fill="y", padx=20, pady=20)
+
+        right_frame = tk.Frame(self.profile_detail_view, bg="#F0F0F0")
+        right_frame.pack(side="left", fill="both", expand=True, padx=(0, 20), pady=20)
+
+        #COLUMNA IZQUIERDA 
+        tk.Label(left_frame, text="FOTO", bg="#D9D9D9", width=15, height=7).pack(pady=(10, 20))
+        
+        self.profile_detail_labels["username"] = tk.Label(
+            left_frame, text="Usuario: ", bg="white", font=("Arial", 10, "bold")
+        )
+        self.profile_detail_labels["username"].pack(anchor="w", pady=4)
+        self.profile_detail_labels["role"] = tk.Label(left_frame, text="Rol: ", bg="white")
+        self.profile_detail_labels["role"].pack(anchor="w", pady=4)
+        
+        # Para que la matrícula quede violeta y en la misma línea, usamos un mini-frame
+        mat_frame = tk.Frame(left_frame, bg="white")
+        mat_frame.pack(anchor="w", pady=4)
+        tk.Label(mat_frame, text="Matrícula: ", bg="white", font=("Arial", 10, "bold")).pack(side="left")
+        self.profile_detail_labels["registration"] = tk.Label(
+            mat_frame, text="", bg="white", fg="#8A2BE2"
+        )
+        self.profile_detail_labels["registration"].pack(side="left")
+
+        for key, label_text in (
+            ("specialty", "Especialidad: No disponible"),
+            ("active_since", "Activo desde: No disponible"),
+            ("status", "Estado: "),
+        ):
+            self.profile_detail_labels[key] = tk.Label(
+                left_frame, text=label_text, bg="white"
+            )
+            self.profile_detail_labels[key].pack(anchor="w", pady=4)
+
+        # ---COLUMNA DERECHA ---
+        tk.Button(right_frame, text="Ver historial", bg="#D1C4E9", font=("Arial", 12), relief="flat").pack(fill="x", pady=(0, 20))
+
+        datos_frame = tk.Frame(right_frame, bg="white", padx=20, pady=20)
+        datos_frame.pack(fill="both", expand=True)
+
+        tk.Label(datos_frame, text="Datos Personales:", bg="white", font=("Arial", 11, "bold")).pack(anchor="w", pady=(0, 15))
+        for key, label_text in (
+            ("name", "Nombre: "),
+            ("address", "Domicilio: No disponible"),
+            ("contact", "Contacto: "),
+            ("email", "Correo: "),
+            ("emergency_contact", "Contacto de emergencia: No disponible"),
+        ):
+            self.profile_detail_labels[key] = tk.Label(
+                datos_frame, text=label_text, bg="white"
+            )
+            self.profile_detail_labels[key].pack(anchor="w", pady=5)
+
+        botones_frame = tk.Frame(right_frame, bg="#F0F0F0")
+        botones_frame.pack(fill="x", pady=(20, 0))
+        
+        tk.Button(botones_frame, text="Modificar datos", bg="#D1C4E9", font=("Arial", 10, "bold"), relief="flat", padx=10, pady=5).pack(side="left", expand=True, fill="x", padx=(0, 5))
+        tk.Button(botones_frame, text="Guardar", bg="#32CD32", fg="white", font=("Arial", 10, "bold"), relief="flat", padx=10, pady=5).pack(side="right", expand=True, fill="x", padx=(5, 0))
