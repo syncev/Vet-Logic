@@ -16,7 +16,7 @@ class TurneroPage(tk.Frame):
     def abrir_formulario_turno(self):
         ventana = tk.Toplevel(self)
         ventana.title("Agregar turno")
-        ventana.geometry("420x460")
+        ventana.geometry("420x180")
         ventana.resizable(False, False)
         ventana.transient(self.winfo_toplevel())
         ventana.grab_set()
@@ -24,38 +24,32 @@ class TurneroPage(tk.Frame):
         frame = tk.Frame(ventana, padx=20, pady=20, bg="white")
         frame.pack(fill="both", expand=True)
 
-        campos = {}
-        for etiqueta in ("Hora", "Cliente", "Paciente", "Especie", "Motivo", "HC"):
-            tk.Label(
-                frame,
-                text=etiqueta,
-                bg="white",
-                font=("Arial", 10, "bold"),
-            ).pack(anchor="w")
-
-            entrada = tk.Entry(frame, width=30)
-            entrada.pack(fill="x", pady=(0, 10))
-            campos[etiqueta] = entrada
-
-        def guardar_turno():
-            valores = [campos[nombre].get().strip() for nombre in campos]
-
-            if not all(valores):
-                return
-
-            nuevo_turno = (*valores, "Hoy")
-            self.appointments.append(nuevo_turno)
-            self.appointments_table.insert("", "end", values=nuevo_turno)
-            ventana.destroy()
+        opciones = tk.Frame(frame, bg="white")
+        opciones.pack(expand=True)
 
         tk.Button(
-            frame,
-            text="Guardar",
-            bg="#8A2BE2",
-            fg="white",
-            font=("Arial", 10, "bold"),
-            command=guardar_turno,
-        ).pack(fill="x", pady=(10, 0))
+            opciones,
+            text="Nuevo cliente",
+            bg="#A8D5BA",
+            fg="#1D3525",
+            font=("Arial", 11, "bold"),
+            relief="flat",
+            cursor="hand2",
+            padx=18,
+            pady=12,
+        ).pack(side="left", padx=8)
+
+        tk.Button(
+            opciones,
+            text="Cliente existente",
+            bg="#F0F0F0",
+            fg="#333333",
+            font=("Arial", 11, "bold"),
+            relief="flat",
+            cursor="hand2",
+            padx=18,
+            pady=12,
+        ).pack(side="left", padx=8)
     # LOGICA
     def _build_date_stepper(self):
         # EL ARREGLO ESTÁ ACÁ: Le asignamos self.right_controls como padre
