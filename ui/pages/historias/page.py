@@ -1,4 +1,9 @@
 import tkinter as tk
+from tkinter import messagebox
+
+import psycopg
+
+from repositories.historia_repository import eliminar_historia_clinica
 from ui.widgets.searchbar import Searchbar
 
 
@@ -50,6 +55,7 @@ class HistoriasPage(tk.Frame):
         self.patient_sex_label.pack(side="left", padx=5)
         self.patient_neutered_label.pack(side="left", padx=5)
         self.patient_weight_label.pack(side="left", padx=5)
+        self.delete_hc_button.pack(anchor="e", padx=10, pady=10)
 
     def _build_historia_clinica_card(self):
         self.historia_clinica_frame = tk.Frame(
@@ -119,6 +125,108 @@ class HistoriasPage(tk.Frame):
             font=("Inter", -16),
             bg="white"
         )
+
+        self.delete_hc_button = tk.Button(
+            self.historia_clinica_frame,
+            text="Eliminar HC",
+            command=self._open_delete_hc_confirmation,
+            bg="#F0F0F0",
+            fg="#1F1F1F",
+            relief="flat",
+            cursor="hand2",
+        )
+
+    def _open_delete_hc_confirmation(self):
+        hc_number = self.HC_number_label.cget("text").strip()
+        if not hc_number.isdecimal() or int(hc_number) <= 0:
+            messagebox.showerror(
+                "HC no válida",
+                "No se pudo identificar el número de la historia clínica actual.",
+                parent=self.winfo_toplevel(),
+            )
+            return
+
+        dialog = tk.Toplevel(self)
+        dialog.title("Eliminar historia clínica")
+        dialog.transient(self.winfo_toplevel())
+        dialog.resizable(False, False)
+        dialog.configure(bg="white")
+
+        tk.Label(
+            dialog,
+            text="¡ATENCIÓN!",
+            font=("Arial", 14, "bold"),
+            bg="white",
+        ).pack(padx=24, pady=(20, 8))
+        tk.Label(
+            dialog,
+            text=(
+                "Esta acción es irreversible y eliminará la historia\n"
+                f"clínica Nº {hc_number} que está abierta.\n\n"
+                "¿Querés continuar?"
+            ),
+            justify="left",
+            bg="white",
+        ).pack(padx=24, pady=(0, 10))
+
+        buttons_frame = tk.Frame(dialog, bg="white")
+        buttons_frame.pack(fill="x", padx=24, pady=(0, 20))
+
+        tk.Button(
+            buttons_frame,
+            text="CANCELAR",
+            command=dialog.destroy,
+            relief="flat",
+            padx=14,
+            pady=8,
+        ).pack(side="left", expand=True, padx=(0, 8))
+        tk.Button(
+            buttons_frame,
+            text="ACEPTAR",
+            command=lambda: self._confirm_delete_hc(int(hc_number), dialog),
+            bg="#E53935",
+            fg="white",
+            relief="flat",
+            padx=14,
+            pady=8,
+        ).pack(side="right", expand=True, padx=(8, 0))
+
+        parent = self.winfo_toplevel()
+        parent.update_idletasks()
+        dialog.update_idletasks()
+        x = parent.winfo_rootx() + (parent.winfo_width() - dialog.winfo_width()) // 2
+        y = parent.winfo_rooty() + (parent.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{x}+{y}")
+
+        dialog.grab_set()
+        dialog.wait_visibility()
+
+    def _confirm_delete_hc(self, hc_number, dialog):
+        try:
+            eliminar_historia_clinica(hc_number)
+        except ValueError as error:
+            messagebox.showerror(
+                "No se pudo eliminar la HC",
+                str(error),
+                parent=dialog,
+            )
+            return
+        except psycopg.Error as error:
+            messagebox.showerror(
+                "Error de base de datos",
+                f"No se pudo eliminar la HC:\n{error}",
+                parent=dialog,
+            )
+            return
+
+        dialog.destroy()
+        self.historia_clinica_frame.pack_forget()
+        messagebox.showinfo(
+            "HC eliminada",
+            f"La historia clínica Nº {hc_number} fue eliminada.",
+            parent=self.winfo_toplevel(),
+        )
+
     def _build_add_hc_view(self):
         header_frame = tk.Frame(self.add_hc_view, bg="white")
         header_frame.pack(fill="x", padx=40, pady=(20, 10))
