@@ -3,6 +3,7 @@ from tkinter import messagebox
 
 import psycopg
 
+from repositories.cliente_repository import eliminar_cliente
 from repositories.historia_repository import eliminar_historia_clinica
 from ui.widgets.searchbar import Searchbar
 
@@ -56,6 +57,7 @@ class HistoriasPage(tk.Frame):
         self.patient_neutered_label.pack(side="left", padx=5)
         self.patient_weight_label.pack(side="left", padx=5)
         self.delete_hc_button.pack(anchor="e", padx=10, pady=10)
+        self.delete_client_button.pack(anchor="e", padx=10, pady=(0, 10))
 
     def _build_historia_clinica_card(self):
         self.historia_clinica_frame = tk.Frame(
@@ -130,6 +132,15 @@ class HistoriasPage(tk.Frame):
             self.historia_clinica_frame,
             text="Eliminar HC",
             command=self._open_delete_hc_confirmation,
+            bg="#F0F0F0",
+            fg="#1F1F1F",
+            relief="flat",
+            cursor="hand2",
+        )
+        self.delete_client_button = tk.Button(
+            self.historia_clinica_frame,
+            text="Eliminar Cliente",
+            command=self._open_delete_client_confirmation,
             bg="#F0F0F0",
             fg="#1F1F1F",
             relief="flat",
@@ -224,6 +235,99 @@ class HistoriasPage(tk.Frame):
         messagebox.showinfo(
             "HC eliminada",
             f"La historia clínica Nº {hc_number} fue eliminada.",
+            parent=self.winfo_toplevel(),
+        )
+
+    def _open_delete_client_confirmation(self):
+        dialog = tk.Toplevel(self)
+        dialog.title("Eliminar cliente")
+        dialog.transient(self.winfo_toplevel())
+        dialog.resizable(False, False)
+        dialog.configure(bg="white")
+
+        tk.Label(
+            dialog,
+            text="¡ATENCIÓN!",
+            font=("Arial", 14, "bold"),
+            bg="white",
+        ).pack(padx=24, pady=(20, 8))
+        tk.Label(
+            dialog,
+            text=(
+                "Esta acción es irreversible y eliminará al cliente,\n"
+                "sus pacientes, turnos y todas sus historias clínicas.\n\n"
+                "Ingresá el DNI del cliente para confirmar:"
+            ),
+            justify="left",
+            bg="white",
+        ).pack(padx=24, pady=(0, 10))
+
+        dni_entry = tk.Entry(dialog, width=30)
+        dni_entry.pack(padx=24, pady=(0, 16))
+
+        buttons_frame = tk.Frame(dialog, bg="white")
+        buttons_frame.pack(fill="x", padx=24, pady=(0, 20))
+        tk.Button(
+            buttons_frame,
+            text="CANCELAR",
+            command=dialog.destroy,
+            relief="flat",
+            padx=14,
+            pady=8,
+        ).pack(side="left", expand=True, padx=(0, 8))
+        tk.Button(
+            buttons_frame,
+            text="CONTINUAR",
+            command=lambda: self._confirm_delete_client(dni_entry.get(), dialog),
+            bg="#E53935",
+            fg="white",
+            relief="flat",
+            padx=14,
+            pady=8,
+        ).pack(side="right", expand=True, padx=(8, 0))
+
+        parent = self.winfo_toplevel()
+        parent.update_idletasks()
+        dialog.update_idletasks()
+        x = parent.winfo_rootx() + (parent.winfo_width() - dialog.winfo_width()) // 2
+        y = parent.winfo_rooty() + (parent.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{x}+{y}")
+
+        dialog.grab_set()
+        dialog.wait_visibility()
+        dni_entry.focus_set()
+
+    def _confirm_delete_client(self, dni, dialog):
+        dni = dni.strip()
+        if not dni:
+            messagebox.showerror(
+                "DNI requerido",
+                "Ingresá el DNI del cliente que querés eliminar.",
+                parent=dialog,
+            )
+            return
+
+        try:
+            eliminar_cliente(dni)
+        except ValueError as error:
+            messagebox.showerror(
+                "No se pudo eliminar el cliente",
+                str(error),
+                parent=dialog,
+            )
+            return
+        except psycopg.Error as error:
+            messagebox.showerror(
+                "Error de base de datos",
+                f"No se pudo eliminar el cliente:\n{error}",
+                parent=dialog,
+            )
+            return
+
+        dialog.destroy()
+        messagebox.showinfo(
+            "Cliente eliminado",
+            f"El cliente con DNI {dni} y sus historias clínicas fueron eliminados.",
             parent=self.winfo_toplevel(),
         )
 
