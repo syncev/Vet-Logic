@@ -1,4 +1,9 @@
 import tkinter as tk
+from tkinter import messagebox
+
+import psycopg
+
+from repositories.cliente_repository import eliminar_historia_clinica
 from ui.widgets.searchbar import Searchbar
 
 
@@ -50,6 +55,7 @@ class HistoriasPage(tk.Frame):
         self.patient_sex_label.pack(side="left", padx=5)
         self.patient_neutered_label.pack(side="left", padx=5)
         self.patient_weight_label.pack(side="left", padx=5)
+        self.delete_hc_button.pack(anchor="e", padx=10, pady=10)
 
     def _build_historia_clinica_card(self):
         self.historia_clinica_frame = tk.Frame(
@@ -119,6 +125,120 @@ class HistoriasPage(tk.Frame):
             font=("Inter", -16),
             bg="white"
         )
+
+        self.delete_hc_button = tk.Button(
+            self.historia_clinica_frame,
+            text="Eliminar HC",
+            command=self._open_delete_hc_confirmation,
+            bg="#F0F0F0",
+            fg="#1F1F1F",
+            relief="flat",
+            cursor="hand2",
+        )
+
+    def _open_delete_hc_confirmation(self):
+        dialog = tk.Toplevel(self)
+        dialog.title("Eliminar historia clínica")
+        dialog.transient(self.winfo_toplevel())
+        dialog.resizable(False, False)
+        dialog.configure(bg="white")
+
+        tk.Label(
+            dialog,
+            text="¡ATENCIÓN!",
+            font=("Arial", 14, "bold"),
+            bg="white",
+        ).pack(padx=24, pady=(20, 8))
+        tk.Label(
+            dialog,
+            text=(
+                "Esta acción eliminará únicamente una historia clínica.\n"
+                "El cliente, sus pacientes y turnos se conservarán.\n\n"
+                "Ingresá el número de HC que querés eliminar:"
+            ),
+            justify="left",
+            bg="white",
+        ).pack(padx=24, pady=(0, 10))
+
+        hc_number_entry = tk.Entry(dialog, width=30)
+        hc_number_entry.pack(padx=24, pady=(0, 16))
+
+        buttons_frame = tk.Frame(dialog, bg="white")
+        buttons_frame.pack(fill="x", padx=24, pady=(0, 20))
+
+        tk.Button(
+            buttons_frame,
+            text="CANCELAR",
+            command=dialog.destroy,
+            relief="flat",
+            padx=14,
+            pady=8,
+        ).pack(side="left", expand=True, padx=(0, 8))
+        tk.Button(
+            buttons_frame,
+            text="CONTINUAR",
+            command=lambda: self._confirm_delete_hc(hc_number_entry.get(), dialog),
+            bg="#E53935",
+            fg="white",
+            relief="flat",
+            padx=14,
+            pady=8,
+        ).pack(side="right", expand=True, padx=(8, 0))
+
+        parent = self.winfo_toplevel()
+        parent.update_idletasks()
+        dialog.update_idletasks()
+        x = parent.winfo_rootx() + (parent.winfo_width() - dialog.winfo_width()) // 2
+        y = parent.winfo_rooty() + (parent.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{x}+{y}")
+
+        dialog.grab_set()
+        dialog.wait_visibility()
+        hc_number_entry.focus_set()
+
+    def _confirm_delete_hc(self, hc_number, dialog):
+        hc_number = hc_number.strip()
+        if not hc_number:
+            messagebox.showerror(
+                "Número requerido",
+                "Ingresá el número de HC que querés eliminar.",
+                parent=dialog,
+            )
+            return
+
+        if not hc_number.isdecimal() or int(hc_number) <= 0:
+            messagebox.showerror(
+                "Número inválido",
+                "El número de HC debe ser un entero positivo.",
+                parent=dialog,
+            )
+            return
+
+        try:
+            eliminar_historia_clinica(int(hc_number))
+        except ValueError as error:
+            messagebox.showerror(
+                "No se pudo eliminar la HC",
+                str(error),
+                parent=dialog,
+            )
+            return
+        except psycopg.Error as error:
+            messagebox.showerror(
+                "Error de base de datos",
+                f"No se pudo eliminar la HC:\n{error}",
+                parent=dialog,
+            )
+            return
+
+        dialog.destroy()
+        self.historia_clinica_frame.pack_forget()
+        messagebox.showinfo(
+            "HC eliminada",
+            f"La historia clínica Nº {hc_number} fue eliminada.",
+            parent=self.winfo_toplevel(),
+        )
+
     def _build_add_hc_view(self):
         header_frame = tk.Frame(self.add_hc_view, bg="white")
         header_frame.pack(fill="x", padx=40, pady=(20, 10))
