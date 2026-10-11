@@ -10,8 +10,8 @@ class TurneroPage(tk.Frame):
     def __init__(self, master, **kwargs):
         super().__init__(master, bg="white", **kwargs)
 
-        self._build_widgets()
-        self._build_layout()
+        self.search_view = tk.Frame(self, bg="white")
+        self.add_hc_view = tk.Frame(self, bg="white")
 
     def abrir_formulario_turno(self):
         ventana = tk.Toplevel(self)
