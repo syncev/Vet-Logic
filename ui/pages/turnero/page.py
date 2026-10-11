@@ -12,52 +12,10 @@ class TurneroPage(tk.Frame):
 
         self._build_widgets()
         self._build_layout()
-        command=self.abrir_selector_turno,
-        def abrir_selector_turno(self):
-        selector = tk.Toplevel(self)
-        selector.title("Agregar turno")
-        selector.geometry("420x240")
-        selector.resizable(False, False)
-        selector.transient(self.winfo_toplevel())
-        selector.grab_set()
 
-        frame = tk.Frame(selector, padx=20, pady=20, bg="white")
-        frame.pack(fill="both", expand=True)
-
-        tk.Label(
-            frame,
-            text="Seleccioná el tipo de cliente",
-            bg="white",
-            font=("Arial", 12, "bold"),
-        ).pack(anchor="w", pady=(0, 15))
-
-        tk.Button(
-            frame,
-            text="Cliente con historia clínica",
-            command=lambda: self.abrir_formulario_turno(
-                selector, "Cliente con historia clínica"
-            ),
-        ).pack(fill="x", pady=5)
-
-        tk.Button(
-            frame,
-            text="Cliente nuevo",
-            command=lambda: self.abrir_formulario_turno(
-                selector, "Cliente nuevo"
-            ),
-        ).pack(fill="x", pady=5)
-
-        tk.Button(
-            frame,
-            text="Cancelar",
-            command=selector.destroy,
-        ).pack(anchor="e", pady=(10, 0))
-
-    def abrir_formulario_turno(self, selector, tipo_cliente):
-        selector.destroy()
-
+    def abrir_formulario_turno(self):
         ventana = tk.Toplevel(self)
-        ventana.title(f"Agregar turno - {tipo_cliente}")
+        ventana.title("Agregar turno")
         ventana.geometry("420x460")
         ventana.resizable(False, False)
         ventana.transient(self.winfo_toplevel())
@@ -252,6 +210,7 @@ class TurneroPage(tk.Frame):
             cursor="hand2",
             padx=15,
             pady=5,
+            command=self.abrir_formulario_turno,
         )
 
         self._build_appointments_table()
