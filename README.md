@@ -153,9 +153,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-La única dependencia externa del proyecto es `screeninfo`. Tkinter no se
-instala con `pip`: debe estar disponible en la instalación del sistema de
-Python.
+Las dependencias externas del proyecto son screeninfo y psycopg[binary]; ambas están incluidas en requirements.txt. Tkinter no se instala con pip: debe estar disponible en la instalación del sistema de Python.
 
 ### 5. Verificar la instalación
 
@@ -164,14 +162,54 @@ Con el entorno virtual todavía activado:
 Windows:
 
 ```powershell
-py -c "import tkinter, screeninfo; print('Instalación correcta')"
+py -c "import tkinter, screeninfo, psycopg; print('Instalación correcta')"
 ```
 
 macOS y Linux:
 
 ```bash
-python -c "import tkinter, screeninfo; print('Instalación correcta')"
+python -c "import tkinter, screeninfo, psycopg; print('Instalación correcta')"
 ```
+
+## Configurar PostgreSQL
+
+Vet Logic se conecta a una instancia local de PostgreSQL en la misma computadora
+donde se ejecuta la aplicación. Cada persona que pruebe el proyecto debe tener
+PostgreSQL instalado e iniciar su servicio.
+
+### 1. Crear la base de datos
+
+Desde pgAdmin, crear una base de datos llamada `vetlogic_desarrollo`.
+
+### 2. Crear las tablas y cargar los datos de prueba
+
+En pgAdmin, abrir la base `vetlogic_desarrollo`, abrir el Query Tool, cargar el
+archivo `database/vetlogic.sql` y ejecutar el script.
+
+**Advertencia:** este script elimina y vuelve a crear tablas. Ejecutarlo
+únicamente en una base vacía o de prueba. No usarlo sobre una base con datos
+que se quieran conservar.
+
+### 3. Configurar la conexión de la aplicación
+
+Desde PowerShell, ubicado en la carpeta raíz del proyecto —la misma que
+contiene `main.py`—, crear el archivo local de configuración a partir de la
+plantilla:
+
+```powershell
+Copy-Item database.example.ini database.ini
+```
+
+Abrir `database.ini` y completar `user` y `password` con las credenciales
+locales de PostgreSQL. No compartir ese archivo ni subirlo al repositorio:
+contiene información privada de conexión.
+
+La plantilla `database.example.ini` no contiene credenciales reales y sí se
+incluye en el repositorio. El archivo `database.ini` es local y está excluido
+del control de versiones.
+
+Cada instalación usa su propia base local. La aplicación no se conecta a la
+base de datos de otra computadora.
 
 ## Ejecución
 
