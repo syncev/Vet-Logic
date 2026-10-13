@@ -1,5 +1,8 @@
 import tkinter as tk
+from tkinter import ttk
 from ui.widgets.searchbar import Searchbar
+from core.db import conectar
+from repositories.historias import obtener_historias
 
 
 class HistoriasPage(tk.Frame):
@@ -36,20 +39,73 @@ class HistoriasPage(tk.Frame):
         separador = tk.Frame(self.search_view, height=1, bg="#E0E0E0")
         separador.pack(fill="x", padx=20, pady=(0, 15))
 
-        self._build_historia_clinica_card()
+        # Contenedor de la lista principal de historias clínicas.
+        self.hc_table_frame = tk.Frame(
+            self.search_view,
+            bg="white",
+            highlightbackground="#E0E0E0",
+            highlightthickness=1,
+        )
+        self.hc_table_frame.pack(
+            fill="both",
+            expand=True,
+            padx=40,
+            pady=(25, 10),
+        )
 
-        self.historia_clinica_frame.pack(pady=(30, 10), padx=10, fill="x")
-        self.hc_header_frame.pack(pady=5, padx=5, fill="x")
-        self.HC_title_label.pack(side="left")
-        self.HC_number_label.pack(side="left", padx=5)
-        self.HC_client_label.pack(pady=5, padx=5, fill="x")
-        self.hc_patient_info_frame.pack(pady=5, padx=5, fill="x")
-        self.patient_name_label.pack(side="left", padx=5)
-        self.patient_species_label.pack(side="left", padx=5)
-        self.patient_age_label.pack(side="left", padx=5)
-        self.patient_sex_label.pack(side="left", padx=5)
-        self.patient_neutered_label.pack(side="left", padx=5)
-        self.patient_weight_label.pack(side="left", padx=5)
+        columnas = (
+            "cliente",
+            "paciente",
+            "especie",
+            "hc",
+            "contacto",
+            "creado",
+            "ultima_visita",
+        )
+
+        self.hc_table = ttk.Treeview(
+            self.hc_table_frame,
+            columns=columnas,
+            show="headings",
+            height=10,
+        )
+
+        encabezados = (
+            ("cliente", "Cliente", 130, "w"),
+            ("paciente", "Paciente", 100, "w"),
+            ("especie", "Especie", 80, "center"),
+            ("hc", "HC", 80, "center"),
+            ("contacto", "Contacto", 110, "w"),
+            ("creado", "Primera visita", 100, "center"),
+            ("ultima_visita", "Última visita", 120, "center"),
+        )
+
+        for columna, titulo, ancho, alineacion in encabezados:
+            self.hc_table.heading(
+                columna,
+                text=titulo,
+                anchor=alineacion,
+            )
+            self.hc_table.column(
+                columna,
+                width=ancho,
+                anchor=alineacion,
+                stretch=True,
+            )
+
+        self._cargar_historias()
+
+        self.hc_table.pack(fill="both", expand=True, padx=1, pady=1)
+
+    def _cargar_historias(self):
+        conexion = conectar()
+        try:
+            filas = obtener_historias(conexion)
+        finally:
+            conexion.close()
+
+        for fila in filas:
+            self.hc_table.insert("", "end", values=fila)
 
     def _build_historia_clinica_card(self):
         self.historia_clinica_frame = tk.Frame(
