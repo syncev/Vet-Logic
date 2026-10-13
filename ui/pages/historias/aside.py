@@ -53,6 +53,19 @@ class AgregarHC(tk.Frame):
             cursor="hand2",
             command=lambda: self._select_section("eliminar_hc")
         )
+   # Botón Eliminar Cliente (Rojo / Coral de la captura)
+        self.btn_eliminar_cliente = tk.Button(self,
+            text="⚠️  Eliminar\nCLIENTE",
+            font=("Arial", 11, "bold"),
+            bg="#FA5252",        # Rojo / coral de la foto
+            fg="#1F1F1F",
+            relief="flat",
+            bd=0,
+            padx=16,
+            pady=16,
+            cursor="hand2",
+            command=lambda: self._select_section("eliminar_cliente")
+        )
 
 
 
@@ -64,3 +77,4 @@ class AgregarHC(tk.Frame):
         self.btn_buscar.pack(fill="x", padx=10, pady=10)
         self.btn_nueva.pack(fill="x", padx=10, pady=10)
         self.btn_eliminar.pack(fill="x", padx=10, pady=(45 , 10))
+        self.btn_eliminar_cliente.pack(fill="x", padx=10, pady=(45 , 10))
