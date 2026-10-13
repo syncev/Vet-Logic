@@ -18,6 +18,10 @@ class HistoriasPage(tk.Frame):
         self.show_section("buscar_hc")
 
     def show_section(self, section):
+        if section == "eliminar_hc":
+            self._abrir_modal_eliminar_hc()
+            return
+
         self.search_view.pack_forget()
         self.add_hc_view.pack_forget()
 
@@ -211,3 +215,84 @@ class HistoriasPage(tk.Frame):
         tk.Label(form_frame, text="Tratamiento", bg=bg_green, font=("Arial", 10, "bold")).grid(row=2, column=0, columnspan=6, pady=(20, 5))
         self.caja_tratamiento = tk.Text(form_frame, height=8)
         self.caja_tratamiento.grid(row=3, column=0, columnspan=6, sticky="ew", padx=5)
+
+    def _abrir_modal_eliminar_hc(self):
+        # 1. Ventana emergente limpia sin barra de Windows
+        dialog = tk.Toplevel(self)
+        dialog.overrideredirect(True)  # Quita la barra superior de Windows
+        dialog.configure(
+            bg="white",
+            highlightbackground="#333333",
+            highlightthickness=1       # Borde fino oscuro exacto a la foto
+        )
+
+        # 2. Título ATENCION!!
+        tk.Label(
+            dialog,
+            text="ATENCION!!",
+            font=("Arial", 14, "bold"),
+            bg="white",
+            fg="#1F1F1F",
+        ).pack(padx=50, pady=(32, 16))
+
+        # 3. Mensaje de advertencia
+        tk.Label(
+            dialog,
+            text="Esta accion es IRREVERSIBLE y BORRA la\n\nHISTORIA CLINICA del paciente actual.",
+            font=("Arial", 10),
+            justify="center",
+            bg="white",
+            fg="#1F1F1F",
+        ).pack(padx=50, pady=(0, 30))
+
+        # 4. Contenedor de botones
+        buttons_frame = tk.Frame(dialog, bg="white")
+        buttons_frame.pack(fill="x", padx=50, pady=(0, 32))
+
+        # Botón CANCELAR (Gris más grande)
+        btn_cancelar = tk.Button(
+            buttons_frame,
+            text="CANCELAR",
+            font=("Arial", 11, "bold"),
+            bg="#D1D5DB",
+            fg="#1F1F1F",
+            relief="flat",
+            bd=0,
+            padx=28,
+            pady=12,
+            cursor="hand2",
+            command=dialog.destroy,
+        )
+        btn_cancelar.pack(side="left", expand=True, padx=(0, 12))
+
+        # Botón CONTINUAR (Naranja más grande)
+        btn_continuar = tk.Button(
+            buttons_frame,
+            text="CONTINUAR",
+            font=("Arial", 11, "bold"),
+            bg="#F7A84B",
+            fg="#1F1F1F",
+            relief="flat",
+            bd=0,
+            padx=28,
+            pady=12,
+            cursor="hand2",
+            command=lambda: self._confirmar_eliminar_hc(dialog),
+        )
+        btn_continuar.pack(side="right", expand=True, padx=(12, 0))
+
+        # 5. Centrar sobre la ventana principal
+        dialog.update_idletasks()
+        parent = self.winfo_toplevel()
+        parent.update_idletasks()
+        x = parent.winfo_rootx() + (parent.winfo_width() - dialog.winfo_width()) // 2
+        y = parent.winfo_rooty() + (parent.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{x}+{y}")
+
+        dialog.grab_set()
+
+    def _confirmar_eliminar_hc(self, dialog):
+        dialog.destroy()
+        # Oculta la tarjeta de la historia clínica en pantalla simulando la baja
+        self.historia_clinica_frame.pack_forget()
+        print("Historia Clínica dada de baja exitosamente.")

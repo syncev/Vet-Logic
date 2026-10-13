@@ -40,6 +40,21 @@ class AgregarHC(tk.Frame):
             # 3. Usamos lambda para pasar el parámetro
             command=lambda: self._select_section("nueva_hc")
         )
+        self.btn_eliminar = tk.Button(
+            self,
+            text="🗑  Eliminar\nHC",
+            font=("Arial", 11, "bold"),
+            bg="#F7A84B",
+            fg="#1F1F1F",
+            relief="flat",
+            bd=0,
+            padx=16,
+            pady=16,             # Más alto y grande
+            cursor="hand2",
+            command=lambda: self._select_section("eliminar_hc")
+        )
+
+
 
     def _select_section(self, section_name):
         if self.on_select_section:
@@ -48,3 +63,4 @@ class AgregarHC(tk.Frame):
     def _build_layout(self):
         self.btn_buscar.pack(fill="x", padx=10, pady=10)
         self.btn_nueva.pack(fill="x", padx=10, pady=10)
+        self.btn_eliminar.pack(fill="x", padx=10, pady=(45 , 10))
