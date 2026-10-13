@@ -3,6 +3,9 @@ from zoneinfo import ZoneInfo
 import tkinter as tk
 from tkinter import ttk
 
+from core.db import conectar
+from repositories.turno import obtener_turnos_por_fecha
+
 # Asumiendo que tenés la barra de búsqueda importada si la usás, 
 # aunque en tu código vi que creaste el Entry directo. Podés borrar esto si no lo usás.
 from ui.widgets.searchbar import Searchbar 
@@ -67,14 +70,25 @@ class TurneroPage(tk.Frame):
         today = datetime.now(timezone)
         tomorrow = today + timedelta(days=1)
         next_day = today + timedelta(days=2)
+        self.selected_date = today.date()
 
         fuente_pag = ("Arial", 11, "bold")
 
-        self.previous_button = tk.Button(self.date_stepper, text="<", font=fuente_pag, bg="#F0F0F0", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2")
-        self.today_button = tk.Button(self.date_stepper, text=str(today.day), font=fuente_pag, bg="#E6D0F5", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2")
-        self.tomorrow_button = tk.Button(self.date_stepper, text=str(tomorrow.day), font=fuente_pag, bg="#F0F0F0", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2")
-        self.next_day_button = tk.Button(self.date_stepper, text=str(next_day.day), font=fuente_pag, bg="#F0F0F0", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2")
-        self.next_button = tk.Button(self.date_stepper, text=">", font=fuente_pag, bg="#F0F0F0", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2")
+        self.previous_button = tk.Button(self.date_stepper, text="<", font=fuente_pag, bg="#F0F0F0", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2", command=lambda: self._change_selected_date(-1))
+        self.today_button = tk.Button(self.date_stepper, text=str(today.day), font=fuente_pag, bg="#E6D0F5", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2", command=lambda: self._select_date(self.selected_date))
+        self.tomorrow_button = tk.Button(self.date_stepper, text=str(tomorrow.day), font=fuente_pag, bg="#F0F0F0", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2", command=lambda: self._select_date(self.selected_date + timedelta(days=1)))
+        self.next_day_button = tk.Button(self.date_stepper, text=str(next_day.day), font=fuente_pag, bg="#F0F0F0", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2", command=lambda: self._select_date(self.selected_date + timedelta(days=2)))
+        self.next_button = tk.Button(self.date_stepper, text=">", font=fuente_pag, bg="#F0F0F0", fg="#333333", relief="flat", borderwidth=0, highlightthickness=0, width=3, cursor="hand2", command=lambda: self._change_selected_date(1))
+
+    def _change_selected_date(self, days):
+        self._select_date(self.selected_date + timedelta(days=days))
+
+    def _select_date(self, fecha):
+        self.selected_date = fecha
+        self.today_button.configure(text=str(fecha.day), bg="#E6D0F5")
+        self.tomorrow_button.configure(text=str((fecha + timedelta(days=1)).day), bg="#F0F0F0")
+        self.next_day_button.configure(text=str((fecha + timedelta(days=2)).day), bg="#F0F0F0")
+        self.cargar_turnos_fecha(fecha)
 
     # tabla de turnos
     def _build_appointments_table(self):
@@ -110,24 +124,22 @@ class TurneroPage(tk.Frame):
         self.appointments_table.column("hc", width=70, anchor="center")
         self.appointments_table.column("ultimo turno", width=150, anchor="center")
         
-        # Citas hardcodeadas sacadas del diseño de Figma
-        self.appointments = [
-            ("09:00", "Silvia Moreno", "Luna", "Gato", "Clinica", "12651", "08/08/2024"),
-            ("09:30", "Martin Sanchez", "Milo", "Gato", "Clinica", "15644", "04/05/2023"),
-            ("10:00", "Calvin Klein", "Thor", "Perro", "Cirugia", "65111", "20/05/2026"),
-            ("10:30", "Clark Kent", "Homero", "Perro", "Peluqueria", "32155", "27/08/2026"),
-            ("10:30", "Maria del Barrio", "Otto", "Gato", "Clinica", "75465", "07/12/2023"),
-            ("11:00", "Esteban Caracas", "Rafa", "Perro", "Clinica", "84223", "30/02/2026"),
-            ("11:30", "Philomena Cunk", "Ara", "Gato", "Clinica", "51511", "01/02/2025"),
-            ("11:30", "Lydia Deetz", "Uma", "Perro", "Peluqueria", "21578", "05/11/2025"),
-            ("12:00", "Sabrina Carpintero", "Corcho", "Perro", "Clinica", "35698", "06/07/2025"),
-            ("12:30", "Britney Lanzas", "Simba", "Gato", "Clinica", "32151", "29/07/2026"),
-            ("13:00", "Martin Pescador", "Max", "Perro", "Clinica", "35169", "15/07/2025"),
-            ("13:15", "Alberto Cazador", "Sasha", "Perro", "Peluqueria", "32169", "21/04/2025"),
-            ("13:30", "Dustin Henderson", "Rocky", "Gato", "Clinica", "11458", "19/10/2025")
-        ]
+        self.appointments = []
+
+    def cargar_turnos_fecha(self, fecha):
+        try:
+            with conectar() as conexion:
+                self.appointments = obtener_turnos_por_fecha(conexion, fecha)
+        except Exception as e:
+            print(f"Error al cargar turnos: {e}")
+            self.appointments = []
+
+        for item in self.appointments_table.get_children():
+            self.appointments_table.delete(item)
+
         for appointment in self.appointments:
-            tag = ("cirugia",) if appointment[4] in ["Cirugia", "Cirugía"] else ()
+            motivo = str(appointment[4]).casefold()
+            tag = ("cirugia",) if motivo in ("cirugia", "cirugía") else ()
             self.appointments_table.insert("", "end", values=appointment, tags=tag)
     
     def search_appointments(self, query, selected_filter):
@@ -142,7 +154,7 @@ class TurneroPage(tk.Frame):
         }
 
         if selected_filter == "Todos":
-            columns_to_search = range(len(self.appointments[0]))
+            columns_to_search = range(len(self.appointments_table["columns"]))
         else:
             columns_to_search = filter_columns.get(selected_filter, [])
 
@@ -159,7 +171,8 @@ class TurneroPage(tk.Frame):
             self.appointments_table.delete(item) 
 
         for appointment in filtered_appointments:
-            tag = ("cirugia",) if appointment[4] in ["Cirugia", "Cirugía"] else ()
+            motivo = str(appointment[4]).casefold()
+            tag = ("cirugia",) if motivo in ("cirugia", "cirugía") else ()
             
             self.appointments_table.insert(
                 "",
@@ -215,6 +228,7 @@ class TurneroPage(tk.Frame):
         )
 
         self._build_appointments_table()
+        self._select_date(self.selected_date)
 
     # LAYOUT
         
