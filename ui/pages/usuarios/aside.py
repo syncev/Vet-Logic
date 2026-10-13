@@ -67,11 +67,13 @@ class UsuariosAside(tk.Frame):
         )
 
     def _build_layout(self):
+        # 👉 Empaquetar todos los botones en orden
         self.profiles_button.pack(fill="x", padx=10, pady=(10, 6))
         self.add_professional_button.pack(fill="x", padx=10, pady=(0, 10))
-        self.inhabilitar_button.pack(fill="x", padx=10, pady=(0, 10))  # 👉 Ahora sí se muestra
+        self.inhabilitar_button.pack(fill="x", padx=10, pady=(0, 10))
 
-    def _abrir_modal_inhabilitar(self):
+
+        def _abrir_modal_inhabilitar(self):
         modal = tk.Toplevel(self)
         modal.title("ATENCIÓN!!")
         modal.geometry("400x200")
@@ -95,10 +97,18 @@ class UsuariosAside(tk.Frame):
         cancelar_btn = tk.Button(botones, text="CANCELAR", bg="lightgray", command=modal.destroy)
         cancelar_btn.pack(side="left", padx=10)
 
-        continuar_btn = tk.Button(botones, text="CONTINUAR", bg="red", fg="white", command=lambda: self._inhabilitar_accion(modal))
+        continuar_btn = tk.Button(
+            botones,
+            text="CONTINUAR",
+            bg="red",
+            fg="white",
+            command=lambda: self._inhabilitar_accion(modal)
+        )
         continuar_btn.pack(side="left", padx=10)
 
     def _inhabilitar_accion(self, modal):
-        print("Perfil inhabilitado")
-        messagebox.showinfo("Acción realizada", "El perfil ha sido inhabilitado.")
+        # 🚨 Acción real de inhabilitar
+        print("Perfil inhabilitado")  # Log en consola
+        messagebox.showinfo("Acción realizada", "El perfil ha sido inhabilitado.")  # Feedback visual
         modal.destroy()
+
