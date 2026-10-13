@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 from ui.widgets.searchbar import Searchbar
+from core.db import conectar
+from repositories.historias import obtener_historias
 
 
 class HistoriasPage(tk.Frame):
@@ -74,7 +76,7 @@ class HistoriasPage(tk.Frame):
             ("especie", "Especie", 80, "center"),
             ("hc", "HC", 80, "center"),
             ("contacto", "Contacto", 110, "w"),
-            ("creado", "Creado", 100, "center"),
+            ("creado", "Primera visita", 100, "center"),
             ("ultima_visita", "Última visita", 120, "center"),
         )
 
@@ -91,18 +93,19 @@ class HistoriasPage(tk.Frame):
                 stretch=True,
             )
 
-        # Datos ficticios para revisar visualmente la tabla; luego se cargarán desde la base.
-        filas_demo = (
-            ("Britney Lanzas", "Simba", "Gato", "32151", "3589991211", "", ""),
-            ("Charo Lopez", "Canela", "Perro", "32150", "351981851", "", ""),
-            ("Yogurtu Ngue", "Gegene", "Gato", "32149", "3514444851", "", ""),
-            ("Yogurtu Ngue", "Yarara", "Perro", "32148", "3514444851", "", ""),
-        )
-
-        for fila in filas_demo:
-            self.hc_table.insert("", "end", values=fila)
+        self._cargar_historias()
 
         self.hc_table.pack(fill="both", expand=True, padx=1, pady=1)
+
+    def _cargar_historias(self):
+        conexion = conectar()
+        try:
+            filas = obtener_historias(conexion)
+        finally:
+            conexion.close()
+
+        for fila in filas:
+            self.hc_table.insert("", "end", values=fila)
 
     def _build_historia_clinica_card(self):
         self.historia_clinica_frame = tk.Frame(
