@@ -73,7 +73,7 @@ class UsuariosAside(tk.Frame):
         self.inhabilitar_button.pack(fill="x", padx=10, pady=(0, 10))
 
 
-        def _abrir_modal_inhabilitar(self):
+    def _abrir_modal_inhabilitar(self):
         modal = tk.Toplevel(self)
         modal.title("ATENCIÓN!!")
         modal.geometry("400x200")
