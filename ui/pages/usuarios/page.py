@@ -1,6 +1,7 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, ttk
 
+from core.db import conectar
 from ui.widgets.searchbar import Searchbar
 
 
@@ -270,6 +271,16 @@ class UsuariosPage(tk.Frame):
         # crea la vista de crear perfil
 
     def _build_add_professional_view(self):
+        self.var_usuario = tk.StringVar(master=self)
+        self.var_rol = tk.StringVar(master=self)
+        self.var_matricula = tk.StringVar(master=self)
+        self.var_especialidad = tk.StringVar(master=self)
+        self.var_nombre = tk.StringVar(master=self)
+        self.var_apellido = tk.StringVar(master=self)
+        self.var_domicilio = tk.StringVar(master=self)
+        self.var_contacto = tk.StringVar(master=self)
+        self.var_correo = tk.StringVar(master=self)
+        self.var_contacto_emergencia = tk.StringVar(master=self)
 
         form_frame = tk.Frame(self.add_professional_view, bg="#F0F0F0")
         form_frame.place(
@@ -298,14 +309,14 @@ class UsuariosPage(tk.Frame):
             relx=1.0, rely=1.0, anchor="se"
         )
 
-        # un for para no repetir tanto codigo. Podriamos ver de traer los datos directos de la BD asi no quedan hardcodeados
+        campos_izq = (
+            ("Usuario", self.var_usuario),
+            ("Rol", self.var_rol),
+            ("Matrícula", self.var_matricula),
+            ("Especialidad", self.var_especialidad),
+        )
 
-        for label_text in (
-            "Usuario",
-            "Rol",
-            "Matrícula",
-            "Especialidad",
-        ):
+        for label_text, variable in campos_izq:
             fila_frame = tk.Frame(left_frame, bg="#FFFFFF")
             fila_frame.pack(anchor="w", padx=20, pady=(2, 10))
 
@@ -317,6 +328,7 @@ class UsuariosPage(tk.Frame):
 
             tk.Entry(
                 entrada_frame,
+                textvariable=variable,
                 width=40,
                 bd=0,
                 relief="flat",
@@ -328,13 +340,16 @@ class UsuariosPage(tk.Frame):
         right_frame = tk.Frame(columnas, bg="#FFFFFF")
         right_frame.pack(side="left", fill="both", expand=True, padx=(12, 0))
 
-        for label_text in (
-            "Nombre",
-            "Domicilio",
-            "Contacto",
-            "Correo",
-            "Contacto de emergencia",
-        ):
+        campos_der = (
+            ("Nombre", self.var_nombre),
+            ("Apellido", self.var_apellido),
+            ("Domicilio", self.var_domicilio),
+            ("Contacto", self.var_contacto),
+            ("Correo", self.var_correo),
+            ("Contacto de emergencia", self.var_contacto_emergencia),
+        )
+
+        for label_text, variable in campos_der:
             campo_frame = tk.Frame(right_frame, bg="#FFFFFF")
             campo_frame.pack(fill="x", padx=20, pady=6, expand=True)
 
@@ -350,6 +365,7 @@ class UsuariosPage(tk.Frame):
 
             tk.Entry(
                 entrada_frame,
+                textvariable=variable,
                 width=24,
                 bd=0,
                 relief="flat",
@@ -364,7 +380,7 @@ class UsuariosPage(tk.Frame):
         tk.Button(
             botones_frame,
             text="Cancelar",
-            command=lambda: self.show_section("perfiles"),
+            command=self.cancelar_creacion,
             bg="#F0F0F0",
             relief="flat",
             padx=10,
@@ -374,6 +390,7 @@ class UsuariosPage(tk.Frame):
         tk.Button(
             botones_frame,
             text="Crear Perfil",
+            command=self.guardar_profesional,
             bg="#0DB90D",
             fg="white",
             relief="flat",
@@ -381,3 +398,87 @@ class UsuariosPage(tk.Frame):
             pady=8,
             width=40,
         ).pack(side="right", padx=(5, 0))
+
+    def guardar_profesional(self):
+        matricula = self.var_matricula.get().strip()
+        nombre = self.var_nombre.get().strip()
+        apellido = self.var_apellido.get().strip()
+        contacto = self.var_contacto.get().strip()
+        especialidad = self.var_especialidad.get().strip()
+        domicilio = self.var_domicilio.get().strip()
+        correo = self.var_correo.get().strip()
+        contacto_emergencia = self.var_contacto_emergencia.get().strip()
+
+        if not matricula or not nombre or not apellido or not contacto:
+            messagebox.showwarning(
+                "Campos obligatorios",
+                "Por favor completa la Matrícula, Nombre, Apellido y Contacto.",
+                parent=self,
+            )
+            return
+
+        sql = """
+            INSERT INTO veterinario
+            (matricula_veterinario, nombre, apellido, contacto, estado,
+             especialidad, domicilio, correo, contacto_emergencia)
+            VALUES (%s, %s, %s, %s, 'ACTIVO', %s, %s, %s, %s)
+        """
+        valores = (
+            matricula,
+            nombre,
+            apellido,
+            contacto,
+            especialidad,
+            domicilio,
+            correo,
+            contacto_emergencia,
+        )
+
+        try:
+            with conectar() as conexion:
+                with conexion.cursor() as cursor:
+                    cursor.execute(sql, valores)
+        except Exception as error:
+            messagebox.showerror(
+                "Error de Base de Datos",
+                f"Ocurrió un error al guardar: {error}",
+                parent=self,
+            )
+            return
+
+        self.tabla.insert(
+            "",
+            "end",
+            values=(
+                f"{nombre} {apellido}",
+                matricula,
+                "Activo",
+                self.var_rol.get().strip() or "Veterinario",
+                contacto,
+                self.var_usuario.get().strip(),
+            ),
+            tags=("activo",),
+        )
+        messagebox.showinfo(
+            "Éxito",
+            "El profesional se ha registrado correctamente.",
+            parent=self,
+        )
+        self.cancelar_creacion()
+
+    def cancelar_creacion(self):
+        for variable in (
+            self.var_usuario,
+            self.var_rol,
+            self.var_matricula,
+            self.var_especialidad,
+            self.var_nombre,
+            self.var_apellido,
+            self.var_domicilio,
+            self.var_contacto,
+            self.var_correo,
+            self.var_contacto_emergencia,
+        ):
+            variable.set("")
+
+        self.show_section("perfiles")
