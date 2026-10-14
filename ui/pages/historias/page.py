@@ -13,6 +13,7 @@ class HistoriasPage(tk.Frame):
         self.add_hc_view = tk.Frame(self, bg="white")
 
         self._build_historia_clinica_card()
+        self._build_consulta_panels()
         self._build_search_view()
         self._build_add_hc_view()
 
@@ -286,6 +287,102 @@ class HistoriasPage(tk.Frame):
         self.patient_sex_label.pack(side="left", padx=6)
         self.patient_neutered_label.pack(side="left", padx=6)
         self.patient_weight_label.pack(side="left", padx=6)
+
+    def _build_consulta_panels(self):
+        self.consulta_panels_frame = tk.Frame(
+            self.historia_clinica_frame,
+            bg="white",
+        )
+        self.consulta_panels_frame.pack(
+            fill="both",
+            expand=True,
+            padx=12,
+            pady=(8, 12),
+        )
+
+        self.consulta_panels_frame.grid_columnconfigure(0, weight=1)
+        self.consulta_panels_frame.grid_columnconfigure(1, weight=1)
+        self.consulta_panels_frame.grid_rowconfigure(0, weight=1)
+        self.consulta_panels_frame.grid_rowconfigure(1, weight=1)
+
+        paneles= (
+            ("Tratamiento", 0, 0),
+            ("Observaciones", 0, 1),
+            ("Notas", 1, 0),
+        )
+
+        self.consulta_textos ={}
+
+        for titulo, fila, columna in paneles:
+            panel = tk.Frame(
+                self.consulta_panels_frame,
+                bg="#F0F0F0",
+                highlightbackground="#D9D9D9",
+                highlightthickness=3
+            )
+            panel.grid(
+                row=fila,
+                column=columna,
+                sticky="nsew",
+                padx=6,
+                pady=6,
+            )
+
+            tk.Label(
+                panel,
+                text=titulo,
+                font=("Arial", 10, "bold"),
+                bg="#F0F0F0",
+            ).pack(fill="x", pady=(6, 4))
+
+            campo = tk.Text(
+                panel,
+                height=5,
+                wrap="word",
+                font=("Arial", 9),
+                relief="flat",
+            )
+            campo.pack(fill="both", expand=True, padx=8, pady=(0, 8))
+            self.consulta_textos[titulo] = campo
+
+        historial_panel = tk.Frame(
+            self.consulta_panels_frame,
+            bg="#F0F0F0",
+            highlightbackground="#D9D9D9",
+            highlightthickness=3,
+        )
+        historial_panel.grid(
+            row=1,
+            column=1,
+            sticky="nsew",
+            padx=6,
+        )
+
+        tk.Label(
+            historial_panel,
+            text="Historial de cambios",
+            font=("Arial", 10, "bold"),
+            bg="#F0F0F0",
+        ).pack(fill="x", pady=(6, 4))
+
+        self.historial_listbox = tk.Listbox(
+            historial_panel,
+            height=5,
+            font=("Arial", 9),
+            relief="flat",
+        )
+        self.historial_listbox.pack(
+            fill="both",
+            expand=True,
+            padx=8,
+            pady=(0, 8),
+        )
+
+        self.historial_listbox.insert(
+            "end",
+             "25-09-26  M. Hernandez",
+            "05-09-26  M. Hernandez",
+        )
 
     def _build_add_hc_view(self):
         header_frame = tk.Frame(self.add_hc_view, bg="white")
