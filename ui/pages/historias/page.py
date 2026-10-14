@@ -33,6 +33,8 @@ class HistoriasPage(tk.Frame):
         self.add_hc_view.pack_forget()
 
         if section == "buscar_hc":
+            if self.historia_clinica_frame.winfo_manager():
+                self._cerrar_historia_clinica()
             self.search_view.pack(fill="both", expand=True)
         elif section == "nueva_hc":
             self.add_hc_view.pack(fill="both", expand=True)
@@ -140,6 +142,9 @@ class HistoriasPage(tk.Frame):
                 self.id_paciente_seleccionado,
             )
 
+        self._cargar_textos_historial()
+        self._limpiar_consulta_actual()
+
         self.historial_listbox.delete(0, "end")
         for consulta in self.consultas_historial:
             fecha = consulta[1].strftime("%d-%m-%y")
@@ -158,7 +163,37 @@ class HistoriasPage(tk.Frame):
         )
         return "break"
 
+    def _cargar_textos_historial(self):
+        indices = {
+            "Notas": 2,
+            "Observaciones": 3,
+            "Tratamiento": 4,
+        }
+
+        for titulo, indice in indices.items():
+            partes = []
+
+            for consulta in self.consultas_historial:
+                contenido = consulta[indice]
+                if contenido and contenido.strip():
+                    fecha = consulta[1].strftime("%d-%m-%Y")
+                    partes.append(
+                        f"Visita {fecha}:\n{contenido.strip()}"
+                    )
+
+                    campo = self.consulta_historial_textos[titulo]
+                    campo.configure(state="normal")
+                    campo.delete("1.0", "end")
+                    if partes:
+                        campo.insert("1.0", "\n\n".join(partes))
+                    campo.configure(state="disabled")
+
+    def _limpiar_consulta_actual(self):
+        for campo in self.consulta_textos.values():
+            campo.delete("1.0", "end")
+
     def _cerrar_historia_clinica(self):
+        self._limpiar_consulta_actual()
         self.historia_clinica_frame.pack_forget()
         self.hc_table_frame.pack(
             fill="both",
@@ -329,7 +364,8 @@ class HistoriasPage(tk.Frame):
             ("Notas", 1, 0),
         )
 
-        self.consulta_textos ={}
+        self.consulta_historial_textos = {}
+        self.consulta_textos = {}
 
         for titulo, fila, columna in paneles:
             panel = tk.Frame(
@@ -353,9 +389,34 @@ class HistoriasPage(tk.Frame):
                 bg="#F0F0F0",
             ).pack(fill="x", pady=(6, 4))
 
+            tk.Label(
+                panel,
+                text="Consultas anteriores (solo lectura)",
+                font=("Arial", 9),
+                bg="#F0F0F0",
+            ).pack(fill="x", padx=8)
+
+            historial = tk.Text(
+                panel,
+                height=3,
+                wrap="word",
+                font=("Arial", 9),
+                relief="flat",
+                state="disabled",
+            )
+            historial.pack(fill="both", expand=True, padx=8, pady=(0, 4))
+            self.consulta_historial_textos[titulo] = historial
+
+            tk.Label(
+                panel,
+                text="Consulta actual",
+                font=("Arial", 9),
+                bg="#F0F0F0",
+            ).pack(fill="x", padx=8)
+
             campo = tk.Text(
                 panel,
-                height=5,
+                height=3,
                 wrap="word",
                 font=("Arial", 9),
                 relief="flat",

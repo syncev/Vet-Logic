@@ -46,7 +46,7 @@ def obtener_consultas_paciente(conexion, id_paciente):
         JOIN veterinario AS v
             ON v.matricula_veterinario = co.matricula_veterinario
         WHERE co.id_paciente = %s
-        ORDER BY co.fecha DESC, co.id_consulta DESC
+        ORDER BY co.fecha ASC, co.id_consulta ASC
     """
 
     with conexion.cursor() as cursor:
