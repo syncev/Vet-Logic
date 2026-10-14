@@ -2,8 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 from ui.widgets.searchbar import Searchbar
 from core.db import conectar
-from repositories.historias import obtener_historias
-
+from repositories.historias import (
+    obtener_consultas_paciente,
+    obtener_historias,
+)
 
 class HistoriasPage(tk.Frame):
     def __init__(self, parent, **kwargs):
@@ -130,6 +132,22 @@ class HistoriasPage(tk.Frame):
         self.patient_name_label.config(text=f"Paciente: {valores[1]}")
         self.patient_species_label.config(text=f"Especie: {valores[2]}")
         self.HC_number_label.config(text=str(valores[3]))
+        self.id_paciente_seleccionado = int(valores[3])
+
+        with conectar() as conexion:
+            self.consultas_historial = obtener_consultas_paciente(
+                conexion,
+                self.id_paciente_seleccionado,
+            )
+
+        self.historial_listbox.delete(0, "end")
+        for consulta in self.consultas_historial:
+            fecha = consulta[1].strftime("%d-%m-%y")
+            veterinario = consulta[6]
+            self.historial_listbox.insert(
+                "end",
+                f"{fecha} {veterinario}",
+            )
 
         self.hc_table_frame.pack_forget()
         self.historia_clinica_frame.pack(
@@ -376,12 +394,6 @@ class HistoriasPage(tk.Frame):
             expand=True,
             padx=8,
             pady=(0, 8),
-        )
-
-        self.historial_listbox.insert(
-            "end",
-             "25-09-26  M. Hernandez",
-            "05-09-26  M. Hernandez",
         )
 
     def _build_add_hc_view(self):

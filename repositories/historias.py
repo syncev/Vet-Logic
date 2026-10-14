@@ -31,3 +31,75 @@ def obtener_historias(conexion):
     with conexion.cursor() as cursor:
         cursor.execute(consulta)
         return cursor.fetchall()
+
+def obtener_consultas_paciente(conexion, id_paciente):
+    consulta = """
+        SELECT
+            co.id_consulta,
+            co.fecha,
+            co.motivo_consulta,
+            COALESCE(co.observaciones, ''),
+            COALESCE(co.tratamiento, ''),
+            v.matricula_veterinario,
+            v.nombre || ' ' || v.apellido AS veterinario
+        FROM consulta AS co
+        JOIN veterinario AS v
+            ON v.matricula_veterinario = co.matricula_veterinario
+        WHERE co.id_paciente = %s
+        ORDER BY co.fecha DESC, co.id_consulta DESC
+    """
+
+    with conexion.cursor() as cursor:
+        cursor.execute(consulta, (id_paciente,))
+        return cursor.fetchall()
+
+def obtener_veterinarios_activos(conexion):
+    consulta = """
+        SELECT matricula_veterinario, nombre, apellido
+        FROM veterinario
+        WHERE estado = 'ACTIVO'
+        ORDER BY apellido, nombre
+    """
+
+    with conexion.cursor() as cursor:
+        cursor.execute(consulta)
+        return cursor.fetchall()
+
+def registrar_consulta(
+    conexion,
+    id_paciente,
+    matricula_veterinario,
+    notas,
+    observaciones,
+    tratamiento,
+):
+    consulta = """
+        INSERT INTO consulta (
+            fecha,
+            motivo_consulta,
+            observaciones,
+            tratamiento,
+            id_paciente,
+            matricula_veterinario
+        )
+        VALUES (
+            CURRENT_DATE,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s
+        )
+        RETURNING id_consulta
+    """
+    valores = (
+        notas,
+        observaciones,
+        tratamiento,
+        id_paciente,
+        matricula_veterinario,
+    )
+
+    with conexion.cursor() as cursor:
+        cursor.execute(consulta, valores)
+        return cursor.fetchone()[0]
