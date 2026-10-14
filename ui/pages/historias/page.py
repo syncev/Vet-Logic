@@ -1,12 +1,14 @@
 import tkinter as tk
+from datetime import date
 from tkinter import messagebox, ttk
 from ui.widgets.searchbar import Searchbar
 from core.db import conectar
 from repositories.historias import (
     obtener_consultas_paciente,
+    obtener_detalle_paciente,
     obtener_historias,
     obtener_veterinarios_activos,
-    registrar_consulta
+    registrar_consulta,
 )
 
 class HistoriasPage(tk.Frame):
@@ -147,9 +149,6 @@ class HistoriasPage(tk.Frame):
         if not valores:
             return "break"
 
-        self.HC_client_label.config(text=f"Cliente: {valores[0]}")
-        self.patient_name_label.config(text=f"Paciente: {valores[1]}")
-        self.patient_species_label.config(text=f"Especie: {valores[2]}")
         self.HC_number_label.config(text=str(valores[3]))
         self.id_paciente_seleccionado = int(valores[3])
 
@@ -158,6 +157,65 @@ class HistoriasPage(tk.Frame):
                 conexion,
                 self.id_paciente_seleccionado,
             )
+            detalle = obtener_detalle_paciente(
+                conexion,
+                self.id_paciente_seleccionado,
+            )
+
+        if detalle is None:
+            messagebox.showerror(
+                "Paciente no encontrado",
+                "No se encontraron los datos del paciente seleccionado.",
+                parent=self,
+            )
+            return "break"
+
+        (
+            nombre_cliente,
+            apellido_cliente,
+            telefono,
+            domicilio,
+            dni,
+            nombre_paciente,
+            especie,
+            fecha_nacimiento,
+            sexo,
+            castrado,
+            peso,
+        ) = detalle
+
+        if fecha_nacimiento is None:
+            edad_texto = "No informada"
+        else:
+            hoy = date.today()
+            edad = hoy.year - fecha_nacimiento.year
+            if (hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day):
+                edad -= 1
+            edad_texto = f"{edad} año" if edad == 1 else f"{edad} años"
+
+        if castrado is None:
+            castrado_texto = "No informado"
+        elif castrado:
+            castrado_texto = "Sí"
+        else:
+            castrado_texto = "No"
+
+        peso_texto = "No informado" if peso is None else f"{peso} kg"
+
+        self.HC_client_label.config(
+            text=f"Cliente: {nombre_cliente} {apellido_cliente}"
+        )
+        self.client_phone_label.config(text=f"Teléfono: {telefono}")
+        self.client_address_label.config(
+            text=f"Domicilio: {domicilio or 'No informado'}"
+        )
+        self.client_dni_label.config(text=f"DNI: {dni}")
+        self.patient_name_label.config(text=f"Paciente: {nombre_paciente}")
+        self.patient_species_label.config(text=f"Especie: {especie}")
+        self.patient_age_label.config(text=f"Edad: {edad_texto}")
+        self.patient_sex_label.config(text=f"Sexo: {sexo or 'No informado'}")
+        self.patient_neutered_label.config(text=f"Castrado: {castrado_texto}")
+        self.patient_weight_label.config(text=f"Peso: {peso_texto}")
 
         self._cargar_veterinarios_activos()
         self._cargar_textos_historial()

@@ -32,6 +32,30 @@ def obtener_historias(conexion):
         cursor.execute(consulta)
         return cursor.fetchall()
 
+def obtener_detalle_paciente(conexion, id_paciente):
+    consulta = """
+        SELECT
+            cl.nombre,
+            cl.apellido,
+            cl.telefono,
+            cl.domicilio,
+            cl.dni,
+            p.nombre,
+            p.especie,
+            p.fecha_nacimiento,
+            p.sexo,
+            p.castrado,
+            p.peso
+        FROM paciente AS p
+        JOIN cliente AS cl
+            ON cl.dni = p.dni
+        WHERE p.id_paciente = %s
+    """
+
+    with conexion.cursor() as cursor:
+        cursor.execute(consulta, (id_paciente,))
+        return cursor.fetchone()
+
 def obtener_consultas_paciente(conexion, id_paciente):
     consulta = """
         SELECT
