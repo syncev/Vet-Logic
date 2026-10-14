@@ -199,6 +199,33 @@ class HistoriasPage(tk.Frame):
             font=("Inter", -16),
             bg="white"
         )
+
+        self.client_contact_frame = tk.Frame(
+            self.historia_clinica_frame,
+            bg="white",
+        )
+
+        self.client_phone_label = tk.Label(
+            self.client_contact_frame,
+            text="Teléfono: 3518292929",
+            font=("Arial", 9),
+            bg="white",
+        )
+
+        self.client_address_label = tk.Label(
+            self.client_contact_frame,
+            text="Domicilio: Sobremonte 2011",
+            font=("Arial", 9),
+            bg="white",
+        )
+
+        self.client_dni_label = tk.Label(
+            self.client_contact_frame,
+            text="DNI: 98555888",
+            font=("Arial", 9),
+            bg="white",
+        )
+
 #contiene datos principales del paciente
         self.hc_patient_info_frame = tk.Frame(self.historia_clinica_frame, bg="white")
 
@@ -240,6 +267,11 @@ class HistoriasPage(tk.Frame):
         )
 
         self.hc_header_frame.pack(fill="x", padx=12, pady=(10, 6))
+
+        self.client_contact_frame.pack(fill="x", padx=12, pady=(0, 6))
+        self.client_phone_label.pack(side="left", padx=6)
+        self.client_address_label.pack(side="left", padx=6)
+        self.client_dni_label.pack(side="left", padx=6)
 
         self.btn_finalizar_consulta.pack(side="right")
         self.btn_cerrar_historia.pack(side="left", padx=(0, 8))
