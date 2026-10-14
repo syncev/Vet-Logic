@@ -426,21 +426,21 @@ class HistoriasPage(tk.Frame):
         self.client_phone_label = tk.Label(
             self.client_contact_frame,
             text="Teléfono: 3518292929",
-            font=("Arial", 9),
+            font=("Arial", 12),
             bg="white",
         )
 
         self.client_address_label = tk.Label(
             self.client_contact_frame,
             text="Domicilio: Sobremonte 2011",
-            font=("Arial", 9),
+            font=("Arial", 12),
             bg="white",
         )
 
         self.client_dni_label = tk.Label(
             self.client_contact_frame,
             text="DNI: 98555888",
-            font=("Arial", 9),
+            font=("Arial", 12),
             bg="white",
         )
 
@@ -493,17 +493,21 @@ class HistoriasPage(tk.Frame):
 
         self.btn_finalizar_consulta.pack(side="right")
         self.btn_cerrar_historia.pack(side="left", padx=(0, 8))
-        self.HC_title_label.pack(side="left")
+        self.HC_title_label.pack(side="left", padx=(30, 0))
         self.HC_number_label.pack(side="left", padx=(6, 20))
         self.HC_client_label.pack(side="left")
 
         self.hc_patient_info_frame.pack(fill="x", padx=12, pady=6)
-        self.patient_name_label.pack(side="left", padx=6)
-        self.patient_species_label.pack(side="left", padx=6)
-        self.patient_age_label.pack(side="left", padx=6)
-        self.patient_sex_label.pack(side="left", padx=6)
-        self.patient_neutered_label.pack(side="left", padx=6)
-        self.patient_weight_label.pack(side="left", padx=6)
+
+        for columna in range(6):
+            self.hc_patient_info_frame.grid_columnconfigure(columna, weight=1)
+
+        self.patient_name_label.grid(row=0, column=0, sticky="w", padx=6)
+        self.patient_species_label.grid(row=0, column=1, sticky="w", padx=6)
+        self.patient_age_label.grid(row=0, column=2, sticky="w", padx=6)
+        self.patient_sex_label.grid(row=0, column=3, sticky="w", padx=6)
+        self.patient_neutered_label.grid(row=0, column=4, sticky="w", padx=6)
+        self.patient_weight_label.grid(row=0, column=5, sticky="w", padx=6)
 
         self.veterinario_selector_frame = tk.Frame(
             self.historia_clinica_frame,
@@ -514,6 +518,7 @@ class HistoriasPage(tk.Frame):
             self.veterinario_selector_frame,
             text="Veterinario de la consulta:",
             bg="white",
+            font=("Arial", 11),
         ).pack(side="left", padx=(6, 4))
 
         self.veterinario_var = tk.StringVar()
@@ -522,6 +527,7 @@ class HistoriasPage(tk.Frame):
             textvariable=self.veterinario_var,
             state="readonly",
             width=35,
+            font=("Arial", 11),
         )
         self.veterinario_selector.pack(side="left")
         self.veterinario_selector_frame.pack(
@@ -611,6 +617,7 @@ class HistoriasPage(tk.Frame):
                 relief="flat",
             )
             campo.pack(fill="both", expand=True, padx=8, pady=(0, 8))
+
             self.consulta_textos[titulo] = campo
 
         historial_panel = tk.Frame(
@@ -639,6 +646,7 @@ class HistoriasPage(tk.Frame):
             font=("Arial", 9),
             relief="flat",
         )
+
         self.historial_listbox.pack(
             fill="both",
             expand=True,
