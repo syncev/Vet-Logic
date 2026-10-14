@@ -12,6 +12,7 @@ class HistoriasPage(tk.Frame):
         self.search_view = tk.Frame(self, bg="white")
         self.add_hc_view = tk.Frame(self, bg="white")
 
+        self._build_historia_clinica_card()
         self._build_search_view()
         self._build_add_hc_view()
 
@@ -103,6 +104,7 @@ class HistoriasPage(tk.Frame):
         self._cargar_historias()
 
         self.hc_table.pack(fill="both", expand=True, padx=1, pady=1)
+        self.hc_table.bind("<Double-1>", self._abrir_historia_clinica)
 
     def _cargar_historias(self):
         conexion = conectar()
@@ -113,6 +115,38 @@ class HistoriasPage(tk.Frame):
 
         for fila in filas:
             self.hc_table.insert("", "end", values=fila)
+
+    def _abrir_historia_clinica(self, event):
+        item_id = self.hc_table.identify_row(event.y)
+        if not item_id:
+            return "break"
+
+        valores = self.hc_table.item(item_id, "values")
+        if not valores:
+            return "break"
+
+        self.HC_client_label.config(text=f"Cliente: {valores[0]}")
+        self.patient_name_label.config(text=f"Paciente: {valores[1]}")
+        self.patient_species_label.config(text=f"Especie: {valores[2]}")
+        self.HC_number_label.config(text=str(valores[3]))
+
+        self.hc_table_frame.pack_forget()
+        self.historia_clinica_frame.pack(
+            fill="both",
+            expand=True,
+            padx=40,
+            pady=(25, 10),
+        )
+        return "break"
+
+    def _cerrar_historia_clinica(self):
+        self.historia_clinica_frame.pack_forget()
+        self.hc_table_frame.pack(
+            fill="both",
+            expand=True,
+            padx=40,
+            pady=(25, 10),
+        )
 
     def _build_historia_clinica_card(self):
         self.historia_clinica_frame = tk.Frame(
@@ -137,8 +171,30 @@ class HistoriasPage(tk.Frame):
             font=("Inter", -24),
             bg="white"
         )
+        self.btn_cerrar_historia = tk.Button(
+            self.hc_header_frame,
+            text="x",
+            font=("Arial", 20, "bold"),
+            bg="white",
+            relief="flat",
+            cursor="hand2",
+            command=self._cerrar_historia_clinica,
+        )
+
+        self.btn_finalizar_consulta = tk.Button(
+            self.hc_header_frame,
+            text="✓ Finalizar consulta",
+            font=("Arial", 10, "bold"),
+            bg="#8FD694",
+            fg="#1F1F1F",
+            relief="flat",
+            padx=10,
+            pady=6,
+            cursor="hand2",
+        )
+
         self.HC_client_label = tk.Label(
-            self.historia_clinica_frame,
+            self.hc_header_frame,
             text="Cliente: Juan Pérez",
             font=("Inter", -16),
             bg="white"
@@ -182,6 +238,23 @@ class HistoriasPage(tk.Frame):
             font=("Inter", -16),
             bg="white"
         )
+
+        self.hc_header_frame.pack(fill="x", padx=12, pady=(10, 6))
+
+        self.btn_finalizar_consulta.pack(side="right")
+        self.btn_cerrar_historia.pack(side="left", padx=(0, 8))
+        self.HC_title_label.pack(side="left")
+        self.HC_number_label.pack(side="left", padx=(6, 20))
+        self.HC_client_label.pack(side="left")
+
+        self.hc_patient_info_frame.pack(fill="x", padx=12, pady=6)
+        self.patient_name_label.pack(side="left", padx=6)
+        self.patient_species_label.pack(side="left", padx=6)
+        self.patient_age_label.pack(side="left", padx=6)
+        self.patient_sex_label.pack(side="left", padx=6)
+        self.patient_neutered_label.pack(side="left", padx=6)
+        self.patient_weight_label.pack(side="left", padx=6)
+
     def _build_add_hc_view(self):
         header_frame = tk.Frame(self.add_hc_view, bg="white")
         header_frame.pack(fill="x", padx=40, pady=(20, 10))
