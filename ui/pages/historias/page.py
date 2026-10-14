@@ -1,10 +1,12 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, ttk
 from ui.widgets.searchbar import Searchbar
 from core.db import conectar
 from repositories.historias import (
     obtener_consultas_paciente,
     obtener_historias,
+    obtener_veterinarios_activos,
+    registrar_consulta
 )
 
 class HistoriasPage(tk.Frame):
@@ -121,6 +123,21 @@ class HistoriasPage(tk.Frame):
         for fila in filas:
             self.hc_table.insert("", "end", values=fila)
 
+    def _cargar_veterinarios_activos(self):
+        with conectar() as conexion:
+            veterinarios = obtener_veterinarios_activos(conexion)
+
+        self.veterinarios_por_opcion = {}
+        opciones = []
+
+        for matricula, nombre, apellido in veterinarios:
+            opcion = f"{apellido}, {nombre} - {matricula}"
+            opciones.append(opcion)
+            self.veterinarios_por_opcion[opcion] = matricula
+
+        self.veterinario_selector["values"] = opciones
+        self.veterinario_selector.set("")
+
     def _abrir_historia_clinica(self, event):
         item_id = self.hc_table.identify_row(event.y)
         if not item_id:
@@ -142,6 +159,7 @@ class HistoriasPage(tk.Frame):
                 self.id_paciente_seleccionado,
             )
 
+        self._cargar_veterinarios_activos()
         self._cargar_textos_historial()
         self._limpiar_consulta_actual()
 
@@ -181,16 +199,103 @@ class HistoriasPage(tk.Frame):
                         f"Visita {fecha}:\n{contenido.strip()}"
                     )
 
-                    campo = self.consulta_historial_textos[titulo]
-                    campo.configure(state="normal")
-                    campo.delete("1.0", "end")
-                    if partes:
-                        campo.insert("1.0", "\n\n".join(partes))
-                    campo.configure(state="disabled")
+            campo = self.consulta_historial_textos[titulo]
+            campo.configure(state="normal")
+            campo.delete("1.0", "end")
+            if partes:
+                campo.insert("1.0", "\n\n".join(partes))
+            campo.configure(state="disabled")
 
     def _limpiar_consulta_actual(self):
         for campo in self.consulta_textos.values():
             campo.delete("1.0", "end")
+
+    def _finalizar_consulta(self):
+        opcion_veterinario = self.veterinario_var.get().strip()
+        matricula = self.veterinarios_por_opcion.get(opcion_veterinario)
+
+        if not matricula:
+            messagebox.showwarning(
+                "Falta seleccionar veterinario",
+                "Seleccioná el veterinario que realizó la consulta.",
+                parent=self,
+            )
+            return
+
+        notas = self.consulta_textos["Notas"].get(
+            "1.0", "end-1c"
+        ).strip()
+        observaciones = self.consulta_textos["Observaciones"].get(
+            "1.0", "end-1c"
+        ).strip()
+        tratamiento = self.consulta_textos["Tratamiento"].get(
+            "1.0", "end-1c"
+        ).strip()
+
+        if not any((notas, observaciones, tratamiento)):
+            messagebox.showwarning(
+                "Consulta vacía",
+                "Escribí información en al menos uno de los campos.",
+                parent=self,
+            )
+            return
+
+        if len(notas) > 200:
+            messagebox.showwarning(
+                "Notas demasiado largas",
+                "El campo Notas admite hasta 200 caracteres.",
+                parent=self,
+            )
+            return
+
+        try:
+            with conectar() as conexion:
+                registrar_consulta(
+                    conexion,
+                    self.id_paciente_seleccionado,
+                    matricula,
+                    notas,
+                    observaciones,
+                    tratamiento,
+                )
+                consultas = obtener_consultas_paciente(
+                    conexion,
+                    self.id_paciente_seleccionado,
+                )
+                historias = obtener_historias(conexion)
+        except Exception as error:
+            messagebox.showerror(
+                "Error al guardar la consulta",
+                f"No se pudo guardar la consulta en la base de datos:\n{error}",
+                parent=self,
+            )
+            return
+
+        self.consultas_historial = consultas
+        self._cargar_textos_historial()
+        self._limpiar_consulta_actual()
+
+        self.historial_listbox.delete(0, "end")
+        for consulta in self.consultas_historial:
+            fecha = consulta[1].strftime("%d-%m-%y")
+            veterinario = consulta[6]
+            self.historial_listbox.insert(
+                "end",
+                f"{fecha} {veterinario}",
+            )
+
+        self.veterinario_selector.set("")
+
+        for item_id in self.hc_table.get_children():
+            self.hc_table.delete(item_id)
+        for historia in historias:
+            self.hc_table.insert("", "end", values=historia)
+
+        messagebox.showinfo(
+            "Consulta guardada",
+            "La consulta se guardó correctamente.",
+            parent=self,
+        )
 
     def _cerrar_historia_clinica(self):
         self._limpiar_consulta_actual()
@@ -245,6 +350,7 @@ class HistoriasPage(tk.Frame):
             padx=10,
             pady=6,
             cursor="hand2",
+            command=self._finalizar_consulta,
         )
 
         self.HC_client_label = tk.Label(
@@ -340,6 +446,31 @@ class HistoriasPage(tk.Frame):
         self.patient_sex_label.pack(side="left", padx=6)
         self.patient_neutered_label.pack(side="left", padx=6)
         self.patient_weight_label.pack(side="left", padx=6)
+
+        self.veterinario_selector_frame = tk.Frame(
+            self.historia_clinica_frame,
+            bg="white",
+        )
+
+        tk.Label(
+            self.veterinario_selector_frame,
+            text="Veterinario de la consulta:",
+            bg="white",
+        ).pack(side="left", padx=(6, 4))
+
+        self.veterinario_var = tk.StringVar()
+        self.veterinario_selector = ttk.Combobox(
+            self.veterinario_selector_frame,
+            textvariable=self.veterinario_var,
+            state="readonly",
+            width=35,
+        )
+        self.veterinario_selector.pack(side="left")
+        self.veterinario_selector_frame.pack(
+            fill="x",
+            padx=12,
+            pady=(0, 6),
+        )
 
     def _build_consulta_panels(self):
         self.consulta_panels_frame = tk.Frame(
