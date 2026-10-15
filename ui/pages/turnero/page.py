@@ -196,6 +196,10 @@ class TurneroPage(tk.Frame):
 
         self.appointments = []
 
+        self.appointments_table.bind("<Double-1>", self._abrir_modal_turno)
+
+
+
     def _crear_imagen_estado(self, color):
         imagen = tk.PhotoImage(master=self, width=24, height=20)
         imagen.put(color, to=(2, 3, 22, 17))
@@ -493,6 +497,81 @@ class TurneroPage(tk.Frame):
 
         form = NewAppointmentPage(self.new_appointment_modal)
         form.pack(fill="both", expand=True)
+
+    def _abrir_modal_turno(self, event):
+        seleccion = self.appointments_table.selection()
+        if not seleccion:
+            return
+
+        iid = seleccion[0]
+        valores = self.appointments_table.item(iid, "values")
+        hora     = valores[1]
+        cliente  = valores[2]
+        paciente = valores[3]
+        motivo   = valores[5]
+        hc       = valores[6]
+        fecha    = self.selected_date.strftime("%d/%m/%Y")
+
+        modal = tk.Toplevel(self)
+        modal.geometry("700x400")
+        modal.resizable(False, False)
+        modal.transient(self.winfo_toplevel())
+        modal.grab_set()
+
+        fondo = tk.Frame(modal, bg="white")
+        fondo.pack(fill="both", expand=True, padx=20, pady=10)
+
+        tk.Button(
+            fondo,
+            text="←",
+            font=("Arial", 20, "bold"),
+            bg="white",
+            fg="#666666",
+            relief="flat",
+            bd=0,
+            cursor="hand2",
+            command=modal.destroy,
+        ).pack(anchor="w", padx=10, pady=(10, 0))
+
+        tarjetas = tk.Frame(fondo, bg="white")
+        tarjetas.pack(fill="x", padx=10, pady=10)
+
+        card_hc = tk.Frame(tarjetas, bg="#D2C2ED", padx=20, pady=20)
+        card_hc.pack(side="left", fill="both", expand=True, padx=(0, 10))
+        tk.Label(card_hc, text="Datos de HC", font=("Arial", 13, "bold"), bg="#D2C2ED").pack(pady=(0, 10))
+        tk.Label(card_hc, text=f"Paciente: {paciente}", font=("Arial", 11), bg="#D2C2ED").pack(anchor="w")
+        tk.Label(card_hc, text=f"Cliente: {cliente}", font=("Arial", 11), bg="#D2C2ED").pack(anchor="w")
+        tk.Label(card_hc, text=f"\nHC: {hc}", font=("Arial", 12, "bold"), bg="#D2C2ED").pack(anchor="w")
+
+        card_turno = tk.Frame(tarjetas, bg="#F0C8A0", padx=20, pady=20)
+        card_turno.pack(side="left", fill="both", expand=True, padx=(10, 0))
+        tk.Label(card_turno, text="Datos de Turno", font=("Arial", 13, "bold"), bg="#F0C8A0").pack(pady=(0, 10))
+        tk.Label(card_turno, text=f"Dia: {fecha}", font=("Arial", 11), bg="#F0C8A0").pack(anchor="w")
+        tk.Label(card_turno, text=f"Hora: {hora}hs", font=("Arial", 11), bg="#F0C8A0").pack(anchor="w")
+        tk.Label(card_turno, text=f"Motivo: {motivo}", font=("Arial", 11), bg="#F0C8A0").pack(anchor="w")
+
+        tk.Label(
+            fondo,
+            text="Turno registrado con exito!",
+            font=("Arial", 12),
+            bg="#A8E5A8",
+            pady=10,
+        ).pack(fill="x", padx=10, pady=(10, 5))
+
+        tk.Button(
+            fondo,
+            text="Cerrar",
+            font=("Arial", 11),
+            bg="#D0EBF0",
+            relief="flat",
+            cursor="hand2",
+            padx=20,
+            pady=5,
+            command=modal.destroy,
+        ).pack(pady=10)
+
+
+
 
     # LAYOUT
 
