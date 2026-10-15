@@ -1,4 +1,5 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 
 def obtener_horarios_ocupados(conexion, fecha_base: date):
@@ -55,3 +56,30 @@ def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
     with conexion.cursor() as cursor:
         cursor.execute(consulta, (fecha_consulta,))
         return cursor.fetchall()
+
+def resolver_estado_visual(fecha_turno: date, hora_inicio_str: str, estado_bd: str) -> tuple[str, str]:
+   
+    estado_normalizado = (estado_bd or "PENDIENTE").upper()
+
+    if estado_normalizado in ("ATENDIDO", "COMPLETADO"):
+        return ("Completado", "🟢")
+    
+    if estado_normalizado == "CANCELADO":
+        return ("Cancelado", "🔴")
+
+    ahora = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
+    hoy = ahora.date()
+
+    if fecha_turno == hoy:
+        try:
+            hora_turno = datetime.strptime(hora_inicio_str, "%H:%M").time()
+            dt_turno = datetime.combine(hoy, hora_turno).replace(tzinfo=ahora.tzinfo)
+            diferencia_minutos = (dt_turno - ahora).total_seconds() / 60
+
+            # Esto chicos es la logica de los 40 minutos que pactamos   
+            if -40 <= diferencia_minutos <= 40:
+                return ("Próximo", "🟡")
+        except ValueError:
+            pass
+
+    return ("Pendiente", "⚪")
