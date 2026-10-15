@@ -24,6 +24,7 @@ class CalendarPicker(tk.Frame):
         master,
         selected_date=None,
         on_date_selected=None,
+        allow_past_dates=False,
         **kwargs,
     ):
         kwargs.setdefault("bg", "#F4F4F5")
@@ -34,6 +35,7 @@ class CalendarPicker(tk.Frame):
         self.selected_date = selected_date or date.today()
         self.current_month = self.selected_date.replace(day=1)
         self.on_date_selected = on_date_selected
+        self.allow_past_dates = allow_past_dates
 
         self._build_widgets()
         self._render()
@@ -67,7 +69,9 @@ class CalendarPicker(tk.Frame):
         ).pack(side="right")
 
         self.days_frame = tk.Frame(self, bg="#F4F4F5")
-        self.days_frame.pack()
+        self.days_frame.pack(fill="x")
+        for column in range(7):
+            self.days_frame.columnconfigure(column, weight=1, uniform="days")
 
     def set_date(self, selected_date):
         self.selected_date = selected_date
@@ -88,10 +92,10 @@ class CalendarPicker(tk.Frame):
             tk.Label(
                 self.days_frame,
                 text=name,
-                width=4,
+                width=2,
                 bg="#F4F4F5",
                 font=("Arial", 9, "bold"),
-            ).grid(row=0, column=column, padx=2, pady=2)
+            ).grid(row=0, column=column, padx=1, pady=2, sticky="nsew")
 
         weeks = calendar.Calendar(
             firstweekday=calendar.MONDAY
@@ -111,15 +115,19 @@ class CalendarPicker(tk.Frame):
                 tk.Button(
                     self.days_frame,
                     text=str(day),
-                    width=3,
+                    width=2,
                     relief="flat",
                     bg="#F5BFC2" if selected else "white",
                     font=("Arial", 9, "bold" if selected else "normal"),
-                    state=tk.DISABLED if day_date < date.today() else tk.NORMAL,
+                    state=(
+                        tk.NORMAL
+                        if self.allow_past_dates or day_date >= date.today()
+                        else tk.DISABLED
+                    ),
                     command=lambda selected_day=day: self._select_day(
                         selected_day
                     ),
-                ).grid(row=row, column=column, padx=2, pady=2)
+                ).grid(row=row, column=column, padx=1, pady=2, sticky="nsew")
 
     def _select_day(self, day):
         self.selected_date = self.current_month.replace(day=day)
