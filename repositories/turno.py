@@ -171,3 +171,26 @@ def registrar_turno_con_paciente_nuevo(conexion, datos: dict) -> dict:
         "id_paciente": id_paciente,  # Este es el número de Historia Clínica (HC)
         "id_turno": id_turno,
     }
+
+
+def cancelar_turno(conexion, id_turno: int) -> bool:
+    """
+    Cancela un turno si está en estado 'PENDIENTE' y su horario aún no ha expirado.
+    Retorna True si fue cancelado, False si ya no era cancelable.
+    """
+    ahora = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
+
+    consulta = """
+        UPDATE turno
+        SET estado = 'CANCELADO'
+        WHERE id_turno = %s
+          AND estado = 'PENDIENTE'
+          AND (fecha > %s OR (fecha = %s AND hora_inicio > %s))
+        RETURNING id_turno;
+    """
+    with conexion.cursor() as cursor:
+        cursor.execute(consulta, (id_turno, ahora.date(), ahora.date(), ahora.time()))
+        resultado = cursor.fetchone()
+
+    conexion.commit()
+    return resultado is not None
