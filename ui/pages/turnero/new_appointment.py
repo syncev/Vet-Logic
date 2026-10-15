@@ -258,6 +258,24 @@ class NewAppointmentPage(tk.Frame):
             pady=(4, 20),
         )
 
+        self.confirm_button = tk.Button(
+            self.form_content,
+            text="Agendar Turno",
+            bg="#61D161",
+            fg="black",
+            font=("Arial", 12, "bold"),
+            relief="flat",
+            cursor="hand2",
+            state=tk.DISABLED,
+            command=self._confirmar_turno,
+        )
+        self.confirm_button.grid(
+            row=10,
+            column=0,
+            columnspan=3,
+            pady=(12, 24),
+        )
+
     def _get_occupied_slots(self, base_date):
         # Rehabilitar la consulta cuando la base de datos este disponible:
         # try:
@@ -280,9 +298,82 @@ class NewAppointmentPage(tk.Frame):
         # Sin consulta a la DB, ningún horario se considera ocupado.
         return set()
 
+    def _confirmar_turno(self):
+        if self.horario_seleccionado is None:
+            return
+
+        dialog = tk.Toplevel(self)
+        dialog.title("Confirmar turno")
+        dialog.geometry("380x190")
+        dialog.resizable(False, False)
+        dialog.transient(self.winfo_toplevel())
+        dialog.grab_set()
+
+        tk.Label(
+            dialog,
+            text="Confirmar Turno",
+            font=("Arial", 16, "bold"),
+        ).pack(pady=(20, 8))
+
+        tk.Label(
+            dialog,
+            text="¿Desea confirmar el turno en la fecha y horario seleccionados?",
+            font=("Arial", 11),
+            wraplength=320,
+        ).pack(padx=20, pady=8)
+
+        botones = tk.Frame(dialog)
+        botones.pack(pady=12)
+
+        tk.Button(
+            botones,
+            text="VOLVER",
+            command=dialog.destroy,
+        ).pack(side="left", padx=10)
+
+        def continuar():
+            fecha, hora = self.horario_seleccionado
+            datos = {
+                "cliente": (
+                    f"{self.entries['client_name'].get().strip()} "
+                    f"{self.entries['client_lastname'].get().strip()}"
+                ).strip(),
+                "paciente": self.entries["pet_name"].get().strip(),
+                "contacto": self.entries["phone"].get().strip(),
+                "fecha": fecha,
+                "hora": hora,
+                "motivo": self.reason.get(),
+            }
+            dialog.destroy()
+            if self.on_save is not None:
+                self.on_save(datos)
+
+        tk.Button(
+            botones,
+            text="CONTINUAR",
+            bg="#61D161",
+            command=continuar,
+        ).pack(side="left", padx=10)
+
+        self._centrar_dialogo(dialog)
+
+    def _centrar_dialogo(self, dialog):
+        parent = self.winfo_toplevel()
+        parent.update_idletasks()
+        dialog.update_idletasks()
+
+        x = parent.winfo_rootx() + (
+            parent.winfo_width() - dialog.winfo_width()
+        ) // 2
+        y = parent.winfo_rooty() + (
+            parent.winfo_height() - dialog.winfo_height()
+        ) // 2
+        dialog.geometry(f"+{x}+{y}")
+
     def _on_calendar_date_selected(self, selected_date):
         self.fecha_seleccionada = selected_date
         self.horario_seleccionado = None
+        self.confirm_button.configure(state=tk.DISABLED)
         self._refresh_schedule()
 
     def _refresh_schedule(self):
@@ -296,6 +387,7 @@ class NewAppointmentPage(tk.Frame):
     def _on_schedule_date_change(self, new_base_date):
         self.fecha_seleccionada = new_base_date
         self.horario_seleccionado = None
+        self.confirm_button.configure(state=tk.DISABLED)
         # La navegación del selector también debe reflejarse en el calendario.
         self.calendar_picker.set_date(new_base_date)
         self._refresh_schedule()
@@ -304,6 +396,7 @@ class NewAppointmentPage(tk.Frame):
         self.fecha_seleccionada = selected_date
         # El selector entrega ambos valores; se conservan juntos para enviar el turno.
         self.horario_seleccionado = (selected_date, selected_time)
+        self.confirm_button.configure(state=tk.NORMAL)
         self.calendar_picker.set_date(selected_date)
 
     def _close(self):
