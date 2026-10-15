@@ -637,6 +637,7 @@ class TurneroPage(tk.Frame):
         modal.geometry("700x400")
         modal.resizable(False, False)
         modal.transient(self.winfo_toplevel())
+        self._centrar_ventana(modal)
         modal.grab_set()
 
         fondo = tk.Frame(modal, bg="white")

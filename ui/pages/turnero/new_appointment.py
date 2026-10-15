@@ -355,6 +355,21 @@ class NewAppointmentPage(tk.Frame):
             command=continuar,
         ).pack(side="left", padx=10)
 
+        self._centrar_dialogo(dialog)
+
+    def _centrar_dialogo(self, dialog):
+        parent = self.winfo_toplevel()
+        parent.update_idletasks()
+        dialog.update_idletasks()
+
+        x = parent.winfo_rootx() + (
+            parent.winfo_width() - dialog.winfo_width()
+        ) // 2
+        y = parent.winfo_rooty() + (
+            parent.winfo_height() - dialog.winfo_height()
+        ) // 2
+        dialog.geometry(f"+{x}+{y}")
+
     def _on_calendar_date_selected(self, selected_date):
         self.fecha_seleccionada = selected_date
         self.horario_seleccionado = None
