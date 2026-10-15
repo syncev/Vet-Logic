@@ -20,6 +20,7 @@ class TurneroPage(tk.Frame):
         # Aseguramos el fondo blanco general
         super().__init__(master, bg="white", **kwargs)
 
+        self.on_date_changed = None
         self._build_widgets()
         self._build_layout()
 
@@ -60,7 +61,7 @@ class TurneroPage(tk.Frame):
             highlightthickness=0,
             width=3,
             cursor="hand2",
-            command=lambda: self._select_date(self.selected_date),
+            command=lambda: self.select_date(self.selected_date),
         )
         self.tomorrow_button = tk.Button(
             self.date_stepper,
@@ -73,7 +74,7 @@ class TurneroPage(tk.Frame):
             highlightthickness=0,
             width=3,
             cursor="hand2",
-            command=lambda: self._select_date(self.selected_date + timedelta(days=1)),
+            command=lambda: self.select_date(self.selected_date + timedelta(days=1)),
         )
         self.next_day_button = tk.Button(
             self.date_stepper,
@@ -86,7 +87,7 @@ class TurneroPage(tk.Frame):
             highlightthickness=0,
             width=3,
             cursor="hand2",
-            command=lambda: self._select_date(self.selected_date + timedelta(days=2)),
+            command=lambda: self.select_date(self.selected_date + timedelta(days=2)),
         )
         self.next_button = tk.Button(
             self.date_stepper,
@@ -103,9 +104,9 @@ class TurneroPage(tk.Frame):
         )
 
     def _change_selected_date(self, days):
-        self._select_date(self.selected_date + timedelta(days=days))
+        self.select_date(self.selected_date + timedelta(days=days))
 
-    def _select_date(self, fecha):
+    def select_date(self, fecha):
         self.selected_date = fecha
         self.today_button.configure(text=str(fecha.day), bg="#E6D0F5")
         self.tomorrow_button.configure(
@@ -114,6 +115,8 @@ class TurneroPage(tk.Frame):
         self.next_day_button.configure(
             text=str((fecha + timedelta(days=2)).day), bg="#F0F0F0"
         )
+        if self.on_date_changed is not None:
+            self.on_date_changed(fecha)
         self.cargar_turnos_fecha(fecha)
 
     # tabla de turnos
@@ -368,7 +371,7 @@ class TurneroPage(tk.Frame):
         )
 
         self._build_appointments_table()
-        self._select_date(self.selected_date)
+        self.select_date(self.selected_date)
 
     # ventana para elegir el tipo de "registrar un nuevo turno"
 
