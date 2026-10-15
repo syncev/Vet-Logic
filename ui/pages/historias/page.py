@@ -1,9 +1,15 @@
 import tkinter as tk
-from tkinter import ttk
+from datetime import date
+from tkinter import messagebox, ttk
 from ui.widgets.searchbar import Searchbar
 from core.db import conectar
-from repositories.historias import obtener_historias
-
+from repositories.historias import (
+    obtener_consultas_paciente,
+    obtener_detalle_paciente,
+    obtener_historias,
+    obtener_veterinarios_activos,
+    registrar_consulta,
+)
 
 class HistoriasPage(tk.Frame):
     def __init__(self, parent, **kwargs):
@@ -12,6 +18,8 @@ class HistoriasPage(tk.Frame):
         self.search_view = tk.Frame(self, bg="white")
         self.add_hc_view = tk.Frame(self, bg="white")
 
+        self._build_historia_clinica_card()
+        self._build_consulta_panels()
         self._build_search_view()
         self._build_add_hc_view()
 
@@ -29,6 +37,8 @@ class HistoriasPage(tk.Frame):
         self.add_hc_view.pack_forget()
 
         if section == "buscar_hc":
+            if self.historia_clinica_frame.winfo_manager():
+                self._cerrar_historia_clinica()
             self.search_view.pack(fill="both", expand=True)
         elif section == "nueva_hc":
             self.add_hc_view.pack(fill="both", expand=True)
@@ -103,6 +113,7 @@ class HistoriasPage(tk.Frame):
         self._cargar_historias()
 
         self.hc_table.pack(fill="both", expand=True, padx=1, pady=1)
+        self.hc_table.bind("<Double-1>", self._abrir_historia_clinica)
 
     def _cargar_historias(self):
         conexion = conectar()
@@ -113,6 +124,246 @@ class HistoriasPage(tk.Frame):
 
         for fila in filas:
             self.hc_table.insert("", "end", values=fila)
+
+    def _cargar_veterinarios_activos(self):
+        with conectar() as conexion:
+            veterinarios = obtener_veterinarios_activos(conexion)
+
+        self.veterinarios_por_opcion = {}
+        opciones = []
+
+        for matricula, nombre, apellido in veterinarios:
+            opcion = f"{apellido}, {nombre} - {matricula}"
+            opciones.append(opcion)
+            self.veterinarios_por_opcion[opcion] = matricula
+
+        self.veterinario_selector["values"] = opciones
+        self.veterinario_selector.set("")
+
+    def _abrir_historia_clinica(self, event):
+        item_id = self.hc_table.identify_row(event.y)
+        if not item_id:
+            return "break"
+
+        valores = self.hc_table.item(item_id, "values")
+        if not valores:
+            return "break"
+
+        self.HC_number_label.config(text=str(valores[3]))
+        self.id_paciente_seleccionado = int(valores[3])
+
+        with conectar() as conexion:
+            self.consultas_historial = obtener_consultas_paciente(
+                conexion,
+                self.id_paciente_seleccionado,
+            )
+            detalle = obtener_detalle_paciente(
+                conexion,
+                self.id_paciente_seleccionado,
+            )
+
+        if detalle is None:
+            messagebox.showerror(
+                "Paciente no encontrado",
+                "No se encontraron los datos del paciente seleccionado.",
+                parent=self,
+            )
+            return "break"
+
+        (
+            nombre_cliente,
+            apellido_cliente,
+            telefono,
+            domicilio,
+            dni,
+            nombre_paciente,
+            especie,
+            fecha_nacimiento,
+            sexo,
+            castrado,
+            peso,
+        ) = detalle
+
+        if fecha_nacimiento is None:
+            edad_texto = "No informada"
+        else:
+            hoy = date.today()
+            edad = hoy.year - fecha_nacimiento.year
+            if (hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day):
+                edad -= 1
+            edad_texto = f"{edad} año" if edad == 1 else f"{edad} años"
+
+        if castrado is None:
+            castrado_texto = "No informado"
+        elif castrado:
+            castrado_texto = "Sí"
+        else:
+            castrado_texto = "No"
+
+        peso_texto = "No informado" if peso is None else f"{peso} kg"
+
+        self.HC_client_label.config(
+            text=f"Cliente: {nombre_cliente} {apellido_cliente}"
+        )
+        self.client_phone_label.config(text=f"Teléfono: {telefono}")
+        self.client_address_label.config(
+            text=f"Domicilio: {domicilio or 'No informado'}"
+        )
+        self.client_dni_label.config(text=f"DNI: {dni}")
+        self.patient_name_label.config(text=f"Paciente: {nombre_paciente}")
+        self.patient_species_label.config(text=f"Especie: {especie}")
+        self.patient_age_label.config(text=f"Edad: {edad_texto}")
+        self.patient_sex_label.config(text=f"Sexo: {sexo or 'No informado'}")
+        self.patient_neutered_label.config(text=f"Castrado: {castrado_texto}")
+        self.patient_weight_label.config(text=f"Peso: {peso_texto}")
+
+        self._cargar_veterinarios_activos()
+        self._cargar_textos_historial()
+        self._limpiar_consulta_actual()
+
+        self.historial_listbox.delete(0, "end")
+        for consulta in self.consultas_historial:
+            fecha = consulta[1].strftime("%d-%m-%y")
+            veterinario = consulta[6]
+            self.historial_listbox.insert(
+                "end",
+                f"{fecha} {veterinario}",
+            )
+
+        self.hc_table_frame.pack_forget()
+        self.historia_clinica_frame.pack(
+            fill="both",
+            expand=True,
+            padx=40,
+            pady=(25, 10),
+        )
+        return "break"
+
+    def _cargar_textos_historial(self):
+        indices = {
+            "Notas": 2,
+            "Observaciones": 3,
+            "Tratamiento": 4,
+        }
+
+        for titulo, indice in indices.items():
+            partes = []
+
+            for consulta in self.consultas_historial:
+                contenido = consulta[indice]
+                if contenido and contenido.strip():
+                    fecha = consulta[1].strftime("%d-%m-%Y")
+                    partes.append(
+                        f"Visita {fecha}:\n{contenido.strip()}"
+                    )
+
+            campo = self.consulta_historial_textos[titulo]
+            campo.configure(state="normal")
+            campo.delete("1.0", "end")
+            if partes:
+                campo.insert("1.0", "\n\n".join(partes))
+            campo.configure(state="disabled")
+
+    def _limpiar_consulta_actual(self):
+        for campo in self.consulta_textos.values():
+            campo.delete("1.0", "end")
+
+    def _finalizar_consulta(self):
+        opcion_veterinario = self.veterinario_var.get().strip()
+        matricula = self.veterinarios_por_opcion.get(opcion_veterinario)
+
+        if not matricula:
+            messagebox.showwarning(
+                "Falta seleccionar veterinario",
+                "Seleccioná el veterinario que realizó la consulta.",
+                parent=self,
+            )
+            return
+
+        notas = self.consulta_textos["Notas"].get(
+            "1.0", "end-1c"
+        ).strip()
+        observaciones = self.consulta_textos["Observaciones"].get(
+            "1.0", "end-1c"
+        ).strip()
+        tratamiento = self.consulta_textos["Tratamiento"].get(
+            "1.0", "end-1c"
+        ).strip()
+
+        if not any((notas, observaciones, tratamiento)):
+            messagebox.showwarning(
+                "Consulta vacía",
+                "Escribí información en al menos uno de los campos.",
+                parent=self,
+            )
+            return
+
+        if len(notas) > 200:
+            messagebox.showwarning(
+                "Notas demasiado largas",
+                "El campo Notas admite hasta 200 caracteres.",
+                parent=self,
+            )
+            return
+
+        try:
+            with conectar() as conexion:
+                registrar_consulta(
+                    conexion,
+                    self.id_paciente_seleccionado,
+                    matricula,
+                    notas,
+                    observaciones,
+                    tratamiento,
+                )
+                consultas = obtener_consultas_paciente(
+                    conexion,
+                    self.id_paciente_seleccionado,
+                )
+                historias = obtener_historias(conexion)
+        except Exception as error:
+            messagebox.showerror(
+                "Error al guardar la consulta",
+                f"No se pudo guardar la consulta en la base de datos:\n{error}",
+                parent=self,
+            )
+            return
+
+        self.consultas_historial = consultas
+        self._cargar_textos_historial()
+        self._limpiar_consulta_actual()
+
+        self.historial_listbox.delete(0, "end")
+        for consulta in self.consultas_historial:
+            fecha = consulta[1].strftime("%d-%m-%y")
+            veterinario = consulta[6]
+            self.historial_listbox.insert(
+                "end",
+                f"{fecha} {veterinario}",
+            )
+
+        self.veterinario_selector.set("")
+
+        for item_id in self.hc_table.get_children():
+            self.hc_table.delete(item_id)
+        for historia in historias:
+            self.hc_table.insert("", "end", values=historia)
+
+        messagebox.showinfo(
+            "Consulta guardada",
+            "La consulta se guardó correctamente.",
+            parent=self,
+        )
+
+    def _cerrar_historia_clinica(self):
+        self._limpiar_consulta_actual()
+        self.historia_clinica_frame.pack_forget()
+        self.hc_table_frame.pack(
+            fill="both",
+            expand=True,
+            padx=40,
+            pady=(25, 10),
+        )
 
     def _build_historia_clinica_card(self):
         self.historia_clinica_frame = tk.Frame(
@@ -137,12 +388,62 @@ class HistoriasPage(tk.Frame):
             font=("Inter", -24),
             bg="white"
         )
+        self.btn_cerrar_historia = tk.Button(
+            self.hc_header_frame,
+            text="x",
+            font=("Arial", 20, "bold"),
+            bg="white",
+            relief="flat",
+            cursor="hand2",
+            command=self._cerrar_historia_clinica,
+        )
+
+        self.btn_finalizar_consulta = tk.Button(
+            self.hc_header_frame,
+            text="✓ Finalizar consulta",
+            font=("Arial", 10, "bold"),
+            bg="#8FD694",
+            fg="#1F1F1F",
+            relief="flat",
+            padx=10,
+            pady=6,
+            cursor="hand2",
+            command=self._finalizar_consulta,
+        )
+
         self.HC_client_label = tk.Label(
-            self.historia_clinica_frame,
+            self.hc_header_frame,
             text="Cliente: Juan Pérez",
             font=("Inter", -16),
             bg="white"
         )
+
+        self.client_contact_frame = tk.Frame(
+            self.historia_clinica_frame,
+            bg="white",
+        )
+
+        self.client_phone_label = tk.Label(
+            self.client_contact_frame,
+            text="Teléfono: 3518292929",
+            font=("Arial", 12),
+            bg="white",
+        )
+
+        self.client_address_label = tk.Label(
+            self.client_contact_frame,
+            text="Domicilio: Sobremonte 2011",
+            font=("Arial", 12),
+            bg="white",
+        )
+
+        self.client_dni_label = tk.Label(
+            self.client_contact_frame,
+            text="DNI: 98555888",
+            font=("Arial", 12),
+            bg="white",
+        )
+
 #contiene datos principales del paciente
         self.hc_patient_info_frame = tk.Frame(self.historia_clinica_frame, bg="white")
 
@@ -182,6 +483,177 @@ class HistoriasPage(tk.Frame):
             font=("Inter", -16),
             bg="white"
         )
+
+        self.hc_header_frame.pack(fill="x", padx=12, pady=(10, 6))
+
+        self.client_contact_frame.pack(fill="x", padx=12, pady=(0, 6))
+        self.client_phone_label.pack(side="left", padx=6)
+        self.client_address_label.pack(side="left", padx=6)
+        self.client_dni_label.pack(side="left", padx=6)
+
+        self.btn_finalizar_consulta.pack(side="right")
+        self.btn_cerrar_historia.pack(side="left", padx=(0, 8))
+        self.HC_title_label.pack(side="left", padx=(30, 0))
+        self.HC_number_label.pack(side="left", padx=(6, 20))
+        self.HC_client_label.pack(side="left")
+
+        self.hc_patient_info_frame.pack(fill="x", padx=12, pady=6)
+
+        for columna in range(6):
+            self.hc_patient_info_frame.grid_columnconfigure(columna, weight=1)
+
+        self.patient_name_label.grid(row=0, column=0, sticky="w", padx=6)
+        self.patient_species_label.grid(row=0, column=1, sticky="w", padx=6)
+        self.patient_age_label.grid(row=0, column=2, sticky="w", padx=6)
+        self.patient_sex_label.grid(row=0, column=3, sticky="w", padx=6)
+        self.patient_neutered_label.grid(row=0, column=4, sticky="w", padx=6)
+        self.patient_weight_label.grid(row=0, column=5, sticky="w", padx=6)
+
+        self.veterinario_selector_frame = tk.Frame(
+            self.historia_clinica_frame,
+            bg="white",
+        )
+
+        tk.Label(
+            self.veterinario_selector_frame,
+            text="Veterinario de la consulta:",
+            bg="white",
+            font=("Arial", 11),
+        ).pack(side="left", padx=(6, 4))
+
+        self.veterinario_var = tk.StringVar()
+        self.veterinario_selector = ttk.Combobox(
+            self.veterinario_selector_frame,
+            textvariable=self.veterinario_var,
+            state="readonly",
+            width=35,
+            font=("Arial", 11),
+        )
+        self.veterinario_selector.pack(side="left")
+        self.veterinario_selector_frame.pack(
+            fill="x",
+            padx=12,
+            pady=(0, 6),
+        )
+
+    def _build_consulta_panels(self):
+        self.consulta_panels_frame = tk.Frame(
+            self.historia_clinica_frame,
+            bg="white",
+        )
+        self.consulta_panels_frame.pack(
+            fill="both",
+            expand=True,
+            padx=12,
+            pady=(8, 12),
+        )
+
+        self.consulta_panels_frame.grid_columnconfigure(0, weight=1)
+        self.consulta_panels_frame.grid_columnconfigure(1, weight=1)
+        self.consulta_panels_frame.grid_rowconfigure(0, weight=1)
+        self.consulta_panels_frame.grid_rowconfigure(1, weight=1)
+
+        paneles= (
+            ("Tratamiento", 0, 0),
+            ("Observaciones", 0, 1),
+            ("Notas", 1, 0),
+        )
+
+        self.consulta_historial_textos = {}
+        self.consulta_textos = {}
+
+        for titulo, fila, columna in paneles:
+            panel = tk.Frame(
+                self.consulta_panels_frame,
+                bg="#F0F0F0",
+                highlightbackground="#D9D9D9",
+                highlightthickness=3
+            )
+            panel.grid(
+                row=fila,
+                column=columna,
+                sticky="nsew",
+                padx=6,
+                pady=6,
+            )
+
+            tk.Label(
+                panel,
+                text=titulo,
+                font=("Arial", 10, "bold"),
+                bg="#F0F0F0",
+            ).pack(fill="x", pady=(6, 4))
+
+            tk.Label(
+                panel,
+                text="Consultas anteriores (solo lectura)",
+                font=("Arial", 9),
+                bg="#F0F0F0",
+            ).pack(fill="x", padx=8)
+
+            historial = tk.Text(
+                panel,
+                height=3,
+                wrap="word",
+                font=("Arial", 9),
+                relief="flat",
+                state="disabled",
+            )
+            historial.pack(fill="both", expand=True, padx=8, pady=(0, 4))
+            self.consulta_historial_textos[titulo] = historial
+
+            tk.Label(
+                panel,
+                text="Consulta actual",
+                font=("Arial", 9),
+                bg="#F0F0F0",
+            ).pack(fill="x", padx=8)
+
+            campo = tk.Text(
+                panel,
+                height=3,
+                wrap="word",
+                font=("Arial", 9),
+                relief="flat",
+            )
+            campo.pack(fill="both", expand=True, padx=8, pady=(0, 8))
+
+            self.consulta_textos[titulo] = campo
+
+        historial_panel = tk.Frame(
+            self.consulta_panels_frame,
+            bg="#F0F0F0",
+            highlightbackground="#D9D9D9",
+            highlightthickness=3,
+        )
+        historial_panel.grid(
+            row=1,
+            column=1,
+            sticky="nsew",
+            padx=6,
+        )
+
+        tk.Label(
+            historial_panel,
+            text="Historial de cambios",
+            font=("Arial", 10, "bold"),
+            bg="#F0F0F0",
+        ).pack(fill="x", pady=(6, 4))
+
+        self.historial_listbox = tk.Listbox(
+            historial_panel,
+            height=5,
+            font=("Arial", 9),
+            relief="flat",
+        )
+
+        self.historial_listbox.pack(
+            fill="both",
+            expand=True,
+            padx=8,
+            pady=(0, 8),
+        )
+
     def _build_add_hc_view(self):
         header_frame = tk.Frame(self.add_hc_view, bg="white")
         header_frame.pack(fill="x", padx=40, pady=(20, 10))

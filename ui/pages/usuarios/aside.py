@@ -50,7 +50,21 @@ class UsuariosAside(tk.Frame):
     def _build_widgets(self):
         self.profiles_button = self._build_action_button("Perfiles", lambda: self._select_section("perfiles"))
         self.add_professional_button = self._build_action_button("Agregar Profesional", lambda: self._select_section("agregar_profesional"))
+        self.btn_inhabilitar = self._build_action_button("INHABILITAR PERFIL", lambda: None)
+        self.btn_inhabilitar.config(
+            bg="#FF4D4D", 
+            fg="white", 
+            activebackground="#FF1A1A", 
+            activeforeground="white"
+        )
 
     def _build_layout(self):
         self.profiles_button.pack(fill="x", padx=10, pady=(10, 6))
         self.add_professional_button.pack(fill="x", padx=10, pady=(0, 10))
+
+    def mostrar_inhabilitar(self, comando):
+        self.btn_inhabilitar.config(command=comando)
+        self.btn_inhabilitar.pack(fill="x", padx=10, pady=(15, 10))
+
+    def ocultar_inhabilitar(self):
+        self.btn_inhabilitar.pack_forget()
