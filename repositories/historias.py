@@ -89,6 +89,20 @@ def obtener_veterinarios_activos(conexion):
         cursor.execute(consulta)
         return cursor.fetchall()
 
+def obtener_turnos_pendientes_hoy(conexion, id_paciente):
+    consulta = """
+        SELECT id_turno, hora_inicio, motivo
+        FROM turno
+        WHERE id_paciente = %s
+            AND fecha = CURRENT_DATE
+            AND estado = 'PENDIENTE'
+        ORDER BY hora_inicio
+    """
+
+    with conexion.cursor() as cursor:
+        cursor.execute(consulta, (id_paciente,))
+        return cursor.fetchall()
+
 def registrar_consulta(
     conexion,
     id_paciente,
@@ -96,34 +110,57 @@ def registrar_consulta(
     notas,
     observaciones,
     tratamiento,
+    id_turno=None,
 ):
-    consulta = """
-        INSERT INTO consulta (
-            fecha,
-            motivo_consulta,
-            observaciones,
-            tratamiento,
-            id_paciente,
-            matricula_veterinario
-        )
-        VALUES (
-            CURRENT_DATE,
-            %s,
-            %s,
-            %s,
-            %s,
-            %s
-        )
-        RETURNING id_consulta
-    """
-    valores = (
-        notas,
-        observaciones,
-        tratamiento,
-        id_paciente,
-        matricula_veterinario,
-    )
-
     with conexion.cursor() as cursor:
-        cursor.execute(consulta, valores)
+        if id_turno is not None:
+            cursor.execute(
+                """
+                UPDATE turno
+                SET estado = 'ATENDIDO'
+                WHERE id_turno = %s
+                    AND id_paciente = %s
+                    AND fecha = CURRENT_DATE
+                    AND estado = 'PENDIENTE'
+                RETURNING id_turno
+                """,
+                (id_turno, id_paciente),
+            )
+
+            if cursor.fetchone() is None:
+                raise ValueError(
+                    "El turno ya no está pendiente o no corresponde a este paciente."
+                )
+
+        cursor.execute(
+            """
+            INSERT INTO consulta(
+                fecha,
+                motivo_consulta,
+                observaciones,
+                tratamiento,
+                id_paciente,
+                matricula_veterinario,
+                id_turno
+            )
+            VALUES (
+                CURRENT_DATE,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            )
+            RETURNING id_consulta
+            """,
+            (
+                notas,
+                observaciones,
+                tratamiento,
+                id_paciente,
+                matricula_veterinario,
+                id_turno
+            ),
+        )
         return cursor.fetchone()[0]
