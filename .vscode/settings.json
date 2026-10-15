@@ -1,8 +1,9 @@
 {
-    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.defaultInterpreterPath": "C:\\Users\\veroc\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
     "python.terminal.activateEnvironment": true,
     "code-runner.runInTerminal": false,
+    "code-runner.cwd": "${workspaceFolder}",
     "code-runner.executorMap": {
-        "python": "/home/santiago/Documents/Proyectos/Tecnicatura/vet-app/.venv/bin/python -u"
+        "python": "python -u"
     }
 }
