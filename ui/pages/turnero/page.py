@@ -4,8 +4,11 @@ import tkinter as tk
 from tkinter import ttk
 
 from core.db import conectar
-from repositories.turno import obtener_turnos_por_fecha
 from ui.pages.turnero.new_appointment import NewAppointmentPage
+from repositories.turno import (
+    obtener_turnos_por_fecha,
+    resolver_estado_visual,
+)
 
 # Asumiendo que tenés la barra de búsqueda importada si la usás,
 # aunque en tu código vi que creaste el Entry directo. Podés borrar esto si no lo usás.
@@ -143,6 +146,7 @@ class TurneroPage(tk.Frame):
         self.appointments_table = ttk.Treeview(
             self.appointments_frame,
             columns=(
+                "estado",
                 "hora",
                 "cliente",
                 "pacliente",
@@ -151,10 +155,20 @@ class TurneroPage(tk.Frame):
                 "hc",
                 "ultimo turno",
             ),
-            show="headings",
+            displaycolumns=(
+                "hora",
+                "cliente",
+                "pacliente",
+                "especie",
+                "motivo",
+                "hc",
+                "ultimo turno",
+            ),
+            show="tree headings",
         )
         self.appointments_table.tag_configure("cirugia", background="#EFE8F8")
 
+        self.appointments_table.heading("#0", text="Estado", anchor="center")
         self.appointments_table.heading("hora", text="Hora")
         self.appointments_table.heading("cliente", text="Cliente", anchor="w")
         self.appointments_table.heading("pacliente", text="Paciente", anchor="w")
@@ -163,7 +177,9 @@ class TurneroPage(tk.Frame):
         self.appointments_table.heading("hc", text="HC")
         self.appointments_table.heading("ultimo turno", text="Último Turno")
 
-        self.appointments_table.column("hora", width=50)
+        self.appointments_table.column("#0", width=70, minwidth=70, stretch=False, anchor="center")
+        self.appointments_table.column("estado", width=0, stretch=False)
+        self.appointments_table.column("hora", width=50, anchor="center")
         self.appointments_table.column("cliente", width=150, anchor="w")
         self.appointments_table.column("pacliente", width=100, anchor="w")
         self.appointments_table.column("especie", width=80, anchor="center")
@@ -171,33 +187,102 @@ class TurneroPage(tk.Frame):
         self.appointments_table.column("hc", width=70, anchor="center")
         self.appointments_table.column("ultimo turno", width=150, anchor="center")
 
+        self.estado_images = {
+            "🟢": self._crear_imagen_estado("#A8DFAE"),
+            "🔴": self._crear_imagen_estado("#D16B70"),
+            "🟡": self._crear_imagen_estado("#F3DA58"),
+            "⚪": self._crear_imagen_estado("#D3D3D3"),
+        }
+
         self.appointments = []
+
+    def _crear_imagen_estado(self, color):
+        imagen = tk.PhotoImage(master=self, width=24, height=20)
+        imagen.put(color, to=(2, 3, 22, 17))
+        for x, y in (
+            (2, 3),
+            (3, 3),
+            (20, 3),
+            (21, 3),
+            (2, 4),
+            (21, 4),
+            (2, 15),
+            (21, 15),
+            (2, 16),
+            (3, 16),
+            (20, 16),
+            (21, 16),
+        ):
+            imagen.transparency_set(x, y, True)
+        return imagen
 
     def cargar_turnos_fecha(self, fecha):
         try:
             with conectar() as conexion:
-                self.appointments = obtener_turnos_por_fecha(conexion, fecha)
+                filas = obtener_turnos_por_fecha(conexion, fecha)
         except Exception as e:
             print(f"Error al cargar turnos: {e}")
-            self.appointments = []
+            filas = []
+
+        self.appointments = []
+        for turno in filas:
+            # turno viene de la BD como:
+            # (id_turno, hora, cliente, paciente, especie, motivo, hc, ultimo_turno, estado_bd)
+            (
+                id_turno,
+                hora,
+                cliente,
+                paciente,
+                especie,
+                motivo,
+                hc,
+                ult_turno,
+                estado_bd,
+            ) = turno
+
+            # Resolvemos el estado visual y el icono
+            nombre_estado, icono = resolver_estado_visual(fecha, hora, estado_bd)
+
+            # Formateamos la fila visible para el Treeview
+            fila_visible = (
+                icono,
+                hora,
+                cliente,
+                paciente,
+                especie,
+                motivo,
+                hc,
+                ult_turno,
+            )
+            self.appointments.append((id_turno, fila_visible))
 
         for item in self.appointments_table.get_children():
             self.appointments_table.delete(item)
 
-        for appointment in self.appointments:
-            motivo = str(appointment[4]).casefold()
+        for id_turno, valores in self.appointments:
+            motivo = str(valores[5]).casefold()
             tag = ("cirugia",) if motivo in ("cirugia", "cirugía") else ()
-            self.appointments_table.insert("", "end", values=appointment, tags=tag)
+            # Usamos el id_turno como iid de la fila en Treeview
+            self.appointments_table.insert(
+                "",
+                "end",
+                iid=str(id_turno),
+                text="",
+                image=self.estado_images[valores[0]],
+                values=valores,
+                tags=tag,
+            )
 
     def search_appointments(self, query, selected_filter):
         query = query.lower()
 
+        # Índices relativos a fila_visible: (estado=0, hora=1, cliente=2, paciente=3, especie=4, motivo=5, hc=6, ultimo=7)
         filter_columns = {
-            "Cliente": [1],
-            "Paciente": [2],
-            "Especie": [3],
-            "Motivo": [4],
-            "HC": [5],
+            "Cliente": [2],
+            "Paciente": [3],
+            "Especie": [4],
+            "Motivo": [5],
+            "HC": [6],
         }
 
         if selected_filter == "Todos":
@@ -207,21 +292,28 @@ class TurneroPage(tk.Frame):
 
         filtered_appointments = []
 
-        for appointment in self.appointments:
+        for id_turno, valores in self.appointments:
             if any(
-                query in str(appointment[column]).lower()
+                query in str(valores[column]).lower()
                 for column in columns_to_search
             ):
-                filtered_appointments.append(appointment)
+                filtered_appointments.append((id_turno, valores))
 
         for item in self.appointments_table.get_children():
             self.appointments_table.delete(item)
 
-        for appointment in filtered_appointments:
-            motivo = str(appointment[4]).casefold()
+        for id_turno, valores in filtered_appointments:
+            motivo = str(valores[5]).casefold()
             tag = ("cirugia",) if motivo in ("cirugia", "cirugía") else ()
-
-            self.appointments_table.insert("", "end", values=appointment, tags=tag)
+            self.appointments_table.insert(
+                "",
+                "end",
+                iid=str(id_turno),
+                text="",
+                image=self.estado_images[valores[0]],
+                values=valores,
+                tags=tag,
+            )
 
     # WIDGETS
     def _build_widgets(self):
