@@ -18,14 +18,21 @@ class UsuariosPage(tk.Frame):
         self._build_profiles_view()
         self._build_profile_detail_view()  # 2. Llamamos a la construcción del diseño
         self._build_add_professional_view()  # 3. Llama a la construcción de la vista de agregar profesional
-
+              
         self.show_section("perfiles")  # Mostrar la vista de perfiles por defecto
 
+    def set_aside(self, aside_instance):
+        self.aside = aside_instance
+        
     def show_section(self, section):
         # Oculta todas las vistas
         self.profiles_view.pack_forget()
         self.add_professional_view.pack_forget()
-        self.profile_detail_view.pack_forget()  # Ocultamos la nueva vista
+        self.profile_detail_view.pack_forget()
+        
+        # Ocultamos el botón por defecto al cambiar de sección
+        if hasattr(self, 'btn_inhabilitar_lateral'):
+            self.btn_inhabilitar_lateral.pack_forget()
 
         # Muestra únicamente la sección elegida
         if section == "perfiles":
@@ -33,12 +40,13 @@ class UsuariosPage(tk.Frame):
         elif section == "agregar_profesional":
             self.add_professional_view.pack(fill="both", expand=True)
         elif section == "ver_perfil":
-            self.profile_detail_view.pack(
-                fill="both", expand=True
-            )  # Mostramos la nueva vista
-        else:
-            raise ValueError(f"Sección de Usuarios desconocida: {section}")
+            self.profile_detail_view.pack(fill="both", expand=True)
+            if hasattr(self, 'aside') and self.aside:
+                self.aside.mostrar_inhabilitar(self._abrir_modal_inhabilitar)
 
+        else:
+            raise ValueError(f"Sección de Usuarios desconocida: {section}")    # Oculta todas las vistas
+        
     def _build_profiles_view(self):
 
         # --- BARRA DE BÚSQUEDA ---
@@ -482,3 +490,64 @@ class UsuariosPage(tk.Frame):
             variable.set("")
 
         self.show_section("perfiles")
+
+    def _abrir_modal_inhabilitar(self):
+        # Crear la ventana emergente (Toplevel) para la confirmación
+        modal = tk.Toplevel(self)
+        modal.title("Inhabilitar Perfil")
+        modal.geometry("420x230")
+        modal.configure(bg="white")
+        modal.transient(self)
+        modal.grab_set()  # Bloquea la ventana principal hasta que se cierre el modal
+
+        # Etiqueta de mensaje de confirmación según Figma
+        lbl_mensaje = tk.Label(
+            modal,
+            text="ATENCIÓN!!\n\nEsta acción no BORRA el perfil, solo lo\nINHABILITA. Puede ser recuperado\nposteriormente.",
+            font=("Arial", 10),
+            bg="white",
+            fg="#333333",
+            justify="center"
+        )
+        lbl_mensaje.pack(pady=20)
+
+        # Frame contenedor para los botones de acción del modal
+        frame_botones = tk.Frame(modal, bg="white")
+        frame_botones.pack(pady=10)
+
+        # Botón para cancelar y cerrar el modal (A la izquierda)
+        btn_cancelar = tk.Button(
+            frame_botones,
+            text="Cancelar",
+            bg="#E0E0E0",
+            fg="#333333",
+            font=("Arial", 10, "bold"),
+            relief="flat",
+            padx=12,
+            pady=8,
+            cursor="hand2",
+            command=modal.destroy
+        )
+        btn_cancelar.pack(side="left", padx=10)
+
+        # Botón para continuar / confirmar la inhabilitación (A la derecha)
+        btn_continuar = tk.Button(
+            frame_botones,
+            text="Continuar",
+            bg="#FF4D4D",
+            fg="white",
+            font=("Arial", 10, "bold"),
+            relief="flat",
+            padx=12,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self._ejecutar_inhabilitacion(modal)
+        )
+        btn_continuar.pack(side="left", padx=10)
+
+    def _ejecutar_inhabilitacion(self, modal):
+        # Lógica interna para actualizar el estado en la base de datos
+        print("Perfil inhabilitado correctamente.")
+        
+        # Cierra la ventana modal al terminar
+        modal.destroy()
