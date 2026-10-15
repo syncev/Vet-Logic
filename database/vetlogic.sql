@@ -146,6 +146,8 @@ INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente) VA
 
 -- 5. Tabla consulta
 INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_paciente, matricula_veterinario, id_turno) VALUES
+('2026-10-15', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 1, 'MP-3456', 1),
+('2026-11-06', 'Aplicación de vacuna anual', 'Paciente tranquilo', 'Dosis séxtuple aplicada', 2, 'MP-4567', 2),
 ('2026-09-25', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 3, 'MP-3456', 3),
 ('2026-11-05', 'Aplicación de vacuna anual', 'Paciente tranquilo', 'Dosis séxtuple aplicada', 4, 'MP-4567', 4),
 ('2026-06-07', 'Control preventivo general', 'Buen estado general de salud', 'Ninguno', 5, 'MP-5678', 5),
