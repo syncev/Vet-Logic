@@ -105,3 +105,69 @@ def actualizar_estado_turno(conexion, id_turno: int, nuevo_estado: str):
     with conexion.cursor() as cursor:
         cursor.execute(consulta, (estado_limpio, id_turno))
     conexion.commit()
+
+def registrar_turno_con_paciente_nuevo(conexion, datos: dict) -> dict:
+    """
+    Registra cliente (si no existe), nuevo paciente (generando automáticamente su HC incremental)
+    y el turno correspondiente cumpliendo las restricciones del esquema SQL.
+    Retorna los IDs generados: id_paciente (HC) e id_turno.
+    """
+    dni = datos["dni"].strip()
+    nombre_cliente = datos.get("cliente_nombre", "").strip()
+    apellido_cliente = datos.get("cliente_apellido", "").strip()
+    telefono = datos.get("contacto", "").strip() or "No informado"
+
+    nombre_paciente = datos["paciente"].strip()
+    especie = datos.get("especie", "Otro").strip()
+    raza = datos.get("raza", "").strip() or None
+
+    fecha = datos["fecha"]
+    hora_inicio_str = datos["hora"]
+    motivo = datos.get("motivo", "CLINICA").strip().upper()
+    if motivo not in ("CLINICA", "VACUNACION", "CIRUGIA", "OTROS"):
+        motivo = "CLINICA"
+
+    # Cálculo de hora fin (40 minutos para respetar la restricción ck_turno_duracion)
+    hora_dt = datetime.strptime(hora_inicio_str, "%H:%M")
+    hora_fin_str = (hora_dt + timedelta(minutes=40)).strftime("%H:%M")
+
+    with conexion.cursor() as cursor:
+        # 1. Registrar o actualizar cliente por DNI
+        cursor.execute(
+            """
+            INSERT INTO cliente (dni, nombre, apellido, telefono)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (dni) DO UPDATE
+            SET telefono = EXCLUDED.telefono;
+            """,
+            (dni, nombre_cliente, apellido_cliente, telefono)
+        )
+
+        # 2. Registrar el paciente: id_paciente se genera con IDENTITY (incremental único = HC)
+        cursor.execute(
+            """
+            INSERT INTO paciente (nombre, especie, raza, dni)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id_paciente;
+            """,
+            (nombre_paciente, especie, raza, dni)
+        )
+        id_paciente = cursor.fetchone()[0]
+
+        # 3. Registrar el turno vinculado al paciente recién creado
+        cursor.execute(
+            """
+            INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente)
+            VALUES (%s, %s, %s, %s, 'PENDIENTE', %s)
+            RETURNING id_turno;
+            """,
+            (fecha, hora_inicio_str, hora_fin_str, motivo, id_paciente)
+        )
+        id_turno = cursor.fetchone()[0]
+
+    conexion.commit()
+
+    return {
+        "id_paciente": id_paciente,  # Este es el número de Historia Clínica (HC)
+        "id_turno": id_turno,
+    }

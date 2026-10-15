@@ -530,6 +530,10 @@ class TurneroPage(tk.Frame):
 
         self._centrar_ventana(modal)
 
+        def cerrar_y_recargar():
+            modal.destroy()
+            self.select_date(self.selected_date)
+
         fondo = tk.Frame(modal, bg="white")
         fondo.pack(fill="both", expand=True, padx=20, pady=10)
 
@@ -574,6 +578,13 @@ class TurneroPage(tk.Frame):
             font=("Arial", 11),
             bg="#D2C2ED",
         ).pack(anchor="w")
+        tk.Label(
+            card_cliente,
+            text=f"Nº Historia Clínica (HC): {datos.get('hc', '-')}",
+            font=("Arial", 11, "bold"),
+            bg="#D2C2ED",
+            fg="#6200EE",
+        ).pack(anchor="w", pady=(6, 0))
 
         card_turno = tk.Frame(tarjetas, bg="#F0C8A0", padx=20, pady=20)
         card_turno.pack(side="left", fill="both", expand=True, padx=(10, 0))
@@ -619,7 +630,7 @@ class TurneroPage(tk.Frame):
             cursor="hand2",
             padx=20,
             pady=5,
-            command=modal.destroy,
+            command=cerrar_y_recargar,
         ).pack(pady=10)
 
     def _abrir_modal_turno(self, event):
