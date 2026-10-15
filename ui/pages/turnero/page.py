@@ -385,6 +385,7 @@ class TurneroPage(tk.Frame):
         self.new_appointment_modal.resizable(False, False)
         self.new_appointment_modal.transient(self.winfo_toplevel())
         self.new_appointment_modal.grab_set()  # esto bloquea la interaccion de la app mientras el modal esta abierto
+        self._centrar_ventana(self.new_appointment_modal)
 
         content = tk.Frame(self.new_appointment_modal, bg="white")
         content.pack(fill="both", expand=True, padx=10, pady=10)
@@ -494,9 +495,129 @@ class TurneroPage(tk.Frame):
 
         self.new_appointment_modal.title("Registrar paciente nuevo")
         self.new_appointment_modal.geometry("980x700")
+        self._centrar_ventana(self.new_appointment_modal)
 
-        form = NewAppointmentPage(self.new_appointment_modal)
+        form = NewAppointmentPage(
+            self.new_appointment_modal,
+            on_save=self._mostrar_datos_turno_nuevo,
+        )
         form.pack(fill="both", expand=True)
+
+    def _centrar_ventana(self, ventana):
+        ventana_principal = self.winfo_toplevel()
+        ventana_principal.update_idletasks()
+        ventana.update_idletasks()
+
+        x = ventana_principal.winfo_rootx() + (
+            ventana_principal.winfo_width() - ventana.winfo_width()
+        ) // 2
+        y = ventana_principal.winfo_rooty() + (
+            ventana_principal.winfo_height() - ventana.winfo_height()
+        ) // 2
+        ventana.geometry(f"+{x}+{y}")
+
+    def _mostrar_datos_turno_nuevo(self, datos):
+        self.new_appointment_modal.destroy()
+
+        modal = tk.Toplevel(self)
+        modal.geometry("700x400")
+        modal.resizable(False, False)
+        modal.transient(self.winfo_toplevel())
+        modal.grab_set()
+
+        self._centrar_ventana(modal)
+
+        fondo = tk.Frame(modal, bg="white")
+        fondo.pack(fill="both", expand=True, padx=20, pady=10)
+
+        tk.Button(
+            fondo,
+            text="←",
+            font=("Arial", 20, "bold"),
+            bg="white",
+            fg="#666666",
+            relief="flat",
+            bd=0,
+            cursor="hand2",
+            command=modal.destroy,
+        ).pack(anchor="w", padx=10, pady=(10, 0))
+
+        tarjetas = tk.Frame(fondo, bg="white")
+        tarjetas.pack(fill="x", padx=10, pady=10)
+
+        card_cliente = tk.Frame(tarjetas, bg="#D2C2ED", padx=20, pady=20)
+        card_cliente.pack(side="left", fill="both", expand=True, padx=(0, 10))
+        tk.Label(
+            card_cliente,
+            text="Datos del Cliente y Paciente",
+            font=("Arial", 13, "bold"),
+            bg="#D2C2ED",
+        ).pack(pady=(0, 10))
+        tk.Label(
+            card_cliente,
+            text=f"Paciente: {datos['paciente']}",
+            font=("Arial", 11),
+            bg="#D2C2ED",
+        ).pack(anchor="w")
+        tk.Label(
+            card_cliente,
+            text=f"Cliente: {datos['cliente']}",
+            font=("Arial", 11),
+            bg="#D2C2ED",
+        ).pack(anchor="w")
+        tk.Label(
+            card_cliente,
+            text=f"Contacto: {datos['contacto']}",
+            font=("Arial", 11),
+            bg="#D2C2ED",
+        ).pack(anchor="w")
+
+        card_turno = tk.Frame(tarjetas, bg="#F0C8A0", padx=20, pady=20)
+        card_turno.pack(side="left", fill="both", expand=True, padx=(10, 0))
+        tk.Label(
+            card_turno,
+            text="Datos de Turno",
+            font=("Arial", 13, "bold"),
+            bg="#F0C8A0",
+        ).pack(pady=(0, 10))
+        tk.Label(
+            card_turno,
+            text=f"Día: {datos['fecha'].strftime('%d/%m/%Y')}",
+            font=("Arial", 11),
+            bg="#F0C8A0",
+        ).pack(anchor="w")
+        tk.Label(
+            card_turno,
+            text=f"Hora: {datos['hora']} hs",
+            font=("Arial", 11),
+            bg="#F0C8A0",
+        ).pack(anchor="w")
+        tk.Label(
+            card_turno,
+            text=f"Motivo: {datos['motivo']}",
+            font=("Arial", 11),
+            bg="#F0C8A0",
+        ).pack(anchor="w")
+
+        tk.Label(
+            fondo,
+            text="Datos del turno confirmados",
+            font=("Arial", 12),
+            bg="#A8E5A8",
+            pady=10,
+        ).pack(fill="x", padx=10, pady=(10, 5))
+
+        tk.Button(
+            fondo,
+            text="Cerrar",
+            font=("Arial", 11),
+            bg="#D0EBF0",
+            relief="flat",
+            cursor="hand2",
+            padx=20,
+            pady=5,
+            command=modal.destroy,
+        ).pack(pady=10)
 
     def _abrir_modal_turno(self, event):
         seleccion = self.appointments_table.selection()
