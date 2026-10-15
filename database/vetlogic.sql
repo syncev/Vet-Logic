@@ -156,3 +156,42 @@ INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_pac
 ('2026-05-30', 'Vacunación antirrábica', 'Sin reacciones adversas', 'Aplicación correcta', 8, 'MP-8901', 8),
 ('2026-07-15', 'Revisión oftalmológica', 'Ojos limpios y sin lesiones', 'Gotas lubricantes', 9, 'MP-9012', 9),
 ('2026-05-12', 'Control geriátrico preventivo', 'Se solicitan análisis de sangre', 'Vitaminas y suplementos', 10, 'MP-0123', 10);
+
+WITH datos (
+    fecha, hora_inicio, hora_fin, motivo, estado, id_paciente,
+    matricula_veterinario, motivo_consulta, observaciones, tratamiento
+) As (
+    VALUES
+    (DATE '2026-10-10', TIME '09:00', TIME '09:40', 'CLINICA', 'ATENDIDO', 1,
+     'MP-1234', 'Control general', 'Buen estado de salud', 'Control anual'),
+    (DATE '2026-10-11', TIME '09:40', TIME '10:20', 'CLINICA', 'ATENDIDO', 2,
+     'MP-2345', 'Control digestivo', 'Sin síntomas actuales', 'Continuar dieta habitual'),
+    (DATE '2026-10-12', TIME '10:20', TIME '11:00', 'CIRUGIA', 'ATENDIDO', 3,
+     'MP-3456', 'Control postoperatorio', 'Evolución favorable', 'Mantener reposo'),
+    (DATE '2026-10-13', TIME '11:00', TIME '11:40', 'VACUNACION', 'ATENDIDO', 4,
+     'MP-4567', 'Vacunación anual', 'Sin reacciones previas', 'Aplicar dosis anual'),
+    (DATE '2026-10-14', TIME '11:40', TIME '12:20', 'CLINICA', 'ATENDIDO', 5,
+     'MP-5678', 'Control preventivo', 'Paciente estable', 'Nuevo control en seis meses')
+),
+turnos_insertados AS (
+    INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente)
+    SELECT fecha, hora_inicio, hora_fin, motivo, estado, id_paciente
+    FROM datos
+    RETURNING id_turno, fecha, id_paciente
+)
+INSERT INTO consulta (
+    fecha, motivo_consulta, observaciones, tratamiento,
+    id_paciente, matricula_veterinario, id_turno
+)
+SELECT
+    t.fecha,
+    d.motivo_consulta,
+    d.observaciones,
+    d.tratamiento,
+    t.id_paciente,
+    d.matricula_veterinario,
+    t.id_turno
+FROM turnos_insertados t
+JOIN datos d
+  ON d.fecha = t.fecha
+ AND d.id_paciente = t.id_paciente;
