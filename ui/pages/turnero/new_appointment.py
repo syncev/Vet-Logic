@@ -6,6 +6,9 @@ from zoneinfo import ZoneInfo
 from ui.pages.turnero.horarios_selector import HorariosSelector
 from ui.widgets.calendar_picker import CalendarPicker
 
+from core.db import conectar
+from repositories.turno import registrar_turno_con_paciente_nuevo
+
 # Desactivado temporalmente mientras la base de datos no esta disponible.
 # import psycopg
 # from core.db import conectar
@@ -295,7 +298,6 @@ class NewAppointmentPage(tk.Frame):
         #     }
 
         self.schedule_status.configure(text="")
-        # Sin consulta a la DB, ningún horario se considera ocupado.
         return set()
 
     def _confirmar_turno(self):
@@ -332,18 +334,60 @@ class NewAppointmentPage(tk.Frame):
         ).pack(side="left", padx=10)
 
         def continuar():
+            dni = self.entries["dni"].get().strip()
+            if not dni:
+                from tkinter import messagebox
+
+                messagebox.showwarning(
+                    "DNI requerido",
+                    "Por favor ingrese el DNI del cliente para poder registrar "
+                    "el turno y generar la Historia Clínica.",
+                    parent=dialog,
+                )
+                return
+
             fecha, hora = self.horario_seleccionado
+            cliente_nombre = self.entries["client_name"].get().strip()
+            cliente_apellido = self.entries["client_lastname"].get().strip()
+            cliente_completo = f"{cliente_nombre} {cliente_apellido}".strip()
+            paciente = self.entries["pet_name"].get().strip()
+            contacto = self.entries["phone"].get().strip()
+            motivo = self.reason.get()
+            especie = self.entries["species"].get()
+            raza = self.entries["breed"].get().strip()
+
             datos = {
-                "cliente": (
-                    f"{self.entries['client_name'].get().strip()} "
-                    f"{self.entries['client_lastname'].get().strip()}"
-                ).strip(),
-                "paciente": self.entries["pet_name"].get().strip(),
-                "contacto": self.entries["phone"].get().strip(),
+                "dni": dni,
+                "cliente_nombre": cliente_nombre,
+                "cliente_apellido": cliente_apellido,
+                "cliente": cliente_completo,
+                "paciente": paciente,
+                "especie": especie,
+                "raza": raza,
+                "contacto": contacto,
                 "fecha": fecha,
                 "hora": hora,
-                "motivo": self.reason.get(),
+                "motivo": motivo,
             }
+
+            try:
+                with conectar() as conexion:
+                    resultado = registrar_turno_con_paciente_nuevo(
+                        conexion,
+                        datos,
+                    )
+                    datos["hc"] = resultado["id_paciente"]
+                    datos["id_turno"] = resultado["id_turno"]
+            except Exception as error:
+                from tkinter import messagebox
+
+                messagebox.showerror(
+                    "Error al registrar turno",
+                    f"No se pudo guardar en la base de datos:\n{error}",
+                    parent=dialog,
+                )
+                return
+
             dialog.destroy()
             if self.on_save is not None:
                 self.on_save(datos)
