@@ -155,5 +155,5 @@ INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_pac
 ('2026-04-21', 'Chequeo dermatológico', 'Alergia estacional leve', 'Baño con shampoo medicado', 7, 'MP-7890', 7),
 ('2026-05-30', 'Vacunación antirrábica', 'Sin reacciones adversas', 'Aplicación correcta', 8, 'MP-8901', 8),
 ('2026-07-15', 'Revisión oftalmológica', 'Ojos limpios y sin lesiones', 'Gotas lubricantes', 9, 'MP-9012', 9),
-('2026-05-12', 'Control geriátrico preventivo', 'Se solicitan análisis de sangre', 'Vitaminas y suplementos', 10, 'MP-0123', 10);
+('2026-11-12', 'Control geriátrico preventivo', 'Se solicitan análisis de sangre', 'Vitaminas y suplementos', 10, 'MP-0123', 10);
 
