@@ -24,11 +24,11 @@ def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
     """
     Recupera los turnos de una fecha para poblar la tabla del turnero.
     Retorna tuplas con el formato:
-    (hora, cliente, paciente, especie, motivo, hc, ultimo_turno)
+    (id_turno, hora, cliente, paciente, especie, motivo, hc, ultimo_turno, estado)
     """
     consulta = """
         SELECT 
-            t.id_turno
+            t.id_turno,
             TO_CHAR(t.hora_inicio, 'HH24:MI') AS hora,
             CONCAT(c.nombre, ' ', c.apellido) AS cliente,
             p.nombre AS paciente,
@@ -45,12 +45,12 @@ def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
                     LIMIT 1
                 ),
                 '-'
-            ) AS ultimo_turno
+            ) AS ultimo_turno,
+            t.estado
         FROM turno t
         INNER JOIN paciente p ON t.id_paciente = p.id_paciente
         INNER JOIN cliente c ON p.dni = c.dni
         WHERE t.fecha = %s
-          # aca chicos saque CANCELADO porque postgresql ocultaba y descartaba raiz cualquier turno que estuviera CANCELADO, y no nos sirve para el turnero.
         ORDER BY t.hora_inicio ASC;
     """
     with conexion.cursor() as cursor:
@@ -83,3 +83,25 @@ def resolver_estado_visual(fecha_turno: date, hora_inicio_str: str, estado_bd: s
             pass
 
     return ("Pendiente", "⚪")
+
+
+def actualizar_estado_turno(conexion, id_turno: int, nuevo_estado: str):
+    """
+    Actualiza el estado de un turno en PostgreSQL ('PENDIENTE', 'ATENDIDO', 'CANCELADO', 'AUSENTE').
+    """
+    estados_validos = ("PENDIENTE", "ATENDIDO", "CANCELADO", "AUSENTE")
+    estado_limpio = nuevo_estado.strip().upper()
+
+    if estado_limpio not in estados_validos:
+        raise ValueError(
+            f"Estado inválido: {nuevo_estado}. Valores permitidos: {estados_validos}"
+        )
+
+    consulta = """
+        UPDATE turno
+        SET estado = %s
+        WHERE id_turno = %s;
+    """
+    with conexion.cursor() as cursor:
+        cursor.execute(consulta, (estado_limpio, id_turno))
+    conexion.commit()
