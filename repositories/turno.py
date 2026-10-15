@@ -27,6 +27,7 @@ def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
     """
     consulta = """
         SELECT 
+            t.id_turno
             TO_CHAR(t.hora_inicio, 'HH24:MI') AS hora,
             CONCAT(c.nombre, ' ', c.apellido) AS cliente,
             p.nombre AS paciente,
@@ -48,7 +49,7 @@ def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
         INNER JOIN paciente p ON t.id_paciente = p.id_paciente
         INNER JOIN cliente c ON p.dni = c.dni
         WHERE t.fecha = %s
-          AND t.estado <> 'CANCELADO'
+          # aca chicos saque CANCELADO porque postgresql ocultaba y descartaba raiz cualquier turno que estuviera CANCELADO, y no nos sirve para el turnero.
         ORDER BY t.hora_inicio ASC;
     """
     with conexion.cursor() as cursor:
