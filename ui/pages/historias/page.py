@@ -291,7 +291,7 @@ class HistoriasPage(tk.Frame):
 
     def _finalizar_consulta(self):
         dialog = tk.Toplevel(self)
-        dialog.overrideredirect(True)
+        dialog.transient(self.winfo_toplevel())
         dialog.configure(
             bg="white",
             highlightbackground="#333333",
@@ -423,6 +423,13 @@ class HistoriasPage(tk.Frame):
                     conexion,
                     self.id_paciente_seleccionado,
                 )
+        except ValueError:
+            messagebox.showwarning(
+                "Turno no disponible",
+                "El turno seleccionado ya no está disponible o fue modificado.",
+                parent=self
+            )
+            return
         except Exception as error:
             messagebox.showerror(
                 "Error al guardar la consulta",
@@ -838,7 +845,7 @@ class HistoriasPage(tk.Frame):
     def _abrir_modal_eliminar_hc(self):
         # 1. Ventana emergente limpia sin barra de Windows
         dialog = tk.Toplevel(self)
-        dialog.overrideredirect(True)  # Quita la barra superior de Windows
+        dialog.transient(self.winfo_toplevel())
         dialog.configure(
             bg="white",
             highlightbackground="#333333",
@@ -919,7 +926,7 @@ class HistoriasPage(tk.Frame):
     def _abrir_modal_eliminar_cliente(self):
         # 1. Ventana emergente limpia sin barra de Windows
         dialog = tk.Toplevel(self)
-        dialog.overrideredirect(True)
+        dialog.transient(self.winfo_toplevel())
         dialog.configure(
             bg="white",
             highlightbackground="#333333",
