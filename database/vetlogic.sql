@@ -104,11 +104,11 @@ INSERT INTO cliente (dni, nombre, apellido, telefono, mail, domicilio) VALUES
 ('89012345', 'Lydia', 'Deetz', '1199001122', 'lydia.art@gmail.com', 'San Juan 654'),
 ('90123456', 'Sabrina', 'Carpintera', '1122112211', 'sabrina@music.com', 'Mitre 1500'),
 ('01234567', 'Britney', 'Lanzas', '1133223322', 'britney@pop.com', 'Pueyrredón 888'),
-('12345678', 'Silvia', 'Moreno', '1122334455','silviy@gmail.com', 'San Martín 885'),
-('23456789', 'Martin', 'Sanchez', '1133445566','sanchezm@pop.com', 'San Luis 778'),
-('34567890', 'Calvin', 'Klein', '1144556677','calvink@gmail.com', 'La Rioja 128'),
-('45678901', 'Clark', 'Kent', '1155667788','kent5@pop.com', 'Catamarca 1488'),
-('56789012', 'Maria', 'del Barrio', '1166778899','mariadelbarrio@pop.com', 'Chubut 1888');
+('12345678', 'Silvia', 'Moreno', '1155203455','silviy@gmail.com', 'San Martín 885'),
+('23456789', 'Martin', 'Sanchez', '1133145566','sanchezm@pop.com', 'San Luis 778'),
+('34567890', 'Calvin', 'Klein', '1143356677','calvink@gmail.com', 'La Rioja 128'),
+('45678901', 'Clark', 'Leiva', '1155667558','kent5@pop.com', 'Catamarca 1488'),
+('56789012', 'Mariela', 'Barrionuevo', '1161878899','mariabarrionuevo@pop.com', 'Chubut 1888');
 
 -- 2. Tabla veterinario
 INSERT INTO veterinario (matricula_veterinario, nombre, apellido, contacto, estado, especialidad, domicilio, correo, contacto_emergencia) VALUES
@@ -135,13 +135,13 @@ INSERT INTO paciente (nombre, especie, raza, sexo, fecha_nacimiento, peso, castr
 ('Milo', 'Gato', 'Shorthair', 'Macho', '2024-05-10', 3.80, false, '23456789'),
 ('Thor', 'Perro', 'Ovejero Alemán', 'Macho', '2021-08-20', 28.50, true, '34567890'),
 ('Homero', 'Perro', 'Golden Retriever', 'Macho', '2022-03-12', 30.00, true, '45678901'),
-('Otto', 'Gato', 'Persa', 'Macho', '2020-11-05', 5.10, true, '56789012'),
+('Otto', 'Gato', 'Persa', 'Macho', '2020-11-05', 5.10, true, '56700012'),
 ('Rafa', 'Perro', 'Caniche', 'Macho', '2023-09-01', 6.50, false, '67890123'),
 ('Ara', 'Gato', 'Angora', 'Hembra', '2024-02-14', 3.20, false, '78901234'),
 ('Uma', 'Perro', 'Pitbull', 'Hembra', '2022-07-30', 24.00, true, '89012345'),
 ('Corcho', 'Perro', 'Beagle', 'Macho', '2019-12-10', 12.00, true, '90123456'),
 ('Simba', 'Gato', 'Maine Coon', 'Macho', '2021-06-25', 7.50, true, '01234567'),
-('Magnolia', 'Gato', 'Siamés', 'Hembra', '2024-06-15', 2.20, false,'12345678'),
+('Magnolia', 'Gato', 'Siamés', 'Hembra', '2024-06-15', 2.20, false,'12348678'),
 ('Pepe', 'Gato', 'Shorthair', 'Macho', '2026-01-15', 1.40, true,'34567890'),
 ('Umma', 'Perro', 'Ovejero Alemán', 'Hembra', '2026-09-15', 4.20, true, '145678901'),
 ('Homero', 'Perro', 'Golden Retriever', 'Macho', '2023-04-15', 30.00, true, '45678901'),
