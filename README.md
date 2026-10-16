@@ -153,7 +153,9 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-Las dependencias externas del proyecto son screeninfo y psycopg[binary]; ambas están incluidas en requirements.txt. Tkinter no se instala con pip: debe estar disponible en la instalación del sistema de Python.
+Las dependencias externas del proyecto son `screeninfo`, `tzdata` y
+`psycopg[binary]`; todas están incluidas en `requirements.txt`. Tkinter no se
+instala con pip: debe estar disponible en la instalación del sistema de Python.
 
 ### 5. Verificar la instalación
 
