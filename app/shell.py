@@ -62,5 +62,12 @@ class Shell(tk.Frame):
         # Usuarios necesita el callback para que su aside cambie la vista central.
         if page_name in ["usuarios", "historias"]:
             self.sidebar.set_context(aside_class, on_select_section=self.current_page.show_section)
-        else:   
+        elif page_name == "turnero":
+            self.sidebar.set_context(
+                aside_class,
+                selected_date=self.current_page.selected_date,
+                on_date_selected=self.current_page.select_date,
+            )
+            self.current_page.on_date_changed = self.sidebar.context_view.set_date
+        else:
             self.sidebar.set_context(aside_class)

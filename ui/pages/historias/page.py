@@ -172,6 +172,20 @@ class HistoriasPage(tk.Frame):
         self.veterinario_selector["values"] = opciones
         self.veterinario_selector.set("")
 
+    def _cargar_turnos_pendientes(self, turnos):
+        opcion_sin_turno= "Sin turno (urgencia u otra consulta)"
+        opciones = [opcion_sin_turno]
+        self.turnos_por_opcion = {opcion_sin_turno: None}
+
+        for id_turno, hora_inicio, motivo in turnos:
+            hora = hora_inicio.strftime("%H:%M")
+            opcion = f"{hora} - {motivo} (turno{id_turno})"
+            opciones.append(opcion)
+            self.turnos_por_opcion[opcion] = id_turno
+
+        self.turno_selector["values"] = opciones
+        self.turno_selector.set("")
+
     def _abrir_historia_clinica(self, event):
         item_id = self.hc_table.identify_row(event.y)
         if not item_id:
@@ -193,6 +207,10 @@ class HistoriasPage(tk.Frame):
                 conexion,
                 self.id_paciente_seleccionado,
             )
+            turnos_pendientes = obtener_turnos_pendientes_hoy(
+                conexion,
+                self.id_paciente_seleccionado,
+            )
 
         if detalle is None:
             messagebox.showerror(
@@ -201,6 +219,8 @@ class HistoriasPage(tk.Frame):
                 parent=self,
             )
             return "break"
+
+        self._cargar_turnos_pendientes(turnos_pendientes)
 
         (
             nombre_cliente,
@@ -301,6 +321,67 @@ class HistoriasPage(tk.Frame):
             campo.delete("1.0", "end")
 
     def _finalizar_consulta(self):
+        dialog = tk.Toplevel(self)
+        dialog.transient(self.winfo_toplevel())
+        dialog.configure(
+            bg="white",
+            highlightbackground="#333333",
+            highlightthickness=1,
+        )
+
+        tk.Label(
+            dialog,
+            text="Está finalizando la consulta.\n¿Desea GUARDAR los cambios?",
+            font=("Arial", 12),
+            justify="center",
+            bg="white",
+            fg="#1F1F1F",
+        ).pack(padx=40, pady=(28, 24))
+
+        buttons_frame = tk.Frame(dialog, bg="white")
+        buttons_frame.pack(fill="x", padx=40, pady=(0, 28))
+
+        tk.Button(
+            buttons_frame,
+            text="ATRÁS",
+            font=("Arial", 11, "bold"),
+            bg="#D1D5DB",
+            fg="#1F1F1F",
+            relief="flat",
+            bd=0,
+            padx=24,
+            pady=10,
+            cursor="hand2",
+            command=dialog.destroy,
+        ).pack(side="left", expand=True, padx=(0, 10))
+
+        tk.Button(
+            buttons_frame,
+            text="GUARDAR",
+            font=("Arial", 11, "bold"),
+            bg="#8FD694",
+            fg="#1F1F1F",
+            relief="flat",
+            bd=0,
+            padx=24,
+            pady=10,
+            cursor="hand2",
+            command=lambda: self._guardar_consulta_confirmada(dialog),
+        ).pack(side="right", expand=True, padx=(10, 0))
+
+        dialog.update_idletasks()
+        parent = self.winfo_toplevel()
+        parent.update_idletasks()
+        x = parent.winfo_rootx() + (
+            parent.winfo_width() - dialog.winfo_width()
+        ) // 2
+        y = parent.winfo_rooty() + (
+            parent.winfo_height() - dialog.winfo_height()
+        ) // 2
+        dialog.geometry(f"+{x}+{y}")
+        dialog.grab_set()
+
+    def _guardar_consulta_confirmada(self, dialog):
         opcion_veterinario = self.veterinario_var.get().strip()
         matricula = self.veterinarios_por_opcion.get(opcion_veterinario)
 
@@ -310,7 +391,20 @@ class HistoriasPage(tk.Frame):
                 "Seleccioná el veterinario que realizó la consulta.",
                 parent=self,
             )
+            dialog.destroy()
             return
+
+        opcion_turno = self.turno_var.get().strip()
+        if opcion_turno not in self.turnos_por_opcion:
+            messagebox.showwarning(
+                "Falta seleccionar turno",
+                "Seleccioná un turno o la opción 'Sin turno'",
+                parent=self,
+            )
+            dialog.destroy()
+            return
+
+        id_turno = self.turnos_por_opcion[opcion_turno]
 
         notas = self.consulta_textos["Notas"].get(
             "1.0", "end-1c"
@@ -328,6 +422,7 @@ class HistoriasPage(tk.Frame):
                 "Escribí información en al menos uno de los campos.",
                 parent=self,
             )
+            dialog.destroy()
             return
 
         if len(notas) > 200:
@@ -336,6 +431,7 @@ class HistoriasPage(tk.Frame):
                 "El campo Notas admite hasta 200 caracteres.",
                 parent=self,
             )
+            dialog.destroy()
             return
 
         try:
@@ -347,6 +443,7 @@ class HistoriasPage(tk.Frame):
                     notas,
                     observaciones,
                     tratamiento,
+                    id_turno=id_turno,
                 )
                 consultas = obtener_consultas_paciente(
                     conexion,
@@ -365,6 +462,8 @@ class HistoriasPage(tk.Frame):
             )
             return
 
+        dialog.destroy()
+
         self.consultas_historial = consultas
         self._cargar_textos_historial()
         self._limpiar_consulta_actual()
@@ -379,6 +478,7 @@ class HistoriasPage(tk.Frame):
             )
 
         self.veterinario_selector.set("")
+        self._cargar_turnos_pendientes(turnos_pendientes)
 
         self._actualizar_tabla_historias(historias)
 
@@ -542,8 +642,18 @@ class HistoriasPage(tk.Frame):
         self.patient_neutered_label.grid(row=0, column=4, sticky="w", padx=6)
         self.patient_weight_label.grid(row=0, column=5, sticky="w", padx=6)
 
-        self.veterinario_selector_frame = tk.Frame(
+        self.selectores_frame = tk.Frame(
             self.historia_clinica_frame,
+            bg="white",
+        )
+        self.selectores_frame.pack(
+            fill="x",
+            padx=12,
+            pady=(0, 6),
+        )
+
+        self.veterinario_selector_frame = tk.Frame(
+            self.selectores_frame,
             bg="white",
         )
 
@@ -559,14 +669,43 @@ class HistoriasPage(tk.Frame):
             self.veterinario_selector_frame,
             textvariable=self.veterinario_var,
             state="readonly",
-            width=35,
+            width=18,
             font=("Arial", 11),
         )
         self.veterinario_selector.pack(side="left")
         self.veterinario_selector_frame.pack(
+            side="left",
             fill="x",
-            padx=12,
-            pady=(0, 6),
+            expand=True,
+            padx=(0, 8),
+        )
+
+        self.turno_selector_frame = tk.Frame(
+            self.selectores_frame,
+            bg="white",
+        )
+
+        tk.Label(
+            self.turno_selector_frame,
+            text="Turno pendiente de hoy:",
+            bg="white",
+            font=("Arial", 11),
+        ).pack(side="left", padx=(6, 4))
+
+        self.turno_var = tk.StringVar()
+        self.turno_selector = ttk.Combobox(
+            self.turno_selector_frame,
+            textvariable=self.turno_var,
+            state="readonly",
+            width=18,
+            font=("Arial", 11),
+        )
+        self.turno_selector.pack(side="left")
+        self.turno_selector_frame.pack(
+            side="left",
+            fill="x",
+            expand=True,
+            padx=(0, 8),
         )
 
     def _build_consulta_panels(self):
@@ -906,7 +1045,7 @@ class HistoriasPage(tk.Frame):
 
         # 1. Ventana emergente limpia sin barra de Windows
         dialog = tk.Toplevel(self)
-        dialog.overrideredirect(True)  # Quita la barra superior de Windows
+        dialog.transient(self.winfo_toplevel())
         dialog.configure(
             bg="white",
             highlightbackground="#333333",
@@ -1024,7 +1163,7 @@ class HistoriasPage(tk.Frame):
 
         # 1. Ventana emergente limpia sin barra de Windows
         dialog = tk.Toplevel(self)
-        dialog.overrideredirect(True)
+        dialog.transient(self.winfo_toplevel())
         dialog.configure(
             bg="white",
             highlightbackground="#333333",

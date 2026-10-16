@@ -133,26 +133,26 @@ INSERT INTO paciente (nombre, especie, raza, sexo, fecha_nacimiento, peso, castr
 
 -- 4. Tabla turno
 INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente) VALUES
-('2026-05-09', '09:00:00', '09:40:00', 'CLINICA', 'ATENDIDO', 1),
-('2026-05-09', '09:40:00', '10:20:00', 'CLINICA', 'ATENDIDO', 2),
-('2026-05-09', '10:20:00', '11:00:00', 'CIRUGIA', 'PENDIENTE', 3),
-('2026-05-09', '11:00:00', '11:40:00', 'VACUNACION', 'PENDIENTE', 4),
-('2026-05-09', '11:40:00', '12:20:00', 'CLINICA', 'PENDIENTE', 5),
-('2026-05-09', '16:00:00', '16:40:00', 'CLINICA', 'CANCELADO', 6),
-('2026-05-09', '16:40:00', '17:20:00', 'CLINICA', 'PENDIENTE', 7),
-('2026-05-09', '17:20:00', '18:00:00', 'VACUNACION', 'PENDIENTE', 8),
-('2026-05-09', '18:00:00', '18:40:00', 'CLINICA', 'PENDIENTE', 9),
-('2026-05-09', '18:40:00', '19:20:00', 'CLINICA', 'PENDIENTE', 10);
+('2026-08-12', '09:00:00', '09:40:00', 'CLINICA', 'ATENDIDO', 1),
+('2026-09-01', '09:40:00', '10:20:00', 'CLINICA', 'ATENDIDO', 2),
+('2026-10-09', '10:20:00', '11:00:00', 'CIRUGIA', 'ATENDIDO', 3),
+('2026-09-15', '11:00:00', '11:40:00', 'VACUNACION', 'ATENDIDO', 4),
+('2026-11-23', '11:40:00', '12:20:00', 'CLINICA', 'PENDIENTE', 5),
+('2026-10-30', '16:00:00', '16:40:00', 'CLINICA', 'CANCELADO', 6),
+('2026-11-20', '16:40:00', '17:20:00', 'CLINICA', 'PENDIENTE', 7),
+('2026-10-16', '17:20:00', '18:00:00', 'VACUNACION', 'PENDIENTE', 8),
+('2026-07-09', '18:00:00', '18:40:00', 'CLINICA', 'ATENDIDO', 9),
+('2026-12-22', '18:40:00', '19:20:00', 'CLINICA', 'PENDIENTE', 10);
 
 -- 5. Tabla consulta
 INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_paciente, matricula_veterinario, id_turno) VALUES
-('2026-05-09', 'Control de rutina general', 'Sana, sin parásitos', 'Antiparasitario al día', 1, 'MP-1234', 1),
-('2026-05-09', 'Otitis leve en oído izquierdo', 'Se detecta leve inflamación', 'Gotas óticas por 5 días', 2, 'MP-2345', 2),
-('2026-05-09', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 3, 'MP-3456', 3),
-('2026-05-09', 'Aplicación de vacuna anual', 'Paciente tranquilo', 'Dosis séxtuple aplicada', 4, 'MP-4567', 4),
-('2026-05-09', 'Control preventivo general', 'Buen estado general de salud', 'Ninguno', 5, 'MP-5678', 5),
-('2026-05-09', 'Gastroenteritis leve por dieta', 'Vómitos ocasionales', 'Dieta blanda y protector gástrico', 6, 'MP-6789', 6),
-('2026-05-09', 'Chequeo dermatológico', 'Alergia estacional leve', 'Baño con shampoo medicado', 7, 'MP-7890', 7),
-('2026-05-09', 'Vacunación antirrábica', 'Sin reacciones adversas', 'Aplicación correcta', 8, 'MP-8901', 8),
-('2026-05-09', 'Revisión oftalmológica', 'Ojos limpios y sin lesiones', 'Gotas lubricantes', 9, 'MP-9012', 9),
-('2026-05-09', 'Control geriátrico preventivo', 'Se solicitan análisis de sangre', 'Vitaminas y suplementos', 10, 'MP-0123', 10);
+('2026-10-15', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 1, 'MP-3456', 1),
+('2026-11-06', 'Aplicación de vacuna anual', 'Paciente tranquilo', 'Dosis séxtuple aplicada', 2, 'MP-4567', 2),
+('2026-09-25', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 3, 'MP-3456', 3),
+('2026-11-05', 'Aplicación de vacuna anual', 'Paciente tranquilo', 'Dosis séxtuple aplicada', 4, 'MP-4567', 4),
+('2026-06-07', 'Control preventivo general', 'Buen estado general de salud', 'Ninguno', 5, 'MP-5678', 5),
+('2026-08-19', 'Gastroenteritis leve por dieta', 'Vómitos ocasionales', 'Dieta blanda y protector gástrico', 6, 'MP-6789', 6),
+('2026-04-21', 'Chequeo dermatológico', 'Alergia estacional leve', 'Baño con shampoo medicado', 7, 'MP-7890', 7),
+('2026-05-30', 'Vacunación antirrábica', 'Sin reacciones adversas', 'Aplicación correcta', 8, 'MP-8901', 8),
+('2026-07-15', 'Revisión oftalmológica', 'Ojos limpios y sin lesiones', 'Gotas lubricantes', 9, 'MP-9012', 9),
+('2026-05-12', 'Control geriátrico preventivo', 'Se solicitan análisis de sangre', 'Vitaminas y suplementos', 10, 'MP-0123', 10);
