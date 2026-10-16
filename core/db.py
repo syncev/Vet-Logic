@@ -13,7 +13,7 @@ def conectar():
             f"No se encontró el archivo de configuración: {CONFIG_FILE}"
         )
 
-    config = ConfigParser()
+    config = ConfigParser(interpolation=None)
     config.read(CONFIG_FILE, encoding="utf-8")
 
     if "database" not in config:

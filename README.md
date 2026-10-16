@@ -153,7 +153,9 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-Las dependencias externas del proyecto son screeninfo y psycopg[binary]; ambas están incluidas en requirements.txt. Tkinter no se instala con pip: debe estar disponible en la instalación del sistema de Python.
+Las dependencias externas del proyecto son `screeninfo`, `tzdata` y
+`psycopg[binary]`; todas están incluidas en `requirements.txt`. Tkinter no se
+instala con pip: debe estar disponible en la instalación del sistema de Python.
 
 ### 5. Verificar la instalación
 
@@ -174,42 +176,64 @@ python -c "import tkinter, screeninfo, psycopg; print('Instalación correcta')"
 ## Configurar PostgreSQL
 
 Vet Logic se conecta a una instancia local de PostgreSQL en la misma computadora
-donde se ejecuta la aplicación. Cada persona que pruebe el proyecto debe tener
-PostgreSQL instalado e iniciar su servicio.
+donde se ejecuta la aplicación. PostgreSQL debe estar instalado y su servicio
+iniciado. pgAdmin es opcional: el proyecto puede crear la base y cargar los
+datos de prueba desde un asistente de terminal.
 
-### 1. Crear la base de datos
+PostgreSQL es un programa del sistema y no se instala con `requirements.txt`.
+Para la primera configuración, use las credenciales del administrador
+`postgres` o de otro usuario que tenga permiso `CREATEDB` y pueda conectarse a
+la base administrativa `postgres`. El asistente usará esas credenciales para
+crear `vetlogic_desarrollo` y las guardará para la conexión de la aplicación.
+Las herramientas cliente `psql` y `pg_dump` se necesitan para migraciones y
+respaldos; no hace falta abrir pgAdmin.
 
-Desde pgAdmin, crear una base de datos llamada `vetlogic_desarrollo`.
+### 1. Configurar la base de datos
 
-### 2. Crear las tablas y cargar los datos de prueba
+Desde la carpeta raíz del proyecto, ejecutar:
 
-En pgAdmin, abrir la base `vetlogic_desarrollo`, abrir el Query Tool, cargar el
-archivo `database/vetlogic.sql` y ejecutar el script.
-
-**Advertencia:** este script elimina y vuelve a crear tablas. Ejecutarlo
-únicamente en una base vacía o de prueba. No usarlo sobre una base con datos
-que se quieran conservar.
-
-### 3. Configurar la conexión de la aplicación
-
-Desde PowerShell, ubicado en la carpeta raíz del proyecto —la misma que
-contiene `main.py`—, crear el archivo local de configuración a partir de la
-plantilla:
-
-```powershell
-Copy-Item database.example.ini database.ini
+```bash
+python setup_database.py
 ```
 
-Abrir `database.ini` y completar `user` y `password` con las credenciales
-locales de PostgreSQL. No compartir ese archivo ni subirlo al repositorio:
-contiene información privada de conexión.
+El asistente solicita host, puerto, usuario y contraseña de PostgreSQL. Con
+esas credenciales crea `vetlogic_desarrollo` si todavía no existe. Si la base
+está vacía, crea las tablas y carga los datos de prueba desde
+`database/vetlogic.sql`. Si ya encuentra tablas, no ejecuta ese script para
+evitar borrar información.
 
-La plantilla `database.example.ini` no contiene credenciales reales y sí se
-incluye en el repositorio. El archivo `database.ini` es local y está excluido
-del control de versiones.
+Si detecta el esquema legado o una estructura desconocida, guarda la conexión
+validada para permitir crear un respaldo, pero informa que la app todavía no
+está lista para ejecutarse. No modifica esas tablas automáticamente.
+
+Para actualizar una base con el esquema legado, cierre la aplicación y ejecute:
+
+```bash
+python migrate_database.py
+```
+
+El comando pide confirmación, crea un respaldo automático y aplica la migración
+en una sola transacción. Si detecta datos incompatibles, cancela los cambios y
+conserva el respaldo para corregir el caso antes de volver a intentarlo.
+
+La configuración se guarda localmente en `database.ini`, que está excluido del
+control de versiones. No compartir ese archivo: contiene credenciales privadas.
+Si ya existe, el asistente solicita confirmación antes de reemplazarlo.
 
 Cada instalación usa su propia base local. La aplicación no se conecta a la
 base de datos de otra computadora.
+
+### Crear un respaldo antes de actualizar
+
+Para generar un respaldo manual en cualquier momento, ejecutar:
+
+```bash
+python backup_database.py
+```
+
+El archivo de respaldo se guarda en `backups/` en formato PostgreSQL restaurable.
+La carpeta está excluida de Git para evitar subir datos personales. La migración
+también genera un respaldo antes de modificar el esquema.
 
 ## Ejecución
 
