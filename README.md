@@ -174,39 +174,27 @@ python -c "import tkinter, screeninfo, psycopg; print('Instalación correcta')"
 ## Configurar PostgreSQL
 
 Vet Logic se conecta a una instancia local de PostgreSQL en la misma computadora
-donde se ejecuta la aplicación. Cada persona que pruebe el proyecto debe tener
-PostgreSQL instalado e iniciar su servicio.
+donde se ejecuta la aplicación. PostgreSQL debe estar instalado y su servicio
+iniciado. pgAdmin es opcional: el proyecto puede crear la base y cargar los
+datos de prueba desde un asistente de terminal.
 
-### 1. Crear la base de datos
+### 1. Configurar la base de datos
 
-Desde pgAdmin, crear una base de datos llamada `vetlogic_desarrollo`.
+Desde la carpeta raíz del proyecto, ejecutar:
 
-### 2. Crear las tablas y cargar los datos de prueba
-
-En pgAdmin, abrir la base `vetlogic_desarrollo`, abrir el Query Tool, cargar el
-archivo `database/vetlogic.sql` y ejecutar el script.
-
-**Advertencia:** este script elimina y vuelve a crear tablas. Ejecutarlo
-únicamente en una base vacía o de prueba. No usarlo sobre una base con datos
-que se quieran conservar.
-
-### 3. Configurar la conexión de la aplicación
-
-Desde PowerShell, ubicado en la carpeta raíz del proyecto —la misma que
-contiene `main.py`—, crear el archivo local de configuración a partir de la
-plantilla:
-
-```powershell
-Copy-Item database.example.ini database.ini
+```bash
+python setup_database.py
 ```
 
-Abrir `database.ini` y completar `user` y `password` con las credenciales
-locales de PostgreSQL. No compartir ese archivo ni subirlo al repositorio:
-contiene información privada de conexión.
+El asistente solicita host, puerto, usuario y contraseña de PostgreSQL. Con
+esas credenciales crea `vetlogic_desarrollo` si todavía no existe. Si la base
+está vacía, crea las tablas y carga los datos de prueba desde
+`database/vetlogic.sql`. Si ya encuentra tablas, no ejecuta ese script para
+evitar borrar información.
 
-La plantilla `database.example.ini` no contiene credenciales reales y sí se
-incluye en el repositorio. El archivo `database.ini` es local y está excluido
-del control de versiones.
+La configuración se guarda localmente en `database.ini`, que está excluido del
+control de versiones. No compartir ese archivo: contiene credenciales privadas.
+Si ya existe, el asistente solicita confirmación antes de reemplazarlo.
 
 Cada instalación usa su propia base local. La aplicación no se conecta a la
 base de datos de otra computadora.
