@@ -199,6 +199,17 @@ Si ya existe, el asistente solicita confirmación antes de reemplazarlo.
 Cada instalación usa su propia base local. La aplicación no se conecta a la
 base de datos de otra computadora.
 
+### Crear un respaldo antes de actualizar
+
+Antes de aplicar cambios al esquema de una base con información propia, ejecutar:
+
+```bash
+python backup_database.py
+```
+
+El archivo de respaldo se guarda en `backups/` en formato PostgreSQL restaurable.
+La carpeta está excluida de Git para evitar subir datos personales.
+
 ## Ejecución
 
 Con el entorno virtual activado, ejecutar:
