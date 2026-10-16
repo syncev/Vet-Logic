@@ -1,16 +1,60 @@
+import os
 from configparser import ConfigParser
 from getpass import getpass
-import os
 from pathlib import Path
 
 import psycopg
 from psycopg import sql
 
-
 ROOT_DIR = Path(__file__).resolve().parent
 CONFIG_FILE = ROOT_DIR / "database.ini"
 SCHEMA_FILE = ROOT_DIR / "database" / "vetlogic.sql"
 DATABASE_NAME = "vetlogic_desarrollo"
+CURRENT_SCHEMA = {
+    "cliente": {"dni", "nombre", "apellido", "telefono"},
+    "veterinario": {"matricula_veterinario", "nombre", "apellido", "contacto"},
+    "paciente": {"id_paciente", "nombre", "especie", "castrado", "dni"},
+    "turno": {"id_turno", "fecha", "hora_inicio", "hora_fin", "id_paciente"},
+    "consulta": {
+        "id_consulta",
+        "observaciones",
+        "tratamiento",
+        "matricula_veterinario",
+        "id_turno",
+    },
+}
+
+
+def identificar_esquema(cursor) -> str:
+    cursor.execute(
+        """
+        SELECT table_name, column_name
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+        """
+    )
+    columnas: dict[str, set[str]] = {}
+    for tabla, columna in cursor.fetchall():
+        columnas.setdefault(tabla, set()).add(columna)
+
+    if not columnas:
+        return "vacio"
+
+    # Estas columnas identifican el esquema anterior guardado en el historial.
+    if (
+        "nombre_y_apellido" in columnas.get("cliente", set())
+        or "estado_reproductivo" in columnas.get("paciente", set())
+        or "matricula_veterinario" in columnas.get("turno", set())
+    ):
+        return "legado"
+
+    if all(
+        requeridas.issubset(columnas.get(tabla, set()))
+        for tabla, requeridas in CURRENT_SCHEMA.items()
+    ):
+        return "actual"
+
+    return "desconocido"
 
 
 def solicitar_configuracion() -> dict[str, str | int]:
@@ -46,49 +90,54 @@ def crear_base_si_no_existe(configuracion: dict[str, str | int]) -> None:
     parametros = {**configuracion, "connect_timeout": 5}
 
     # La conexión administrativa permite crear la base sin depender de pgAdmin.
-    with psycopg.connect(
-        **parametros,
-        dbname="postgres",
-        autocommit=True,
-    ) as conexion:
-        with conexion.cursor() as cursor:
-            cursor.execute(
-                "SELECT 1 FROM pg_database WHERE datname = %s",
-                (DATABASE_NAME,),
-            )
-            base_existe = cursor.fetchone() is not None
+    with (
+        psycopg.connect(
+            **parametros,
+            dbname="postgres",
+            autocommit=True,
+        ) as conexion,
+        conexion.cursor() as cursor,
+    ):
+        cursor.execute(
+            "SELECT 1 FROM pg_database WHERE datname = %s",
+            (DATABASE_NAME,),
+        )
+        base_existe = cursor.fetchone() is not None
 
-            if not base_existe:
-                cursor.execute(
-                    sql.SQL("CREATE DATABASE {}").format(
-                        sql.Identifier(DATABASE_NAME)
-                    )
+        if not base_existe:
+            cursor.execute(
+                sql.SQL("CREATE DATABASE {}").format(
+                    sql.Identifier(DATABASE_NAME)
                 )
+            )
 
     parametros_base = {**parametros, "dbname": DATABASE_NAME}
-    with psycopg.connect(**parametros_base) as conexion:
-        with conexion.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT tablename
-                FROM pg_tables
-                WHERE schemaname = 'public'
-                LIMIT 1
-                """
+    with (
+        psycopg.connect(**parametros_base) as conexion,
+        conexion.cursor() as cursor,
+    ):
+        estado_esquema = identificar_esquema(cursor)
+
+        if estado_esquema == "vacio":
+            script = SCHEMA_FILE.read_text(encoding="utf-8")
+            cursor.execute(script)
+        elif estado_esquema == "legado":
+            raise ValueError(
+                "La base contiene el esquema anterior de Vet Logic. "
+                "No se modificó para proteger los datos; necesita una "
+                "migración antes de iniciar la aplicación."
             )
-            tiene_tablas = cursor.fetchone() is not None
+        elif estado_esquema == "desconocido":
+            raise ValueError(
+                "La estructura de la base no coincide con el esquema "
+                "actual. No se ejecutó vetlogic.sql ni se guardó la "
+                "configuración."
+            )
 
-            if not tiene_tablas:
-                script = SCHEMA_FILE.read_text(encoding="utf-8")
-                cursor.execute(script)
-
-    if base_existe and tiene_tablas:
-        print(
-            "La base ya contiene tablas. No se ejecutó vetlogic.sql para "
-            "proteger sus datos."
-        )
-    else:
+    if estado_esquema == "vacio":
         print("Base creada y datos iniciales cargados desde vetlogic.sql.")
+    else:
+        print("Se encontró una base con el esquema actual; no se recargó el seed.")
 
 
 def guardar_configuracion(configuracion: dict[str, str | int]) -> None:
