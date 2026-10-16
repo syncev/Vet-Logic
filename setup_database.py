@@ -126,7 +126,7 @@ def crear_base_si_no_existe(configuracion: dict[str, str | int]) -> str:
 
 
 def guardar_configuracion(configuracion: dict[str, str | int]) -> None:
-    config = ConfigParser()
+    config = ConfigParser(interpolation=None)
     config["database"] = {
         **{key: str(value) for key, value in configuracion.items()},
         "dbname": DATABASE_NAME,
@@ -157,7 +157,7 @@ def main() -> int:
     if estado_esquema == "legado":
         print(
             "La base usa el esquema anterior. No se modificó; cree un "
-            "respaldo antes de ejecutar la migración."
+            "respaldo y ejecute migrate_database.py para actualizarla."
         )
         return 2
     if estado_esquema == "desconocido":

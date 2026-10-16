@@ -196,6 +196,16 @@ Si detecta el esquema legado o una estructura desconocida, guarda la conexión
 validada para permitir crear un respaldo, pero informa que la app todavía no
 está lista para ejecutarse. No modifica esas tablas automáticamente.
 
+Para actualizar una base con el esquema legado, cierre la aplicación y ejecute:
+
+```bash
+python migrate_database.py
+```
+
+El comando pide confirmación, crea un respaldo automático y aplica la migración
+en una sola transacción. Si detecta datos incompatibles, cancela los cambios y
+conserva el respaldo para corregir el caso antes de volver a intentarlo.
+
 La configuración se guarda localmente en `database.ini`, que está excluido del
 control de versiones. No compartir ese archivo: contiene credenciales privadas.
 Si ya existe, el asistente solicita confirmación antes de reemplazarlo.
@@ -205,14 +215,15 @@ base de datos de otra computadora.
 
 ### Crear un respaldo antes de actualizar
 
-Antes de aplicar cambios al esquema de una base con información propia, ejecutar:
+Para generar un respaldo manual en cualquier momento, ejecutar:
 
 ```bash
 python backup_database.py
 ```
 
 El archivo de respaldo se guarda en `backups/` en formato PostgreSQL restaurable.
-La carpeta está excluida de Git para evitar subir datos personales.
+La carpeta está excluida de Git para evitar subir datos personales. La migración
+también genera un respaldo antes de modificar el esquema.
 
 ## Ejecución
 
