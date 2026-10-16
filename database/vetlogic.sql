@@ -156,3 +156,48 @@ INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_pac
 ('2026-05-30', 'Vacunación antirrábica', 'Sin reacciones adversas', 'Aplicación correcta', 8, 'MP-8901', 8),
 ('2026-07-15', 'Revisión oftalmológica', 'Ojos limpios y sin lesiones', 'Gotas lubricantes', 9, 'MP-9012', 9),
 ('2026-05-12', 'Control geriátrico preventivo', 'Se solicitan análisis de sangre', 'Vitaminas y suplementos', 10, 'MP-0123', 10);
+-- CLIENTE
+INSERT INTO cliente (dni, nombre, apellido, telefono) VALUES
+('12345678', 'Silvia', 'Moreno', '1122334455'),
+('23456789', 'Martin', 'Sanchez', '1133445566'),
+('34567890', 'Calvin', 'Klein', '1144556677'),
+('45678901', 'Clark', 'Kent', '1155667788'),
+('56789012', 'Maria', 'del Barrio', '1166778899');
+
+-- VETERINARIO
+INSERT INTO veterinario (matricula_veterinario, nombre, apellido, contacto, especialidad) VALUES
+('MP-1234', 'Carlos', 'Gómez', '1144556677', 'Clínica General'),
+('MP-2345', 'María', 'Pérez', '1155667788', 'Cirugía'),
+('MP-3456', 'Esteban', 'Quito', '1166778899', 'Dermatología'),
+('MP-4567', 'Lucía', 'Fernández', '1177889900', 'Felinos'),
+('MP-5678', 'Martín', 'Bosco', '1188990011', 'Traumatología');
+
+-- PACIENTE
+-- id_paciente se genera automáticamente; dni relaciona al paciente con su cliente.
+INSERT INTO paciente (nombre, especie, raza, sexo, dni) VALUES
+('Luna', 'Gato', 'Siamés', 'Hembra', '12345678'),
+('Milo', 'Gato', 'Shorthair', 'Macho', '23456789'),
+('Thor', 'Perro', 'Ovejero Alemán', 'Macho', '34567890'),
+('Homero', 'Perro', 'Golden Retriever', 'Macho', '45678901'),
+('Otto', 'Gato', 'Persa', 'Macho', '56789012');
+
+-- TURNO
+-- Estos id_paciente suponen que los cinco pacientes anteriores recibieron los IDs 1 a 5.
+INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente) VALUES
+('2026-10-15', '09:00', '09:40', 'CLINICA', 'ATENDIDO', 1),
+('2026-10-12', '09:40', '10:20', 'CLINICA', 'ATENDIDO', 2),
+('2026-10-13', '10:20', '11:00', 'CIRUGIA', 'ATENDIDO', 3),
+('2026-10-14', '11:00', '11:40', 'VACUNACION', 'ATENDIDO', 4),
+('2026-10-15', '11:40', '12:20', 'CLINICA', 'ATENDIDO', 5);
+
+-- CONSULTA
+-- Estos id_turno suponen que los cinco turnos anteriores recibieron los IDs 1 a 5.
+INSERT INTO consulta
+    (fecha, motivo_consulta, observaciones, tratamiento,
+     id_paciente, matricula_veterinario, id_turno)
+VALUES
+('2026-10-15', 'Control general', 'Buen estado de salud', 'Control anual', 1, 'MP-1234', 1),
+('2026-10-12', 'Control digestivo', 'Sin síntomas actuales', 'Continuar dieta habitual', 2, 'MP-2345', 2),
+('2026-10-13', 'Control postoperatorio', 'Evolución favorable', 'Mantener reposo', 3, 'MP-3456', 3),
+('2026-10-14', 'Vacunación anual', 'Sin reacciones previas', 'Aplicar dosis anual', 4, 'MP-4567', 4),
+('2026-10-15', 'Control preventivo', 'Paciente estable', 'Nuevo control en seis meses', 5, 'MP-5678', 5);
