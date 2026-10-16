@@ -216,3 +216,82 @@ def marcar_turnos_ausentes(conexion, tz_name: str = "America/Argentina/Buenos_Ai
         afectados = cursor.rowcount
     conexion.commit()
     return afectados
+
+def buscar_turnos(
+    conexion,
+    fecha_consulta: date,
+    termino: str = "",
+    filtro: str = "Todos"
+) -> list[tuple]:
+    """
+    Realiza la consulta SQL a la base de datos filtrando tanto por fecha,
+    término de búsqueda y columna esto chicos provoca que la tabla del turnero se actualice con los resultados.
+    """
+    consulta_base = """
+        SELECT 
+            t.id_turno,
+            TO_CHAR(t.hora_inicio, 'HH24:MI') AS hora,
+            CONCAT(c.nombre, ' ', c.apellido) AS cliente,
+            p.nombre AS paciente,
+            p.especie,
+            t.motivo,
+            p.id_paciente::TEXT AS hc,
+            COALESCE(
+                (
+                    SELECT TO_CHAR(t_ant.fecha, 'DD/MM/YYYY')
+                    FROM turno t_ant
+                    WHERE t_ant.id_paciente = t.id_paciente
+                      AND t_ant.fecha < t.fecha
+                    ORDER BY t_ant.fecha DESC
+                    LIMIT 1
+                ),
+                '-'
+            ) AS ultimo_turno,
+            t.estado
+        FROM turno t
+        INNER JOIN paciente p ON t.id_paciente = p.id_paciente
+        INNER JOIN cliente c ON p.dni = c.dni
+        WHERE t.fecha = %s
+    """
+
+    parametros = [fecha_consulta]
+    termino_limpio = f"%{termino.strip()}%"
+
+    if termino.strip():
+        filtro_normalizado = filtro.strip()
+        if filtro_normalizado == "Cliente":
+            consulta_base += " AND (c.nombre ILIKE %s OR c.apellido ILIKE %s OR CONCAT(c.nombre, ' ', c.apellido) ILIKE %s)"
+            parametros.extend([termino_limpio, termino_limpio, termino_limpio])
+        elif filtro_normalizado == "Paciente":
+            consulta_base += " AND p.nombre ILIKE %s"
+            parametros.append(termino_limpio)
+        elif filtro_normalizado == "Especie":
+            consulta_base += " AND p.especie ILIKE %s"
+            parametros.append(termino_limpio)
+        elif filtro_normalizado == "Motivo":
+            consulta_base += " AND t.motivo ILIKE %s"
+            parametros.append(termino_limpio)
+        elif filtro_normalizado == "HC":
+            consulta_base += " AND p.id_paciente::TEXT ILIKE %s"
+            parametros.append(termino_limpio)
+        elif filtro_normalizado == "Telefono":
+            consulta_base += " AND c.telefono ILIKE %s"
+            parametros.append(termino_limpio)
+        else:  # "Todos"
+            consulta_base += """
+                AND (
+                    CONCAT(c.nombre, ' ', c.apellido) ILIKE %s
+                    OR p.nombre ILIKE %s
+                    OR p.especie ILIKE %s
+                    OR t.motivo ILIKE %s
+                    OR p.id_paciente::TEXT ILIKE %s
+                    OR c.telefono ILIKE %s
+                )
+            """
+            parametros.extend([termino_limpio] * 6)
+
+    consulta_base += " ORDER BY t.hora_inicio ASC;"
+
+    with conexion.cursor() as cursor:
+        cursor.execute(consulta_base, tuple(parametros))
+        return cursor.fetchall()

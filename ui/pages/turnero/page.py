@@ -9,6 +9,7 @@ from repositories.turno import (
     obtener_turnos_por_fecha,
     resolver_estado_visual,
     cancelar_turno,
+    buscar_turnos,
 )
 
 from ui.widgets.searchbar import Searchbar
@@ -243,12 +244,14 @@ class TurneroPage(tk.Frame):
             print(f"Error al cargar turnos: {e}")
             filas = []
 
+        self._poblar_tabla_turnos(filas)
+
+    def _poblar_tabla_turnos(self, filas):
         now = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
         self.appointments = []
         self.turnos_cancelables.clear()
+
         for turno in filas:
-            # turno viene de la BD como:
-            # (id_turno, hora, cliente, paciente, especie, motivo, hc, ultimo_turno, estado_bd)
             (
                 id_turno,
                 hora,
@@ -261,14 +264,13 @@ class TurneroPage(tk.Frame):
                 estado_bd,
             ) = turno
 
-            # Resolvemos el estado visual y el icono
-            nombre_estado, icono = resolver_estado_visual(fecha, hora, estado_bd)
+            nombre_estado, icono = resolver_estado_visual(self.selected_date, hora, estado_bd)
 
             es_cancelable = False
             if (estado_bd or "").upper() == "PENDIENTE":
                 try:
                     hora_dt = datetime.strptime(hora, "%H:%M").time()
-                    dt_turno = datetime.combine(fecha, hora_dt).replace(
+                    dt_turno = datetime.combine(self.selected_date, hora_dt).replace(
                         tzinfo=now.tzinfo
                     )
                     es_cancelable = dt_turno > now
@@ -279,7 +281,6 @@ class TurneroPage(tk.Frame):
             if es_cancelable:
                 self.turnos_cancelables.add(id_turno)
 
-            # Formateamos la fila visible para el Treeview
             fila_visible = (
                 icono,
                 hora,
@@ -299,7 +300,6 @@ class TurneroPage(tk.Frame):
         for id_turno, valores in self.appointments:
             motivo = str(valores[5]).casefold()
             tag = ("cirugia",) if motivo in ("cirugia", "cirugía") else ()
-            # Usamos el id_turno como iid de la fila en Treeview
             self.appointments_table.insert(
                 "",
                 "end",
@@ -365,7 +365,7 @@ class TurneroPage(tk.Frame):
             )
 
     def search_appointments(self, query, selected_filter):
-        query = query.lower()
+        query_limpia = (query or "").strip() # si query es None, lo convertimos a string vacio para evitar errores, evito el error.
 
         # Índices relativos a fila_visible: (estado=0, hora=1, cliente=2, paciente=3, especie=4, motivo=5, hc=6, ultimo=7)
         filter_columns = {
@@ -385,7 +385,7 @@ class TurneroPage(tk.Frame):
 
         for id_turno, valores in self.appointments:
             if any(
-                query in str(valores[column]).lower()
+                query_limpia.casefold() in str(valores[column]).casefold()
                 for column in columns_to_search
             ):
                 filtered_appointments.append((id_turno, valores))
