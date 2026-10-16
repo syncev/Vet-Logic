@@ -30,9 +30,8 @@ class UsuariosPage(tk.Frame):
         self.add_professional_view.pack_forget()
         self.profile_detail_view.pack_forget()
         
-        # Ocultamos el botón por defecto al cambiar de sección
-        if hasattr(self, 'btn_inhabilitar_lateral'):
-            self.btn_inhabilitar_lateral.pack_forget()
+        if hasattr(self, "aside") and self.aside:
+            self.aside.ocultar_inhabilitar()
 
         # Muestra únicamente la sección elegida
         if section == "perfiles":
@@ -145,6 +144,9 @@ class UsuariosPage(tk.Frame):
 
     def _update_profile_detail(self, values):
         name, registration, status, role, contact, username = values
+        self.username_actual = username
+        self.matricula_actual = registration
+
         extra_details = {
             "britneyl": {
                 "specialty": "Oftalmología felina",
@@ -164,17 +166,22 @@ class UsuariosPage(tk.Frame):
         self.profile_detail_labels["active_since"].config(
             text=f"Activo desde: {extra_details.get('active_since', 'No disponible')}"
         )
-        self.profile_detail_labels["name"].config(text=f"Nombre: {name}")
-        self.profile_detail_labels["address"].config(
-            text=f"Domicilio: {extra_details.get('address', 'No disponible')}"
-        )
-        self.profile_detail_labels["contact"].config(
-            text=f"Contacto: {extra_details.get('contact', 'No disponible')}"
-        )
-        self.profile_detail_labels["email"].config(text=f"Correo: {contact}")
-        self.profile_detail_labels["emergency_contact"].config(
-            text=f"Contacto de emergencia: {extra_details.get('emergency_contact', 'No disponible')}"
-        )
+
+       # Cargamos los datos en los Entry de la derecha
+        datos_a_cargar = {
+            "name": name,
+            "address": extra_details.get('address', 'No disponible'),
+            "contact": extra_details.get('contact', 'No disponible'),
+            "email": contact,
+            "emergency_contact": extra_details.get('emergency_contact', 'No disponible'),
+        }
+
+        for key, entry in self.profile_detail_entries.items():
+            entry.config(state="normal")
+            entry.delete(0, tk.END)
+            entry.insert(0, datos_a_cargar.get(key, ""))
+            entry.config(state="disabled")
+
         self.profile_detail_labels["status"].config(text=f"Estado: {status}")
 
     def filtrar_profesionales(self, texto):
@@ -182,6 +189,7 @@ class UsuariosPage(tk.Frame):
 
     def _build_profile_detail_view(self):
         self.profile_detail_labels = {}
+        self.profile_detail_entries = {}  # Cajas de texto para editar
         left_frame = tk.Frame(self.profile_detail_view, bg="white", padx=20, pady=20)
         left_frame.pack(side="left", fill="y", padx=20, pady=20)
 
@@ -241,6 +249,10 @@ class UsuariosPage(tk.Frame):
             bg="white",
             font=("Arial", 11, "bold"),
         ).pack(anchor="w", pady=(0, 15))
+
+       # Inicializamos el diccionario de entries para la edición
+        self.profile_detail_entries = {}
+        
         for key, label_text in (
             ("name", "Nombre: "),
             ("address", "Domicilio: No disponible"),
@@ -248,10 +260,18 @@ class UsuariosPage(tk.Frame):
             ("email", "Correo: "),
             ("emergency_contact", "Contacto de emergencia: No disponible"),
         ):
-            self.profile_detail_labels[key] = tk.Label(
-                datos_frame, text=label_text, bg="white"
-            )
-            self.profile_detail_labels[key].pack(anchor="w", pady=5)
+        # Creamos un mini frame para cada línea
+            frame_campo = tk.Frame(datos_frame, bg="white")
+            frame_campo.pack(anchor="w", fill="x", pady=5)
+            
+        # Extraemos la etiqueta limpia
+            texto_etiqueta = label_text.split(":")[0] + ":"
+            tk.Label(frame_campo, text=texto_etiqueta, bg="white", width=22, anchor="w").pack(side="left")
+            
+        # Creamos el Entry bloqueado por defecto
+            entry = tk.Entry(frame_campo, font=("Arial", 10), state="disabled", width=30)
+            entry.pack(side="left", fill="x", expand=True)
+            self.profile_detail_entries[key] = entry
 
         botones_frame = tk.Frame(right_frame, bg="#F0F0F0")
         botones_frame.pack(fill="x", pady=(20, 0))
@@ -264,7 +284,9 @@ class UsuariosPage(tk.Frame):
             relief="flat",
             padx=10,
             pady=5,
+            command=self._habilitar_edicion,
         ).pack(side="left", expand=True, fill="x", padx=(0, 5))
+
         tk.Button(
             botones_frame,
             text="Guardar",
@@ -274,10 +296,10 @@ class UsuariosPage(tk.Frame):
             relief="flat",
             padx=10,
             pady=5,
+            command=self._guardar_cambios_bd,
         ).pack(side="right", expand=True, fill="x", padx=(5, 0))
 
-        # crea la vista de crear perfil
-
+        
     def _build_add_professional_view(self):
         self.var_usuario = tk.StringVar(master=self)
         self.var_rol = tk.StringVar(master=self)
@@ -551,3 +573,59 @@ class UsuariosPage(tk.Frame):
         
         # Cierra la ventana modal al terminar
         modal.destroy()
+
+    def _habilitar_edicion(self):
+        """Habilita todas las cajas de texto para poder editarlas."""
+        for entry in self.profile_detail_entries.values():
+            entry.config(state="normal")
+
+    def _guardar_cambios_bd(self):
+        """Toma los valores ingresados y realiza el UPDATE en la base de datos."""
+        print("Usuario actual intentando guardar:", self.username_actual)
+        
+        nuevo_nombre = self.profile_detail_entries["name"].get()
+        nuevo_domicilio = self.profile_detail_entries["address"].get()
+        nuevo_contacto = self.profile_detail_entries["contact"].get()
+        nuevo_correo = self.profile_detail_entries["email"].get()
+        nuevo_emergencia = self.profile_detail_entries["emergency_contact"].get()
+
+        conexion = None
+        try:
+            # Usamos la función conectar() que ya importaste arriba
+            conexion = conectar()
+            cursor = conexion.cursor()
+            
+            query = """
+                UPDATE veterinario 
+                SET nombre = %s, 
+                    domicilio = %s, 
+                    contacto = %s, 
+                    correo = %s, 
+                    contacto_emergencia = %s
+                WHERE matricula_veterinario = %s;
+            """
+            cursor.execute(query, (
+                nuevo_nombre, 
+                nuevo_domicilio, 
+                nuevo_contacto, 
+                nuevo_correo, 
+                nuevo_emergencia, 
+                self.matricula_actual
+            ))
+            conexion.commit()
+            cursor.close()
+            conexion.close()
+
+            tk.messagebox.showinfo("Éxito", "¡Datos actualizados correctamente en la base de datos!")
+
+            # Volvemos a bloquear los campos tras guardar
+            for entry in self.profile_detail_entries.values():
+                entry.config(state="disabled")
+
+        except Exception as error:
+            if conexion:
+                try:
+                    conexion.rollback()
+                except:
+                    pass
+            tk.messagebox.showerror("Error", f"No se pudieron guardar los cambios: {error}")
