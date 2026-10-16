@@ -192,6 +192,10 @@ está vacía, crea las tablas y carga los datos de prueba desde
 `database/vetlogic.sql`. Si ya encuentra tablas, no ejecuta ese script para
 evitar borrar información.
 
+Si detecta el esquema legado o una estructura desconocida, guarda la conexión
+validada para permitir crear un respaldo, pero informa que la app todavía no
+está lista para ejecutarse. No modifica esas tablas automáticamente.
+
 La configuración se guarda localmente en `database.ini`, que está excluido del
 control de versiones. No compartir ese archivo: contiene credenciales privadas.
 Si ya existe, el asistente solicita confirmación antes de reemplazarlo.

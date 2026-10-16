@@ -86,7 +86,7 @@ def confirmar_reemplazo_configuracion() -> bool:
     return respuesta.strip().lower() in ("s", "si", "sí")
 
 
-def crear_base_si_no_existe(configuracion: dict[str, str | int]) -> None:
+def crear_base_si_no_existe(configuracion: dict[str, str | int]) -> str:
     parametros = {**configuracion, "connect_timeout": 5}
 
     # La conexión administrativa permite crear la base sin depender de pgAdmin.
@@ -121,23 +121,8 @@ def crear_base_si_no_existe(configuracion: dict[str, str | int]) -> None:
         if estado_esquema == "vacio":
             script = SCHEMA_FILE.read_text(encoding="utf-8")
             cursor.execute(script)
-        elif estado_esquema == "legado":
-            raise ValueError(
-                "La base contiene el esquema anterior de Vet Logic. "
-                "No se modificó para proteger los datos; necesita una "
-                "migración antes de iniciar la aplicación."
-            )
-        elif estado_esquema == "desconocido":
-            raise ValueError(
-                "La estructura de la base no coincide con el esquema "
-                "actual. No se ejecutó vetlogic.sql ni se guardó la "
-                "configuración."
-            )
 
-    if estado_esquema == "vacio":
-        print("Base creada y datos iniciales cargados desde vetlogic.sql.")
-    else:
-        print("Se encontró una base con el esquema actual; no se recargó el seed.")
+    return estado_esquema
 
 
 def guardar_configuracion(configuracion: dict[str, str | int]) -> None:
@@ -161,13 +146,30 @@ def main() -> int:
 
     try:
         configuracion = solicitar_configuracion()
-        crear_base_si_no_existe(configuracion)
+        estado_esquema = crear_base_si_no_existe(configuracion)
+        # Una conexión validada también permite respaldar bases que aún necesitan migración.
         guardar_configuracion(configuracion)
     except (OSError, ValueError, psycopg.Error) as error:
         print(f"No se pudo configurar Vet Logic: {error}")
         return 1
 
     print(f"Configuración guardada en {CONFIG_FILE.name}.")
+    if estado_esquema == "legado":
+        print(
+            "La base usa el esquema anterior. No se modificó; cree un "
+            "respaldo antes de ejecutar la migración."
+        )
+        return 2
+    if estado_esquema == "desconocido":
+        print(
+            "La estructura no coincide con un esquema conocido. No se "
+            "modificó la base; revise su origen antes de continuar."
+        )
+        return 2
+    if estado_esquema == "vacio":
+        print("Base creada y datos iniciales cargados desde vetlogic.sql.")
+    else:
+        print("Se encontró una base con el esquema actual; no se recargó el seed.")
     print("Ya puede iniciar la aplicación con: python main.py")
     return 0
 
