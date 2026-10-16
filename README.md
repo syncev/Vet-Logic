@@ -178,6 +178,14 @@ donde se ejecuta la aplicación. PostgreSQL debe estar instalado y su servicio
 iniciado. pgAdmin es opcional: el proyecto puede crear la base y cargar los
 datos de prueba desde un asistente de terminal.
 
+PostgreSQL es un programa del sistema y no se instala con `requirements.txt`.
+Para la primera configuración, use las credenciales del administrador
+`postgres` o de otro usuario que tenga permiso `CREATEDB` y pueda conectarse a
+la base administrativa `postgres`. El asistente usará esas credenciales para
+crear `vetlogic_desarrollo` y las guardará para la conexión de la aplicación.
+Las herramientas cliente `psql` y `pg_dump` se necesitan para migraciones y
+respaldos; no hace falta abrir pgAdmin.
+
 ### 1. Configurar la base de datos
 
 Desde la carpeta raíz del proyecto, ejecutar:
