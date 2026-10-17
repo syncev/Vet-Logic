@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 
 class Searchbar(tk.Frame):
+    PLACEHOLDER_DEFAULT = "Buscar por paciente, cliente, HC, o telefono"
+
     def __init__(
         self,
         master,
@@ -81,7 +83,13 @@ class Searchbar(tk.Frame):
         self.search_entry = tk.Entry(
             self.search_frame,
             width=40,
+            font=("Arial", 10),
+            fg="#888888",
         )
+        self.search_entry.insert(0, self.PLACEHOLDER_DEFAULT)
+
+        self.search_entry.bind("<FocusIn>", self._clear_placeholder)
+        self.search_entry.bind("<FocusOut>", self._restore_placeholder)
 
         self.search_entry.bind(
             "<Return>",
@@ -97,8 +105,20 @@ class Searchbar(tk.Frame):
             fg="black",
             activebackground="#8A2BE2",
             activeforeground="white",
+            cursor="hand2",
             command=self.search,
         )
+
+    def _clear_placeholder(self, event):
+        if self.search_entry.get() == self.PLACEHOLDER_DEFAULT:
+            self.search_entry.delete(0, tk.END)
+            self.search_entry.configure(fg="#1F1F1F")
+
+    def _restore_placeholder(self, event):
+        if not self.search_entry.get().strip():
+            self.search_entry.delete(0, tk.END)
+            self.search_entry.insert(0, self.PLACEHOLDER_DEFAULT)
+            self.search_entry.configure(fg="#888888")
 
     def search(self):
         self.search_button.config(
@@ -106,7 +126,8 @@ class Searchbar(tk.Frame):
             fg="white",
         )
 
-        query = self.search_entry.get().strip()
+        text = self.search_entry.get().strip()
+        query = "" if text == self.PLACEHOLDER_DEFAULT else text
         selected_filter = self.filter_options.get()
 
         if self.on_search is not None:
@@ -129,6 +150,10 @@ class Searchbar(tk.Frame):
             width=18
         )
         self.filter_options.set("Todos")
+        self.filter_options.bind(
+            "<<ComboboxSelected>>",
+            lambda event: self.search(),
+        )
 #WIDGETS
     def _build_widgets(self):
         self._build_search_widget()
@@ -194,4 +219,3 @@ class Searchbar(tk.Frame):
             fill="both",
             expand=True,
         )
-

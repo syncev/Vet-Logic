@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
-
+from core.db import conectar
 
 def obtener_horarios_ocupados(conexion, fecha_base: date):
     fecha_final = fecha_base + timedelta(days=2)
@@ -26,6 +26,8 @@ def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
     Retorna tuplas con el formato:
     (id_turno, hora, cliente, paciente, especie, motivo, hc, ultimo_turno, estado)
     """
+    marcar_turnos_ausentes(conexion)
+    
     consulta = """
         SELECT 
             t.id_turno,
@@ -58,7 +60,6 @@ def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
         return cursor.fetchall()
 
 def resolver_estado_visual(fecha_turno: date, hora_inicio_str: str, estado_bd: str) -> tuple[str, str]:
-   
     estado_normalizado = (estado_bd or "PENDIENTE").upper()
 
     if estado_normalizado in ("ATENDIDO", "COMPLETADO"):
@@ -67,6 +68,9 @@ def resolver_estado_visual(fecha_turno: date, hora_inicio_str: str, estado_bd: s
     if estado_normalizado == "CANCELADO":
         return ("Cancelado", "🔴")
 
+    if estado_normalizado == "AUSENTE":
+        return ("Ausente", "🔴")
+    
     ahora = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
     hoy = ahora.date()
 
@@ -76,14 +80,13 @@ def resolver_estado_visual(fecha_turno: date, hora_inicio_str: str, estado_bd: s
             dt_turno = datetime.combine(hoy, hora_turno).replace(tzinfo=ahora.tzinfo)
             diferencia_minutos = (dt_turno - ahora).total_seconds() / 60
 
-            # Esto chicos es la logica de los 40 minutos que pactamos   
+            # Lógica de los 40 minutos
             if -40 <= diferencia_minutos <= 40:
                 return ("Próximo", "🟡")
         except ValueError:
             pass
 
     return ("Pendiente", "⚪")
-
 
 def actualizar_estado_turno(conexion, id_turno: int, nuevo_estado: str):
     """
@@ -194,3 +197,155 @@ def cancelar_turno(conexion, id_turno: int) -> bool:
 
     conexion.commit()
     return resultado is not None
+
+SQL_MARCAR_AUSENTES = """
+    UPDATE turno
+    SET estado = 'AUSENTE'
+    WHERE estado = 'PENDIENTE'
+      AND (fecha + hora_inicio + INTERVAL '40 minutes') < (now() AT TIME ZONE %s)
+    RETURNING id_turno;
+"""
+
+def marcar_turnos_ausentes(conexion, tz_name: str = "America/Argentina/Buenos_Aires") -> int:
+    """
+    Actualiza a 'AUSENTE' en la base de datos todos los turnos que sigan en 'PENDIENTE'
+    y cuyo horario de inicio + 40 minutos ya haya pasado.
+    """
+    with conexion.cursor() as cursor:
+        cursor.execute(SQL_MARCAR_AUSENTES, (tz_name,))
+        afectados = cursor.rowcount
+    conexion.commit()
+    return afectados
+
+def buscar_turnos(
+    conexion,
+    fecha_consulta: date,
+    termino: str = "",
+    filtro: str = "Todos"
+) -> list[tuple]:
+    """
+    Realiza la consulta SQL a la base de datos filtrando tanto por fecha,
+    término de búsqueda y columna esto chicos provoca que la tabla del turnero se actualice con los resultados.
+    """
+    consulta_base = """
+        SELECT 
+            t.id_turno,
+            TO_CHAR(t.hora_inicio, 'HH24:MI') AS hora,
+            CONCAT(c.nombre, ' ', c.apellido) AS cliente,
+            p.nombre AS paciente,
+            p.especie,
+            t.motivo,
+            p.id_paciente::TEXT AS hc,
+            COALESCE(
+                (
+                    SELECT TO_CHAR(t_ant.fecha, 'DD/MM/YYYY')
+                    FROM turno t_ant
+                    WHERE t_ant.id_paciente = t.id_paciente
+                      AND t_ant.fecha < t.fecha
+                    ORDER BY t_ant.fecha DESC
+                    LIMIT 1
+                ),
+                '-'
+            ) AS ultimo_turno,
+            t.estado
+        FROM turno t
+        INNER JOIN paciente p ON t.id_paciente = p.id_paciente
+        INNER JOIN cliente c ON p.dni = c.dni
+        WHERE t.fecha = %s
+    """
+
+    parametros = [fecha_consulta]
+    termino_limpio = f"%{termino.strip()}%"
+
+    if termino.strip():
+        filtro_normalizado = filtro.strip()
+        if filtro_normalizado == "Cliente":
+            consulta_base += " AND (c.nombre ILIKE %s OR c.apellido ILIKE %s OR CONCAT(c.nombre, ' ', c.apellido) ILIKE %s)"
+            parametros.extend([termino_limpio, termino_limpio, termino_limpio])
+        elif filtro_normalizado == "Paciente":
+            consulta_base += " AND p.nombre ILIKE %s"
+            parametros.append(termino_limpio)
+        elif filtro_normalizado == "Especie":
+            consulta_base += " AND p.especie ILIKE %s"
+            parametros.append(termino_limpio)
+        elif filtro_normalizado == "Motivo":
+            consulta_base += " AND t.motivo ILIKE %s"
+            parametros.append(termino_limpio)
+        elif filtro_normalizado == "HC":
+            consulta_base += " AND p.id_paciente::TEXT ILIKE %s"
+            parametros.append(termino_limpio)
+        elif filtro_normalizado == "Telefono":
+            consulta_base += " AND c.telefono ILIKE %s"
+            parametros.append(termino_limpio)
+        else:  # "Todos"
+            consulta_base += """
+                AND (
+                    CONCAT(c.nombre, ' ', c.apellido) ILIKE %s
+                    OR p.nombre ILIKE %s
+                    OR p.especie ILIKE %s
+                    OR t.motivo ILIKE %s
+                    OR p.id_paciente::TEXT ILIKE %s
+                    OR c.telefono ILIKE %s
+                )
+            """
+            parametros.extend([termino_limpio] * 6)
+
+    consulta_base += " ORDER BY t.hora_inicio ASC;"
+
+    with conexion.cursor() as cursor:
+        cursor.execute(consulta_base, tuple(parametros))
+        return cursor.fetchall()
+
+def encontrar_fecha_de_turno(conexion, termino: str, filtro: str = "Todos") -> date | None:
+    """
+    Busca la fecha del turno más cercano o relevante que coincida
+    con el término de búsqueda en cualquier día.
+    """
+    if not termino or not termino.strip():
+        return None
+
+    termino_limpio = f"%{termino.strip()}%"
+    consulta = """
+        SELECT t.fecha
+        FROM turno t
+        INNER JOIN paciente p ON t.id_paciente = p.id_paciente
+        INNER JOIN cliente c ON p.dni = c.dni
+        WHERE 
+    """
+
+    filtro_norm = (filtro or "Todos").strip()
+    parametros = []
+
+    if filtro_norm == "Cliente":
+        consulta += "(c.nombre ILIKE %s OR c.apellido ILIKE %s OR CONCAT(c.nombre, ' ', c.apellido) ILIKE %s)"
+        parametros.extend([termino_limpio, termino_limpio, termino_limpio])
+    elif filtro_norm == "Paciente":
+        consulta += "p.nombre ILIKE %s"
+        parametros.append(termino_limpio)
+    elif filtro_norm == "Especie":
+        consulta += "p.especie ILIKE %s"
+        parametros.append(termino_limpio)
+    elif filtro_norm == "Motivo":
+        consulta += "t.motivo ILIKE %s"
+        parametros.append(termino_limpio)
+    elif filtro_norm == "HC":
+        consulta += "p.id_paciente::TEXT ILIKE %s"
+        parametros.append(termino_limpio)
+    else:  # "Todos"
+        consulta += """(
+            CONCAT(c.nombre, ' ', c.apellido) ILIKE %s
+            OR p.nombre ILIKE %s
+            OR p.especie ILIKE %s
+            OR t.motivo ILIKE %s
+            OR p.id_paciente::TEXT ILIKE %s
+            OR c.telefono ILIKE %s
+        )"""
+        parametros.extend([termino_limpio] * 6)
+
+    # Priorizamos fechas desde hoy en adelante o la más reciente
+    consulta += " ORDER BY ABS(t.fecha - CURRENT_DATE) ASC LIMIT 1;"
+
+    with conexion.cursor() as cursor:
+        cursor.execute(consulta, tuple(parametros))
+        resultado = cursor.fetchone()
+        return resultado[0] if resultado else None

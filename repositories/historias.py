@@ -123,6 +123,25 @@ def registrar_cliente_y_paciente(
         )
         return cursor.fetchone()[0], cliente_creado
 
+def eliminar_historia_clinica(conexion, id_paciente):
+    with conexion.cursor() as cursor:
+        cursor.execute(
+            "DELETE FROM consulta WHERE id_paciente = %s",
+            (id_paciente,),
+        )
+        cursor.execute(
+            "DELETE FROM turno WHERE id_paciente = %s",
+            (id_paciente,),
+        )
+        cursor.execute(
+            """
+            DELETE FROM paciente
+            WHERE id_paciente = %s
+            RETURNING id_paciente
+            """,
+            (id_paciente,),
+        )
+        return cursor.fetchone() is not None    
 
 def obtener_detalle_paciente(conexion, id_paciente):
     consulta = """

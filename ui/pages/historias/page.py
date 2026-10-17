@@ -1,4 +1,5 @@
 import tkinter as tk
+import psycopg
 from datetime import date
 from tkinter import messagebox, ttk
 
@@ -12,9 +13,8 @@ from repositories.historias import (
     obtener_historias,
     obtener_veterinarios_activos,
     registrar_consulta,
-    registrar_cliente_y_paciente,
-    inhabilitar_cliente_de_paciente,
-    inhabilitar_paciente,
+    obtener_turnos_pendientes_hoy,
+    eliminar_historia_clinica,
 )
 
 class HistoriasPage(tk.Frame):
@@ -1044,6 +1044,36 @@ class HistoriasPage(tk.Frame):
             return
 
         # 1. Ventana emergente limpia sin barra de Windows
+        if not self.search_view.winfo_manager():
+            messagebox.showwarning(
+                "Sección no disponible",
+                "Volvé a la búsqueda de historias clínicas para eliminar una HC.",
+                parent=self,
+            )
+            return
+
+        if self.historia_clinica_frame.winfo_manager():
+            id_paciente = self.id_paciente_seleccionado
+        else:
+            seleccion = self.hc_table.selection()
+            if not seleccion:
+                messagebox.showwarning(
+                    "Seleccioná una historia clínica",
+                    "Seleccioná una fila de la lista antes de eliminar.",
+                    parent=self,
+                )
+                return
+
+            valores = self.hc_table.item(seleccion[0], "values")
+            try:
+                id_paciente = int(valores[3])
+            except (IndexError, TypeError, ValueError):
+                messagebox.showerror(
+                    "Selección inválida",
+                    "No se pudo identificar la historia clínica seleccionada.",
+                    parent=self,
+                )
+                return
         dialog = tk.Toplevel(self)
         dialog.transient(self.winfo_toplevel())
         dialog.configure(
@@ -1065,9 +1095,9 @@ class HistoriasPage(tk.Frame):
         tk.Label(
             dialog,
             text=(
-                "La historia clínica quedará inactiva.\n"
-                "Se conservarán los datos del paciente,\n"
-                "sus consultas y sus turnos."
+                "Se eliminarán permanentemente el paciente,\n"
+                "sus consultas y todos sus turnos,\n"
+                "incluidos los cancelados. El cliente se conservará."
             ),
             font=("Arial", 10),
             justify="center",
@@ -1124,39 +1154,50 @@ class HistoriasPage(tk.Frame):
     def _confirmar_eliminar_hc(self, dialog, id_paciente):
         try:
             with conectar() as conexion:
-                inhabilitado = inhabilitar_paciente(conexion, id_paciente)
-                historias = obtener_historias(
-                    conexion,
-                    self.searchbar.search_entry.get().strip(),
-                    self.searchbar.filter_options.get(),
-                )
+                eliminado = eliminar_historia_clinica(conexion, id_paciente)
         except (psycopg.Error, OSError, ValueError, KeyError) as error:
             messagebox.showerror(
-                "Error al inhabilitar la historia clínica",
-                f"No se pudo inhabilitar la historia clínica:\n{error}",
+                "Error al eliminar la historia clínica",
+                f"No se pudo eliminar la historia clínica:\n{error}",
+                parent=self,
+            )
+            return
+
+        if not eliminado:
+            dialog.destroy()
+            messagebox.showwarning(
+                "Historia clínica no encontrada",
+                "No se encontró el paciente seleccionado en la base de datos.",
                 parent=self,
             )
             return
 
         dialog.destroy()
 
-        if not inhabilitado:
-            self._actualizar_historias_en_pantalla(historias)
+        if self.historia_clinica_frame.winfo_manager():
+            self._cerrar_historia_clinica()
+
+        for item_id in self.hc_table.get_children():
+            self.hc_table.delete(item_id)
+
+        try:
+            self._cargar_historias()
+        except (psycopg.Error, OSError, ValueError, KeyError) as error:
             messagebox.showwarning(
-                "Paciente no encontrado",
-                "No se encontró el paciente seleccionado en la base de datos.",
+                "Historia eliminada, lista no actualizada",
+                "La historia se eliminó de la base de datos, "
+                f"pero no se pudo actualizar el listado:\n{error}",
                 parent=self,
             )
             return
 
-        self._actualizar_historias_en_pantalla(historias)
         messagebox.showinfo(
-            "Historia clínica inhabilitada",
-            "La historia clínica quedó inactiva. Los datos del paciente, "
-            "sus consultas y sus turnos se conservaron.",
+            "Historia clínica eliminada",
+            "Se eliminaron el paciente, sus consultas y sus turnos. "
+            "El cliente se conservó.",
             parent=self,
         )
-
+    
     def _abrir_modal_eliminar_cliente(self):
         id_paciente = self._obtener_id_paciente_seleccionado()
         if id_paciente is None:
