@@ -14,6 +14,7 @@ from repositories.historias import (
     obtener_veterinarios_activos,
     registrar_consulta,
     obtener_turnos_pendientes_hoy,
+    inhabilitar_cliente_de_paciente,
     eliminar_historia_clinica,
 )
 
