@@ -295,3 +295,57 @@ def buscar_turnos(
     with conexion.cursor() as cursor:
         cursor.execute(consulta_base, tuple(parametros))
         return cursor.fetchall()
+
+def encontrar_fecha_de_turno(conexion, termino: str, filtro: str = "Todos") -> date | None:
+    """
+    Busca la fecha del turno más cercano o relevante que coincida
+    con el término de búsqueda en cualquier día.
+    """
+    if not termino or not termino.strip():
+        return None
+
+    termino_limpio = f"%{termino.strip()}%"
+    consulta = """
+        SELECT t.fecha
+        FROM turno t
+        INNER JOIN paciente p ON t.id_paciente = p.id_paciente
+        INNER JOIN cliente c ON p.dni = c.dni
+        WHERE 
+    """
+
+    filtro_norm = (filtro or "Todos").strip()
+    parametros = []
+
+    if filtro_norm == "Cliente":
+        consulta += "(c.nombre ILIKE %s OR c.apellido ILIKE %s OR CONCAT(c.nombre, ' ', c.apellido) ILIKE %s)"
+        parametros.extend([termino_limpio, termino_limpio, termino_limpio])
+    elif filtro_norm == "Paciente":
+        consulta += "p.nombre ILIKE %s"
+        parametros.append(termino_limpio)
+    elif filtro_norm == "Especie":
+        consulta += "p.especie ILIKE %s"
+        parametros.append(termino_limpio)
+    elif filtro_norm == "Motivo":
+        consulta += "t.motivo ILIKE %s"
+        parametros.append(termino_limpio)
+    elif filtro_norm == "HC":
+        consulta += "p.id_paciente::TEXT ILIKE %s"
+        parametros.append(termino_limpio)
+    else:  # "Todos"
+        consulta += """(
+            CONCAT(c.nombre, ' ', c.apellido) ILIKE %s
+            OR p.nombre ILIKE %s
+            OR p.especie ILIKE %s
+            OR t.motivo ILIKE %s
+            OR p.id_paciente::TEXT ILIKE %s
+            OR c.telefono ILIKE %s
+        )"""
+        parametros.extend([termino_limpio] * 6)
+
+    # Priorizamos fechas desde hoy en adelante o la más reciente
+    consulta += " ORDER BY ABS(t.fecha - CURRENT_DATE) ASC LIMIT 1;"
+
+    with conexion.cursor() as cursor:
+        cursor.execute(consulta, tuple(parametros))
+        resultado = cursor.fetchone()
+        return resultado[0] if resultado else None

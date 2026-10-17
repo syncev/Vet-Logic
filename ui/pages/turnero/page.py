@@ -10,6 +10,7 @@ from repositories.turno import (
     resolver_estado_visual,
     cancelar_turno,
     buscar_turnos,
+    encontrar_fecha_de_turno,
 )
 
 from ui.widgets.searchbar import Searchbar
@@ -365,46 +366,43 @@ class TurneroPage(tk.Frame):
             )
 
     def search_appointments(self, query, selected_filter):
-        query_limpia = (query or "").strip() # si query es None, lo convertimos a string vacio para evitar errores, evito el error.
+        query_limpia = (query or "").strip()
 
-        # Índices relativos a fila_visible: (estado=0, hora=1, cliente=2, paciente=3, especie=4, motivo=5, hc=6, ultimo=7)
-        filter_columns = {
-            "Cliente": [2],
-            "Paciente": [3],
-            "Especie": [4],
-            "Motivo": [5],
-            "HC": [6],
-        }
+        # Si borran la búsqueda y está en Todos, recargamos la fecha normal
+        if not query_limpia and selected_filter == "Todos":
+            self.cargar_turnos_fecha(self.selected_date)
+            return
 
-        if selected_filter == "Todos":
-            columns_to_search = range(len(self.appointments_table["columns"]) - 1)
-        else:
-            columns_to_search = filter_columns.get(selected_filter, [])
+        filas = []
+        try:
+            with conectar() as conexion:
+                filas = buscar_turnos(
+                    conexion=conexion,
+                    fecha_consulta=self.selected_date,
+                    termino=query_limpia,
+                    filtro=selected_filter,
+                )
 
-        filtered_appointments = []
+                if not filas and query_limpia:
+                    fecha_destino = encontrar_fecha_de_turno(
+                        conexion=conexion,
+                        termino=query_limpia,
+                        filtro=selected_filter,
+                    )
+                    if fecha_destino and fecha_destino != self.selected_date:
+                        self.select_date(fecha_destino)
+                        # Buscamos nuevamente en esa fecha de destino
+                        filas = buscar_turnos(
+                            conexion=conexion,
+                            fecha_consulta=fecha_destino,
+                            termino=query_limpia,
+                            filtro=selected_filter,
+                        )
+        except Exception as e:
+            print(f"Error en la búsqueda de turnos: {e}")
+            filas = []
 
-        for id_turno, valores in self.appointments:
-            if any(
-                query_limpia.casefold() in str(valores[column]).casefold()
-                for column in columns_to_search
-            ):
-                filtered_appointments.append((id_turno, valores))
-
-        for item in self.appointments_table.get_children():
-            self.appointments_table.delete(item)
-
-        for id_turno, valores in filtered_appointments:
-            motivo = str(valores[5]).casefold()
-            tag = ("cirugia",) if motivo in ("cirugia", "cirugía") else ()
-            self.appointments_table.insert(
-                "",
-                "end",
-                iid=str(id_turno),
-                text="",
-                image=self.estado_images[valores[0]],
-                values=valores,
-                tags=tag,
-            )
+        self._poblar_tabla_turnos(filas)
 
     # WIDGETS
     def _build_widgets(self):
