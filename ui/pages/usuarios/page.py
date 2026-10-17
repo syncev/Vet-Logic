@@ -107,6 +107,7 @@ class UsuariosPage(tk.Frame):
             SELECT matricula_veterinario, nombre, apellido, estado, contacto,
                 especialidad, domicilio, correo, contacto_emergencia
             FROM veterinario
+            WHERE estado = 'ACTIVO'
             ORDER BY apellido, nombre, matricula_veterinario
         """
 
@@ -588,11 +589,42 @@ class UsuariosPage(tk.Frame):
         btn_continuar.pack(side="left", padx=10)
 
     def _ejecutar_inhabilitacion(self, modal):
-        # Lógica interna para actualizar el estado en la base de datos
-        print("Perfil inhabilitado correctamente.")
-        
-        # Cierra la ventana modal al terminar
+        try:
+            with conectar() as conexion:
+                with conexion.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        UPDATE veterinario
+                        SET estado = 'INACTIVO'
+                        WHERE matricula_veterinario = %s
+                        AND estado = 'ACTIVO'
+                        """,
+                        (self.matricula_actual,),
+                    )
+                    filas_actualizadas = cursor.rowcount
+        except (psycopg.Error, OSError, ValueError, KeyError) as error:
+            messagebox.showerror(
+                "Error al inhabilitar el perfil",
+                f"No se pudo actualizar el estado del veterinario:\n{error}",
+                parent=modal,
+            )
+            return
+
+        if filas_actualizadas != 1:
+            messagebox.showwarning(
+                "Perfil no actualizado",
+                "El veterinario no existe o ya estaba inhabilitado.",
+                parent=modal,
+            )
+            return
+
         modal.destroy()
+        messagebox.showinfo(
+            "Perfil inhabilitado",
+            "El veterinario pasó a estado INACTIVO.",
+            parent=self,
+        )
+        self.show_section("perfiles")
 
     def _habilitar_edicion(self):
         """Habilita todas las cajas de texto para poder editarlas."""
