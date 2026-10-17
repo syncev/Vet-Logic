@@ -10,6 +10,9 @@ from repositories.turno import (
     resolver_estado_visual,
     cancelar_turno,
     buscar_turnos,
+    encontrar_fecha_de_turno,
+    buscar_pacientes_para_turno,
+    registrar_turno_paciente_existente,
 )
 
 from ui.widgets.searchbar import Searchbar
