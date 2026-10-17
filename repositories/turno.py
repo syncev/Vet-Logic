@@ -296,11 +296,13 @@ def buscar_turnos(
         cursor.execute(consulta_base, tuple(parametros))
         return cursor.fetchall()
 
-def encontrar_fecha_de_turno(conexion, termino: str, filtro: str = "Todos") -> date | None:
-    """
-    Busca la fecha del turno más cercano o relevante que coincida
-    con el término de búsqueda en cualquier día.
-    """
+
+def encontrar_fecha_de_turno(
+    conexion,
+    termino: str,
+    filtro: str = "Todos",
+) -> date | None:
+    """Busca la fecha del turno más cercano que coincide con el término."""
     if not termino or not termino.strip():
         return None
 
@@ -310,28 +312,30 @@ def encontrar_fecha_de_turno(conexion, termino: str, filtro: str = "Todos") -> d
         FROM turno t
         INNER JOIN paciente p ON t.id_paciente = p.id_paciente
         INNER JOIN cliente c ON p.dni = c.dni
-        WHERE 
+        WHERE
     """
-
-    filtro_norm = (filtro or "Todos").strip()
+    filtro_normalizado = (filtro or "Todos").strip()
     parametros = []
 
-    if filtro_norm == "Cliente":
-        consulta += "(c.nombre ILIKE %s OR c.apellido ILIKE %s OR CONCAT(c.nombre, ' ', c.apellido) ILIKE %s)"
-        parametros.extend([termino_limpio, termino_limpio, termino_limpio])
-    elif filtro_norm == "Paciente":
+    if filtro_normalizado == "Cliente":
+        consulta += (
+            "(c.nombre ILIKE %s OR c.apellido ILIKE %s "
+            "OR CONCAT(c.nombre, ' ', c.apellido) ILIKE %s)"
+        )
+        parametros.extend([termino_limpio] * 3)
+    elif filtro_normalizado == "Paciente":
         consulta += "p.nombre ILIKE %s"
         parametros.append(termino_limpio)
-    elif filtro_norm == "Especie":
+    elif filtro_normalizado == "Especie":
         consulta += "p.especie ILIKE %s"
         parametros.append(termino_limpio)
-    elif filtro_norm == "Motivo":
+    elif filtro_normalizado == "Motivo":
         consulta += "t.motivo ILIKE %s"
         parametros.append(termino_limpio)
-    elif filtro_norm == "HC":
+    elif filtro_normalizado == "HC":
         consulta += "p.id_paciente::TEXT ILIKE %s"
         parametros.append(termino_limpio)
-    else:  # "Todos"
+    else:
         consulta += """(
             CONCAT(c.nombre, ' ', c.apellido) ILIKE %s
             OR p.nombre ILIKE %s
@@ -342,10 +346,86 @@ def encontrar_fecha_de_turno(conexion, termino: str, filtro: str = "Todos") -> d
         )"""
         parametros.extend([termino_limpio] * 6)
 
-    # Priorizamos fechas desde hoy en adelante o la más reciente
     consulta += " ORDER BY ABS(t.fecha - CURRENT_DATE) ASC LIMIT 1;"
 
     with conexion.cursor() as cursor:
         cursor.execute(consulta, tuple(parametros))
         resultado = cursor.fetchone()
         return resultado[0] if resultado else None
+
+
+def buscar_pacientes_para_turno(conexion, termino: str) -> list[tuple]:
+    """
+    Busca pacientes por nombre del paciente, cliente o número de historia clínica.
+    """
+    if not termino or not termino.strip():
+        return []
+
+    termino_limpio = termino.strip()
+    if termino_limpio.isdecimal():
+        consulta = """
+            SELECT
+                p.id_paciente,
+                CONCAT(c.nombre, ' ', c.apellido) AS cliente,
+                p.nombre AS paciente,
+                p.especie,
+                c.telefono,
+                c.dni
+            FROM paciente p
+            INNER JOIN cliente c ON p.dni = c.dni
+            WHERE p.id_paciente = %s
+            ORDER BY p.nombre ASC
+            LIMIT 15;
+        """
+        with conexion.cursor() as cursor:
+            cursor.execute(consulta, (int(termino_limpio),))
+            return cursor.fetchall()
+
+    patron = f"%{termino_limpio}%"
+    consulta = """
+        SELECT
+            p.id_paciente,
+            CONCAT(c.nombre, ' ', c.apellido) AS cliente,
+            p.nombre AS paciente,
+            p.especie,
+            c.telefono,
+            c.dni
+        FROM paciente p
+        INNER JOIN cliente c ON p.dni = c.dni
+        WHERE p.nombre ILIKE %s
+           OR c.nombre ILIKE %s
+           OR c.apellido ILIKE %s
+           OR CONCAT(c.nombre, ' ', c.apellido) ILIKE %s
+           OR c.dni ILIKE %s
+        ORDER BY p.nombre ASC
+        LIMIT 15;
+    """
+    with conexion.cursor() as cursor:
+        cursor.execute(consulta, (patron,) * 5)
+        return cursor.fetchall()
+
+
+def registrar_turno_paciente_existente(conexion, datos: dict) -> int:
+    """Registra un turno para un paciente que ya cuenta con historia clínica."""
+    fecha = datos["fecha"]
+    hora_inicio_str = datos["hora"]
+    motivo = datos.get("motivo", "CLINICA").strip().upper()
+    if motivo not in ("CLINICA", "VACUNACION", "CIRUGIA", "OTROS"):
+        motivo = "CLINICA"
+
+    hora_dt = datetime.strptime(hora_inicio_str, "%H:%M")
+    hora_fin_str = (hora_dt + timedelta(minutes=40)).strftime("%H:%M")
+
+    consulta = """
+        INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente)
+        VALUES (%s, %s, %s, %s, 'PENDIENTE', %s)
+        RETURNING id_turno;
+    """
+    with conexion.cursor() as cursor:
+        cursor.execute(
+            consulta,
+            (fecha, hora_inicio_str, hora_fin_str, motivo, datos["id_paciente"]),
+        )
+        id_turno = cursor.fetchone()[0]
+    conexion.commit()
+    return id_turno
