@@ -361,7 +361,27 @@ def buscar_pacientes_para_turno(conexion, termino: str) -> list[tuple]:
     if not termino or not termino.strip():
         return []
 
-    patron = f"%{termino.strip()}%"
+    termino_limpio = termino.strip()
+    if termino_limpio.isdecimal():
+        consulta = """
+            SELECT
+                p.id_paciente,
+                CONCAT(c.nombre, ' ', c.apellido) AS cliente,
+                p.nombre AS paciente,
+                p.especie,
+                c.telefono,
+                c.dni
+            FROM paciente p
+            INNER JOIN cliente c ON p.dni = c.dni
+            WHERE p.id_paciente = %s
+            ORDER BY p.nombre ASC
+            LIMIT 15;
+        """
+        with conexion.cursor() as cursor:
+            cursor.execute(consulta, (int(termino_limpio),))
+            return cursor.fetchall()
+
+    patron = f"%{termino_limpio}%"
     consulta = """
         SELECT
             p.id_paciente,
@@ -376,13 +396,12 @@ def buscar_pacientes_para_turno(conexion, termino: str) -> list[tuple]:
            OR c.nombre ILIKE %s
            OR c.apellido ILIKE %s
            OR CONCAT(c.nombre, ' ', c.apellido) ILIKE %s
-           OR p.id_paciente::TEXT ILIKE %s
            OR c.dni ILIKE %s
         ORDER BY p.nombre ASC
         LIMIT 15;
     """
     with conexion.cursor() as cursor:
-        cursor.execute(consulta, (patron,) * 6)
+        cursor.execute(consulta, (patron,) * 5)
         return cursor.fetchall()
 
 
