@@ -295,4 +295,7 @@ INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_pac
 ('2026-12-17', 'Revision pediatrica', 'Desarrollo corporal adecuado para la edad', 'Continuar con vacuna de refuerzo', 1, 'MP-1234', 61),
 ('2026-12-18', 'Control oftalmologico', 'Reflejos pupilares y cornea sin alteraciones', 'Sin tratamiento necesario', 2, 'MP-3456', 62),
 ('2026-12-21', 'Consulta clinica general', 'Examen fisico completo y auscultacion normal', 'Dieta equilibrada', 3, 'MP-5578', 63),
+('2026-12-22', 'Vacunacion anual', 'Aplicacion de dosis de refuerzo antirrabica', 'Carnet al dia', 4, 'MP-2345', 64),
+('2026-12-23', 'Consulta odontologica', 'Sarro dental moderado sin inflamacion de encias', 'Limpieza ultrasonica recomendada', 5, 'MP-3856', 65),
+('2026-12-28', 'Control clinico general', 'Evolucion favorable post-tratamiento', 'Alta medica definitiva', 6, 'MP-7867', 66),
 
