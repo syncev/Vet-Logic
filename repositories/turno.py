@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
-
+from core.db import conectar
 
 def obtener_horarios_ocupados(conexion, fecha_base: date):
     fecha_final = fecha_base + timedelta(days=2)
@@ -26,6 +26,8 @@ def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
     Retorna tuplas con el formato:
     (id_turno, hora, cliente, paciente, especie, motivo, hc, ultimo_turno, estado)
     """
+    marcar_turnos_ausentes(conexion)
+    
     consulta = """
         SELECT 
             t.id_turno,
@@ -58,7 +60,6 @@ def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
         return cursor.fetchall()
 
 def resolver_estado_visual(fecha_turno: date, hora_inicio_str: str, estado_bd: str) -> tuple[str, str]:
-   
     estado_normalizado = (estado_bd or "PENDIENTE").upper()
 
     if estado_normalizado in ("ATENDIDO", "COMPLETADO"):
@@ -67,6 +68,9 @@ def resolver_estado_visual(fecha_turno: date, hora_inicio_str: str, estado_bd: s
     if estado_normalizado == "CANCELADO":
         return ("Cancelado", "🔴")
 
+    if estado_normalizado == "AUSENTE":
+        return ("Ausente", "🔴")
+    
     ahora = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
     hoy = ahora.date()
 
@@ -76,14 +80,13 @@ def resolver_estado_visual(fecha_turno: date, hora_inicio_str: str, estado_bd: s
             dt_turno = datetime.combine(hoy, hora_turno).replace(tzinfo=ahora.tzinfo)
             diferencia_minutos = (dt_turno - ahora).total_seconds() / 60
 
-            # Esto chicos es la logica de los 40 minutos que pactamos   
+            # Lógica de los 40 minutos
             if -40 <= diferencia_minutos <= 40:
                 return ("Próximo", "🟡")
         except ValueError:
             pass
 
     return ("Pendiente", "⚪")
-
 
 def actualizar_estado_turno(conexion, id_turno: int, nuevo_estado: str):
     """
@@ -194,3 +197,22 @@ def cancelar_turno(conexion, id_turno: int) -> bool:
 
     conexion.commit()
     return resultado is not None
+
+SQL_MARCAR_AUSENTES = """
+    UPDATE turno
+    SET estado = 'AUSENTE'
+    WHERE estado = 'PENDIENTE'
+      AND (fecha + hora_inicio + INTERVAL '40 minutes') < (now() AT TIME ZONE %s)
+    RETURNING id_turno;
+"""
+
+def marcar_turnos_ausentes(conexion, tz_name: str = "America/Argentina/Buenos_Aires") -> int:
+    """
+    Actualiza a 'AUSENTE' en la base de datos todos los turnos que sigan en 'PENDIENTE'
+    y cuyo horario de inicio + 40 minutos ya haya pasado.
+    """
+    with conexion.cursor() as cursor:
+        cursor.execute(SQL_MARCAR_AUSENTES, (tz_name,))
+        afectados = cursor.rowcount
+    conexion.commit()
+    return afectados

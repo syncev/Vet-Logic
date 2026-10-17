@@ -23,6 +23,13 @@ class TurneroPage(tk.Frame):
         self._build_widgets()
         self._build_layout()
 
+        self._iniciar_auto_refresco() # esto es opcional, pero lo quise agregar para que la tabla se refresque automaticamente cada cierto tiempo, por si se hacen cambios. pruebenlo
+
+    def _iniciar_auto_refresco(self):
+        self.cargar_turnos_fecha(self.selected_date)
+        # Se programa para volver a ejecutarse en 2 minutos, por las dudas en tkinter el .after mide en milisegundos hagan las matematicas  
+        self.after(120000, self._iniciar_auto_refresco)
+
     # LOGICA
     def _build_date_stepper(self):
         # EL ARREGLO ESTÁ ACÁ: Le asignamos self.right_controls como padre
