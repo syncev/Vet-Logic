@@ -283,4 +283,7 @@ INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_pac
 ('2026-12-01', 'Evaluacion prequirurgica', 'Estudios de laboratorio en orden', 'Apto para cirugia', 9, 'MP-2345', 49),
 ('2026-12-02', 'Consulta por desparasitacion', 'Sin signos de ecto o endoparasitos', 'Administracion de antiparasitario oral', 10, 'MP-7867', 50),
 ('2026-12-03', 'Control clinico general', 'Evolucion favorable e hidratacion adecuada', 'Continuar con control periodico', 1, 'MP-1234', 51),
+('2026-12-04', 'Revision de rutina', 'Buen estado nutricional y denticion limpia', 'Control anual', 2, 'MP-4567', 52),
+('2026-12-07', 'Consulta dermatologica', 'Piel sana sin evidencias de dermatitis', 'Uso de jabon neutro en banos', 3, 'MP-3456', 53),
+('2026-12-08', 'Vacunacion anual', 'Refuerzo aplicado exitosamente', 'Carnet al dia', 4, 'MP-5578', 54),
 
