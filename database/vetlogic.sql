@@ -280,4 +280,7 @@ INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_pac
 ('2026-11-26', 'Consulta por control de conducta', 'Sin alteracion organica detectable', 'Recomendaciones de enriquecimiento ambiental', 6, 'MP-3856', 46),
 ('2026-11-27', 'Revision clinica general', 'Parametros fisiologicos estables', 'Mantener plan de alimentacion actual', 7, 'MP-1234', 47),
 ('2026-11-30', 'Aplicacion de vacuna', 'Refuerzo de antirrabica aplicado sin complicaciones', 'Carnet actualizado', 8, 'MP-5578', 48),
+('2026-12-01', 'Evaluacion prequirurgica', 'Estudios de laboratorio en orden', 'Apto para cirugia', 9, 'MP-2345', 49),
+('2026-12-02', 'Consulta por desparasitacion', 'Sin signos de ecto o endoparasitos', 'Administracion de antiparasitario oral', 10, 'MP-7867', 50),
+('2026-12-03', 'Control clinico general', 'Evolucion favorable e hidratacion adecuada', 'Continuar con control periodico', 1, 'MP-1234', 51),
 
