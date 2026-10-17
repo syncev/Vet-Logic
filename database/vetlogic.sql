@@ -292,4 +292,7 @@ INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_pac
 ('2026-12-14', 'Aplicacion de vacuna', 'Refuerzo quintuple administrado sin reacciones', 'Proximo control en 1 ano', 8, 'MP-4567', 58),
 ('2026-12-15', 'Consulta de rutina', 'Excelente estado general e hidratacion', 'Continuar plan de vida saludable', 9, 'MP-7867', 59),
 ('2026-12-16', 'Evaluacion prequirurgica', 'Analisis de laboratorio estables', 'Apto para procedimiento quirurgico', 10, 'MP-5578', 60),
+('2026-12-17', 'Revision pediatrica', 'Desarrollo corporal adecuado para la edad', 'Continuar con vacuna de refuerzo', 1, 'MP-1234', 61),
+('2026-12-18', 'Control oftalmologico', 'Reflejos pupilares y cornea sin alteraciones', 'Sin tratamiento necesario', 2, 'MP-3456', 62),
+('2026-12-21', 'Consulta clinica general', 'Examen fisico completo y auscultacion normal', 'Dieta equilibrada', 3, 'MP-5578', 63),
 
