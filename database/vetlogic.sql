@@ -13,7 +13,10 @@ CREATE TABLE cliente (
     apellido VARCHAR(60) NOT NULL,
     telefono VARCHAR(30) NOT NULL,
     mail VARCHAR(150),
-    domicilio VARCHAR(200)
+    domicilio VARCHAR(200),
+    estado VARCHAR(10) NOT NULL DEFAULT 'ACTIVO',
+    CONSTRAINT ck_cliente_estado
+        CHECK (estado IN ('ACTIVO', 'INACTIVO'))
 );
 
 CREATE TABLE veterinario (
@@ -39,6 +42,8 @@ CREATE TABLE paciente (
     peso NUMERIC(5,2),
     castrado BOOLEAN,
     dni VARCHAR(20) NOT NULL,
+    estado VARCHAR(10) NOT NULL DEFAULT 'ACTIVO',
+    CONSTRAINT ck_paciente_estado CHECK (estado IN ('ACTIVO', 'INACTIVO')),
     CONSTRAINT fk_paciente_cliente FOREIGN KEY (dni) REFERENCES cliente(dni)
 );
 

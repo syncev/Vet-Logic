@@ -1,17 +1,18 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, ttk
 
 from core.db import conectar
 from ui.pages.turnero.new_appointment import NewAppointmentPage
 from repositories.turno import (
     obtener_turnos_por_fecha,
     resolver_estado_visual,
+    cancelar_turno,
+    buscar_turnos,
+    encontrar_fecha_de_turno,
 )
 
-# Asumiendo que tenés la barra de búsqueda importada si la usás,
-# aunque en tu código vi que creaste el Entry directo. Podés borrar esto si no lo usás.
 from ui.widgets.searchbar import Searchbar
 
 
@@ -23,6 +24,13 @@ class TurneroPage(tk.Frame):
         self.on_date_changed = None
         self._build_widgets()
         self._build_layout()
+
+        self._iniciar_auto_refresco() # esto es opcional, pero lo quise agregar para que la tabla se refresque automaticamente cada cierto tiempo, por si se hacen cambios. pruebenlo
+
+    def _iniciar_auto_refresco(self):
+        self.cargar_turnos_fecha(self.selected_date)
+        # Se programa para volver a ejecutarse en 2 minutos, por las dudas en tkinter el .after mide en milisegundos hagan las matematicas  
+        self.after(120000, self._iniciar_auto_refresco)
 
     # LOGICA
     def _build_date_stepper(self):
@@ -157,6 +165,7 @@ class TurneroPage(tk.Frame):
                 "motivo",
                 "hc",
                 "ultimo turno",
+                "accion",
             ),
             displaycolumns=(
                 "hora",
@@ -166,6 +175,7 @@ class TurneroPage(tk.Frame):
                 "motivo",
                 "hc",
                 "ultimo turno",
+                "accion",
             ),
             show="tree headings",
         )
@@ -179,6 +189,7 @@ class TurneroPage(tk.Frame):
         self.appointments_table.heading("motivo", text="Motivo")
         self.appointments_table.heading("hc", text="HC")
         self.appointments_table.heading("ultimo turno", text="Último Turno")
+        self.appointments_table.heading("accion", text="")
 
         self.appointments_table.column("#0", width=70, minwidth=70, stretch=False, anchor="center")
         self.appointments_table.column("estado", width=0, stretch=False)
@@ -189,6 +200,7 @@ class TurneroPage(tk.Frame):
         self.appointments_table.column("motivo", width=100, anchor="center")
         self.appointments_table.column("hc", width=70, anchor="center")
         self.appointments_table.column("ultimo turno", width=150, anchor="center")
+        self.appointments_table.column("accion", width=45, minwidth=45, stretch=False, anchor="center")
 
         self.estado_images = {
             "🟢": self._crear_imagen_estado("#A8DFAE"),
@@ -198,8 +210,10 @@ class TurneroPage(tk.Frame):
         }
 
         self.appointments = []
+        self.turnos_cancelables = set()
 
         self.appointments_table.bind("<Double-1>", self._abrir_modal_turno)
+        self.appointments_table.bind("<Button-1>", self._on_table_click)
 
 
 
@@ -231,10 +245,14 @@ class TurneroPage(tk.Frame):
             print(f"Error al cargar turnos: {e}")
             filas = []
 
+        self._poblar_tabla_turnos(filas)
+
+    def _poblar_tabla_turnos(self, filas):
+        now = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
         self.appointments = []
+        self.turnos_cancelables.clear()
+
         for turno in filas:
-            # turno viene de la BD como:
-            # (id_turno, hora, cliente, paciente, especie, motivo, hc, ultimo_turno, estado_bd)
             (
                 id_turno,
                 hora,
@@ -247,10 +265,23 @@ class TurneroPage(tk.Frame):
                 estado_bd,
             ) = turno
 
-            # Resolvemos el estado visual y el icono
-            nombre_estado, icono = resolver_estado_visual(fecha, hora, estado_bd)
+            nombre_estado, icono = resolver_estado_visual(self.selected_date, hora, estado_bd)
 
-            # Formateamos la fila visible para el Treeview
+            es_cancelable = False
+            if (estado_bd or "").upper() == "PENDIENTE":
+                try:
+                    hora_dt = datetime.strptime(hora, "%H:%M").time()
+                    dt_turno = datetime.combine(self.selected_date, hora_dt).replace(
+                        tzinfo=now.tzinfo
+                    )
+                    es_cancelable = dt_turno > now
+                except ValueError:
+                    pass
+
+            accion_icono = "❌" if es_cancelable else ""
+            if es_cancelable:
+                self.turnos_cancelables.add(id_turno)
+
             fila_visible = (
                 icono,
                 hora,
@@ -260,6 +291,7 @@ class TurneroPage(tk.Frame):
                 motivo,
                 hc,
                 ult_turno,
+                accion_icono,
             )
             self.appointments.append((id_turno, fila_visible))
 
@@ -269,7 +301,6 @@ class TurneroPage(tk.Frame):
         for id_turno, valores in self.appointments:
             motivo = str(valores[5]).casefold()
             tag = ("cirugia",) if motivo in ("cirugia", "cirugía") else ()
-            # Usamos el id_turno como iid de la fila en Treeview
             self.appointments_table.insert(
                 "",
                 "end",
@@ -278,49 +309,100 @@ class TurneroPage(tk.Frame):
                 image=self.estado_images[valores[0]],
                 values=valores,
                 tags=tag,
+            )
+
+    def _on_table_click(self, event):
+        region = self.appointments_table.identify_region(event.x, event.y)
+        if region != "cell":
+            return
+
+        columna = self.appointments_table.identify_column(event.x)
+        if self.appointments_table.column(columna, "id") != "accion":
+            return
+
+        item_id = self.appointments_table.identify_row(event.y)
+        if not item_id:
+            return
+
+        id_turno = int(item_id)
+        if id_turno in self.turnos_cancelables:
+            self._confirmar_cancelacion_turno(id_turno)
+
+    def _confirmar_cancelacion_turno(self, id_turno):
+        valores = self.appointments_table.item(str(id_turno), "values")
+        hora = valores[1]
+        paciente = valores[3]
+
+        respuesta = messagebox.askyesno(
+            "Cancelar Turno",
+            f"¿Desea cancelar el turno de las {hora} hs para {paciente}?\n\n"
+            "El horario volverá a quedar disponible para asignación.",
+            parent=self,
+        )
+        if not respuesta:
+            return
+
+        try:
+            with conectar() as conexion:
+                exito = cancelar_turno(conexion, id_turno)
+            if exito:
+                messagebox.showinfo(
+                    "Turno Cancelado",
+                    "El turno fue cancelado y el horario quedó liberado.",
+                    parent=self,
+                )
+            else:
+                messagebox.showwarning(
+                    "No se pudo cancelar",
+                    "El turno ya no se encuentra pendiente o su horario ya ha pasado.",
+                    parent=self,
+                )
+            self.cargar_turnos_fecha(self.selected_date)
+        except Exception as e:
+            messagebox.showerror(
+                "Error",
+                f"Error al cancelar turno en la base de datos:\n{e}",
+                parent=self,
             )
 
     def search_appointments(self, query, selected_filter):
-        query = query.lower()
+        query_limpia = (query or "").strip()
 
-        # Índices relativos a fila_visible: (estado=0, hora=1, cliente=2, paciente=3, especie=4, motivo=5, hc=6, ultimo=7)
-        filter_columns = {
-            "Cliente": [2],
-            "Paciente": [3],
-            "Especie": [4],
-            "Motivo": [5],
-            "HC": [6],
-        }
+        # Si borran la búsqueda y está en Todos, recargamos la fecha normal
+        if not query_limpia and selected_filter == "Todos":
+            self.cargar_turnos_fecha(self.selected_date)
+            return
 
-        if selected_filter == "Todos":
-            columns_to_search = range(len(self.appointments_table["columns"]))
-        else:
-            columns_to_search = filter_columns.get(selected_filter, [])
+        filas = []
+        try:
+            with conectar() as conexion:
+                filas = buscar_turnos(
+                    conexion=conexion,
+                    fecha_consulta=self.selected_date,
+                    termino=query_limpia,
+                    filtro=selected_filter,
+                )
 
-        filtered_appointments = []
+                if not filas and query_limpia:
+                    fecha_destino = encontrar_fecha_de_turno(
+                        conexion=conexion,
+                        termino=query_limpia,
+                        filtro=selected_filter,
+                    )
+                    if fecha_destino and fecha_destino != self.selected_date:
+                        self.select_date(fecha_destino)
+                        # Buscamos nuevamente en esa fecha de destino
+                        filas = buscar_turnos(
+                            conexion=conexion,
+                            fecha_consulta=fecha_destino,
+                            termino=query_limpia,
+                            filtro=selected_filter,
+                        )
+        except Exception as e:
+            print(f"Error en la búsqueda de turnos: {e}")
+            filas = []
 
-        for id_turno, valores in self.appointments:
-            if any(
-                query in str(valores[column]).lower()
-                for column in columns_to_search
-            ):
-                filtered_appointments.append((id_turno, valores))
-
-        for item in self.appointments_table.get_children():
-            self.appointments_table.delete(item)
-
-        for id_turno, valores in filtered_appointments:
-            motivo = str(valores[5]).casefold()
-            tag = ("cirugia",) if motivo in ("cirugia", "cirugía") else ()
-            self.appointments_table.insert(
-                "",
-                "end",
-                iid=str(id_turno),
-                text="",
-                image=self.estado_images[valores[0]],
-                values=valores,
-                tags=tag,
-            )
+        self._poblar_tabla_turnos(filas)
 
     # WIDGETS
     def _build_widgets(self):
@@ -634,6 +716,10 @@ class TurneroPage(tk.Frame):
         ).pack(pady=10)
 
     def _abrir_modal_turno(self, event):
+        column = self.appointments_table.identify_column(event.x)
+        if self.appointments_table.column(column, "id") == "accion":
+            return
+
         seleccion = self.appointments_table.selection()
         if not seleccion:
             return

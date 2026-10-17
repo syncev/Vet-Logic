@@ -1,6 +1,10 @@
 import tkinter as tk
+import psycopg
 from datetime import date
 from tkinter import messagebox, ttk
+
+import psycopg
+
 from ui.widgets.searchbar import Searchbar
 from core.db import conectar
 from repositories.historias import (
@@ -10,6 +14,7 @@ from repositories.historias import (
     obtener_veterinarios_activos,
     registrar_consulta,
     obtener_turnos_pendientes_hoy,
+    eliminar_historia_clinica,
 )
 
 class HistoriasPage(tk.Frame):
@@ -49,6 +54,7 @@ class HistoriasPage(tk.Frame):
     def _build_search_view(self):
         self.searchbar = Searchbar(
             self.search_view,
+            on_search=self._buscar_historias,
             controls_relwidth=1.0,
             title_text="Búsqueda de Historia Clínica",
         )
@@ -117,14 +123,39 @@ class HistoriasPage(tk.Frame):
         self.hc_table.bind("<Double-1>", self._abrir_historia_clinica)
 
     def _cargar_historias(self):
+        texto = self.searchbar.search_entry.get().strip()
+        filtro = self.searchbar.filter_options.get()
         conexion = conectar()
         try:
-            filas = obtener_historias(conexion)
+            filas = obtener_historias(conexion, texto, filtro)
         finally:
             conexion.close()
 
+        self._actualizar_tabla_historias(filas)
+
+    def _buscar_historias(self, texto, filtro):
+        try:
+            with conectar() as conexion:
+                filas = obtener_historias(conexion, texto, filtro)
+        except (psycopg.Error, OSError, ValueError, KeyError) as error:
+            messagebox.showerror(
+                "Error al buscar historias clínicas",
+                f"No se pudieron buscar las historias clínicas:\n{error}",
+                parent=self,
+            )
+            return
+
+        self._actualizar_tabla_historias(filas)
+
+    def _actualizar_tabla_historias(self, filas):
+        for item_id in self.hc_table.get_children():
+            self.hc_table.delete(item_id)
         for fila in filas:
-            self.hc_table.insert("", "end", values=fila)
+            valores = list(fila)
+            for indice in (5, 6):
+                if valores[indice] is None:
+                    valores[indice] = "Sin consultas"
+            self.hc_table.insert("", "end", values=valores)
 
     def _cargar_veterinarios_activos(self):
         with conectar() as conexion:
@@ -418,19 +449,12 @@ class HistoriasPage(tk.Frame):
                     conexion,
                     self.id_paciente_seleccionado,
                 )
-                historias = obtener_historias(conexion)
-                turnos_pendientes = obtener_turnos_pendientes_hoy(
+                historias = obtener_historias(
                     conexion,
-                    self.id_paciente_seleccionado,
+                    self.searchbar.search_entry.get().strip(),
+                    self.searchbar.filter_options.get(),
                 )
-        except ValueError:
-            messagebox.showwarning(
-                "Turno no disponible",
-                "El turno seleccionado ya no está disponible o fue modificado.",
-                parent=self
-            )
-            return
-        except Exception as error:
+        except (psycopg.Error, OSError, ValueError, KeyError) as error:
             messagebox.showerror(
                 "Error al guardar la consulta",
                 f"No se pudo guardar la consulta en la base de datos:\n{error}",
@@ -456,10 +480,7 @@ class HistoriasPage(tk.Frame):
         self.veterinario_selector.set("")
         self._cargar_turnos_pendientes(turnos_pendientes)
 
-        for item_id in self.hc_table.get_children():
-            self.hc_table.delete(item_id)
-        for historia in historias:
-            self.hc_table.insert("", "end", values=historia)
+        self._actualizar_tabla_historias(historias)
 
         messagebox.showinfo(
             "Consulta guardada",
@@ -809,41 +830,250 @@ class HistoriasPage(tk.Frame):
         header_frame = tk.Frame(self.add_hc_view, bg="white")
         header_frame.pack(fill="x", padx=40, pady=(20, 10))
 
-        tk.Label(header_frame, text="Nueva Hist. Clínica - Nº ", font=("Arial", 16, "bold"), bg="white").pack(side="left")
-        tk.Label(header_frame, text="65223", font=("Arial", 16, "bold"), bg="#D1C4E9", padx=10).pack(side="left")
+        tk.Label(
+            header_frame,
+            text="Nueva Historia Clínica",
+            font=("Arial", 16, "bold"),
+            bg="white",
+        ).pack(side="left")
 
-        self.btn_guardar = tk.Button(header_frame, text="💾 Guardar", font=("Arial", 12), relief="flat", bg="#A8D5BA", cursor="hand2")
+        self.btn_guardar = tk.Button(
+            header_frame,
+            text="💾 Guardar",
+            font=("Arial", 12),
+            relief="flat",
+            bg="#A8D5BA",
+            cursor="hand2",
+            command=self._guardar_nueva_hc,
+        )
         self.btn_guardar.pack(side="right")
 
         bg_green = "#C8E6C9"
         form_frame = tk.Frame(self.add_hc_view, bg=bg_green, padx=20, pady=20)
         form_frame.pack(fill="both", expand=True, padx=40, pady=10)
 
-        self.var_nombre = tk.StringVar()
-        self.var_apellido = tk.StringVar()
-        self.var_dni = tk.StringVar()
+        for nombre_variable in (
+            "nombre_cliente",
+            "apellido_cliente",
+            "dni_cliente",
+            "telefono_cliente",
+            "mail_cliente",
+            "domicilio_cliente",
+            "nombre_paciente",
+            "especie_paciente",
+            "raza_paciente",
+            "sexo_paciente",
+        ):
+            setattr(self, f"var_{nombre_variable}", tk.StringVar())
 
-        tk.Label(form_frame, text="Datos del Cliente", font=("Arial", 10, "bold"), bg=bg_green).grid(row=0, column=0, sticky="w", pady=(0, 10))
+        tk.Label(
+            form_frame,
+            text="Datos del cliente",
+            font=("Arial", 10, "bold"),
+            bg=bg_green,
+        ).grid(row=0, column=0, columnspan=6, sticky="w", pady=(0, 10))
 
-        tk.Label(form_frame, text="Nombre", bg=bg_green).grid(row=1, column=0, sticky="e", padx=5)
-        tk.Entry(form_frame, textvariable=self.var_nombre).grid(row=1, column=1, sticky="ew", padx=5)
+        self._agregar_campo_formulario(
+            form_frame, "Nombre *", self.var_nombre_cliente, 1, 0, bg_green
+        )
+        self._agregar_campo_formulario(
+            form_frame, "Apellido *", self.var_apellido_cliente, 1, 2, bg_green
+        )
+        self._agregar_campo_formulario(
+            form_frame, "DNI *", self.var_dni_cliente, 1, 4, bg_green
+        )
+        self._agregar_campo_formulario(
+            form_frame, "Teléfono *", self.var_telefono_cliente, 2, 0, bg_green
+        )
+        self._agregar_campo_formulario(
+            form_frame, "Email", self.var_mail_cliente, 2, 2, bg_green
+        )
+        self._agregar_campo_formulario(
+            form_frame, "Domicilio", self.var_domicilio_cliente, 2, 4, bg_green
+        )
 
-        tk.Label(form_frame, text="Apellido", bg=bg_green).grid(row=1, column=2, sticky="e", padx=5)
-        tk.Entry(form_frame, textvariable=self.var_apellido).grid(row=1, column=3, sticky="ew", padx=5)
+        tk.Label(
+            form_frame,
+            text="Datos del paciente",
+            font=("Arial", 10, "bold"),
+            bg=bg_green,
+        ).grid(row=3, column=0, columnspan=6, sticky="w", pady=(24, 10))
 
-        tk.Label(form_frame, text="DNI", bg=bg_green).grid(row=1, column=4, sticky="e", padx=5)
-        tk.Entry(form_frame, textvariable=self.var_dni).grid(row=1, column=5, sticky="ew", padx=5)
+        self._agregar_campo_formulario(
+            form_frame, "Nombre *", self.var_nombre_paciente, 4, 0, bg_green
+        )
+        self._agregar_campo_formulario(
+            form_frame, "Especie *", self.var_especie_paciente, 4, 2, bg_green
+        )
+        self._agregar_campo_formulario(
+            form_frame, "Raza", self.var_raza_paciente, 4, 4, bg_green
+        )
+        self._agregar_campo_formulario(
+            form_frame, "Sexo", self.var_sexo_paciente, 5, 0, bg_green
+        )
 
-        form_frame.grid_columnconfigure(1, weight=1)
-        form_frame.grid_columnconfigure(3, weight=1)
-        form_frame.grid_columnconfigure(5, weight=1)
+        for columna in (1, 3, 5):
+            form_frame.grid_columnconfigure(columna, weight=1)
 
-        tk.Label(form_frame, text="Tratamiento", bg=bg_green, font=("Arial", 10, "bold")).grid(row=2, column=0, columnspan=6, pady=(20, 5))
-        self.caja_tratamiento = tk.Text(form_frame, height=8)
-        self.caja_tratamiento.grid(row=3, column=0, columnspan=6, sticky="ew", padx=5)
+        tk.Label(
+            form_frame,
+            text=(
+                "Los campos marcados con * son obligatorios. "
+                "Si el DNI ya existe, se conservarán los datos del cliente "
+                "y se agregará el paciente a ese cliente."
+            ),
+            bg=bg_green,
+            wraplength=800,
+            justify="left",
+        ).grid(row=6, column=0, columnspan=6, sticky="w", pady=(24, 0))
+
+    @staticmethod
+    def _agregar_campo_formulario(
+        parent,
+        etiqueta,
+        variable,
+        fila,
+        columna,
+        color_fondo,
+    ):
+        tk.Label(
+            parent,
+            text=etiqueta,
+            bg=color_fondo,
+        ).grid(row=fila, column=columna, sticky="e", padx=5, pady=5)
+        tk.Entry(
+            parent,
+            textvariable=variable,
+        ).grid(
+            row=fila,
+            column=columna + 1,
+            sticky="ew",
+            padx=5,
+            pady=5,
+        )
+
+    def _guardar_nueva_hc(self):
+        datos = {
+            "dni": self.var_dni_cliente.get().strip(),
+            "nombre_cliente": self.var_nombre_cliente.get().strip(),
+            "apellido_cliente": self.var_apellido_cliente.get().strip(),
+            "telefono": self.var_telefono_cliente.get().strip(),
+            "mail": self.var_mail_cliente.get().strip(),
+            "domicilio": self.var_domicilio_cliente.get().strip(),
+            "nombre_paciente": self.var_nombre_paciente.get().strip(),
+            "especie": self.var_especie_paciente.get().strip(),
+            "raza": self.var_raza_paciente.get().strip(),
+            "sexo": self.var_sexo_paciente.get().strip(),
+        }
+        requeridos = (
+            "dni",
+            "nombre_cliente",
+            "apellido_cliente",
+            "telefono",
+            "nombre_paciente",
+            "especie",
+        )
+        if any(not datos[campo] for campo in requeridos):
+            messagebox.showwarning(
+                "Faltan datos obligatorios",
+                "Completá todos los campos marcados con *.",
+                parent=self,
+            )
+            return
+
+        try:
+            with conectar() as conexion:
+                id_paciente, cliente_creado = registrar_cliente_y_paciente(
+                    conexion,
+                    datos["dni"],
+                    datos["nombre_cliente"],
+                    datos["apellido_cliente"],
+                    datos["telefono"],
+                    datos["mail"],
+                    datos["domicilio"],
+                    datos["nombre_paciente"],
+                    datos["especie"],
+                    datos["raza"],
+                    datos["sexo"],
+                )
+                historias = obtener_historias(conexion, "", "Todos")
+        except (psycopg.Error, OSError, ValueError, KeyError) as error:
+            messagebox.showerror(
+                "Error al guardar la historia clínica",
+                f"No se pudo guardar el cliente y el paciente:\n{error}",
+                parent=self,
+            )
+            return
+
+        self._actualizar_tabla_historias(historias)
+        self.searchbar.search_entry.delete(0, tk.END)
+        self.searchbar.filter_options.set("Todos")
+        self._limpiar_formulario_hc()
+        self.show_section("buscar_hc")
+
+        mensaje = f"Se creó la historia clínica Nº {id_paciente}."
+        if not cliente_creado:
+            mensaje += (
+                "\nEl DNI ya estaba registrado; se conservaron los datos "
+                "existentes del cliente."
+            )
+        messagebox.showinfo(
+            "Historia clínica guardada",
+            mensaje,
+            parent=self,
+        )
+
+    def _limpiar_formulario_hc(self):
+        for nombre_variable in (
+            "nombre_cliente",
+            "apellido_cliente",
+            "dni_cliente",
+            "telefono_cliente",
+            "mail_cliente",
+            "domicilio_cliente",
+            "nombre_paciente",
+            "especie_paciente",
+            "raza_paciente",
+            "sexo_paciente",
+        ):
+            getattr(self, f"var_{nombre_variable}").set("")
 
     def _abrir_modal_eliminar_hc(self):
+        id_paciente = self._obtener_id_paciente_seleccionado()
+        if id_paciente is None:
+            return
+
         # 1. Ventana emergente limpia sin barra de Windows
+        if not self.search_view.winfo_manager():
+            messagebox.showwarning(
+                "Sección no disponible",
+                "Volvé a la búsqueda de historias clínicas para eliminar una HC.",
+                parent=self,
+            )
+            return
+
+        if self.historia_clinica_frame.winfo_manager():
+            id_paciente = self.id_paciente_seleccionado
+        else:
+            seleccion = self.hc_table.selection()
+            if not seleccion:
+                messagebox.showwarning(
+                    "Seleccioná una historia clínica",
+                    "Seleccioná una fila de la lista antes de eliminar.",
+                    parent=self,
+                )
+                return
+
+            valores = self.hc_table.item(seleccion[0], "values")
+            try:
+                id_paciente = int(valores[3])
+            except (IndexError, TypeError, ValueError):
+                messagebox.showerror(
+                    "Selección inválida",
+                    "No se pudo identificar la historia clínica seleccionada.",
+                    parent=self,
+                )
+                return
         dialog = tk.Toplevel(self)
         dialog.transient(self.winfo_toplevel())
         dialog.configure(
@@ -864,7 +1094,11 @@ class HistoriasPage(tk.Frame):
         # 3. Mensaje de advertencia
         tk.Label(
             dialog,
-            text="Esta accion es IRREVERSIBLE y BORRA la\n\nHISTORIA CLINICA del paciente actual.",
+            text=(
+                "Se eliminarán permanentemente el paciente,\n"
+                "sus consultas y todos sus turnos,\n"
+                "incluidos los cancelados. El cliente se conservará."
+            ),
             font=("Arial", 10),
             justify="center",
             bg="white",
@@ -903,7 +1137,7 @@ class HistoriasPage(tk.Frame):
             padx=28,
             pady=12,
             cursor="hand2",
-            command=lambda: self._confirmar_eliminar_hc(dialog),
+            command=lambda: self._confirmar_eliminar_hc(dialog, id_paciente),
         )
         btn_continuar.pack(side="right", expand=True, padx=(12, 0))
 
@@ -917,13 +1151,58 @@ class HistoriasPage(tk.Frame):
 
         dialog.grab_set()
 
-    def _confirmar_eliminar_hc(self, dialog):
+    def _confirmar_eliminar_hc(self, dialog, id_paciente):
+        try:
+            with conectar() as conexion:
+                eliminado = eliminar_historia_clinica(conexion, id_paciente)
+        except (psycopg.Error, OSError, ValueError, KeyError) as error:
+            messagebox.showerror(
+                "Error al eliminar la historia clínica",
+                f"No se pudo eliminar la historia clínica:\n{error}",
+                parent=self,
+            )
+            return
+
+        if not eliminado:
+            dialog.destroy()
+            messagebox.showwarning(
+                "Historia clínica no encontrada",
+                "No se encontró el paciente seleccionado en la base de datos.",
+                parent=self,
+            )
+            return
+
         dialog.destroy()
-        # Oculta la tarjeta de la historia clínica en pantalla simulando la baja
-        self.historia_clinica_frame.pack_forget()
-        print("Historia Clínica dada de baja exitosamente.")
+
+        if self.historia_clinica_frame.winfo_manager():
+            self._cerrar_historia_clinica()
+
+        for item_id in self.hc_table.get_children():
+            self.hc_table.delete(item_id)
+
+        try:
+            self._cargar_historias()
+        except (psycopg.Error, OSError, ValueError, KeyError) as error:
+            messagebox.showwarning(
+                "Historia eliminada, lista no actualizada",
+                "La historia se eliminó de la base de datos, "
+                f"pero no se pudo actualizar el listado:\n{error}",
+                parent=self,
+            )
+            return
+
+        messagebox.showinfo(
+            "Historia clínica eliminada",
+            "Se eliminaron el paciente, sus consultas y sus turnos. "
+            "El cliente se conservó.",
+            parent=self,
+        )
     
     def _abrir_modal_eliminar_cliente(self):
+        id_paciente = self._obtener_id_paciente_seleccionado()
+        if id_paciente is None:
+            return
+
         # 1. Ventana emergente limpia sin barra de Windows
         dialog = tk.Toplevel(self)
         dialog.transient(self.winfo_toplevel())
@@ -946,9 +1225,9 @@ class HistoriasPage(tk.Frame):
         tk.Label(
             dialog,
             text=(
-                "Esta accion es IRREVERSIBLE y borra TODAS\n\n"
-                "las historias clinicas de TODOS los PACIENTES\n"
-                "de este cliente."
+                "El cliente quedará inhabilitado.\n"
+                "Se conservarán sus pacientes, historias\n"
+                "clínicas, consultas y turnos."
             ),
             font=("Arial", 10),
             justify="center",
@@ -988,7 +1267,10 @@ class HistoriasPage(tk.Frame):
             padx=28,
             pady=12,
             cursor="hand2",
-            command=lambda: self._confirmar_eliminar_cliente(dialog),
+            command=lambda: self._confirmar_eliminar_cliente(
+                dialog,
+                id_paciente,
+            ),
         )
         btn_continuar.pack(side="right", expand=True, padx=(12, 0))
 
@@ -1002,8 +1284,84 @@ class HistoriasPage(tk.Frame):
 
         dialog.grab_set()
 
-    def _confirmar_eliminar_cliente(self, dialog):
+    def _confirmar_eliminar_cliente(self, dialog, id_paciente):
+        try:
+            with conectar() as conexion:
+                inhabilitado = inhabilitar_cliente_de_paciente(
+                    conexion,
+                    id_paciente,
+                )
+                historias = obtener_historias(
+                    conexion,
+                    self.searchbar.search_entry.get().strip(),
+                    self.searchbar.filter_options.get(),
+                )
+        except (psycopg.Error, OSError, ValueError, KeyError) as error:
+            messagebox.showerror(
+                "Error al inhabilitar el cliente",
+                f"No se pudo inhabilitar el cliente:\n{error}",
+                parent=self,
+            )
+            return
+
         dialog.destroy()
-        # Oculta la información en pantalla simulando la baja del cliente
-        self.historia_clinica_frame.pack_forget()
-        print("Cliente y todas sus historias clínicas dados de baja exitosamente.")
+
+        if not inhabilitado:
+            messagebox.showwarning(
+                "Cliente no encontrado",
+                "No se encontró el cliente asociado al paciente seleccionado.",
+                parent=self,
+            )
+            return
+
+        self._actualizar_historias_en_pantalla(historias)
+        messagebox.showinfo(
+            "Cliente inhabilitado",
+            "El cliente fue inhabilitado. Sus pacientes, historias clínicas, "
+            "consultas y turnos se conservaron.",
+            parent=self,
+        )
+
+    def _obtener_id_paciente_seleccionado(self):
+        if not self.search_view.winfo_manager():
+            messagebox.showwarning(
+                "Abrí la búsqueda de historias clínicas",
+                "Volvé a la lista de historias clínicas para seleccionar "
+                "el registro que querés eliminar.",
+                parent=self,
+            )
+            return None
+
+        seleccion = self.hc_table.selection()
+        if not seleccion:
+            messagebox.showwarning(
+                "Seleccioná una historia clínica",
+                "Seleccioná una fila de la lista antes de eliminar.",
+                parent=self,
+            )
+            return None
+
+        valores = self.hc_table.item(seleccion[0], "values")
+        if len(valores) <= 3:
+            messagebox.showerror(
+                "Selección inválida",
+                "No se pudo identificar el paciente seleccionado.",
+                parent=self,
+            )
+            return None
+
+        try:
+            return int(valores[3])
+        except (TypeError, ValueError):
+            messagebox.showerror(
+                "Selección inválida",
+                "El identificador del paciente seleccionado no es válido.",
+                parent=self,
+            )
+            return None
+
+    def _actualizar_historias_en_pantalla(self, historias):
+        self._actualizar_tabla_historias(historias)
+        self.id_paciente_seleccionado = None
+        if self.historia_clinica_frame.winfo_manager():
+            self._cerrar_historia_clinica()
