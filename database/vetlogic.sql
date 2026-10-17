@@ -254,7 +254,10 @@ INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_pac
 ('2026-10-15', 'Vacunacion de refuerzo', 'Aplicación exitosa', 'Ninguno', 10, 'MP-5678', 20),
 ('2026-10-19', 'Evaluacion quirurgica', 'Paciente en ayunas', 'Reposo pre-quirurgico', 1, 'MP-6789', 21),
 ('2026-10-20', 'Control dermatologico', 'Sin presencia de ectoparásitos', 'Shampoo neutro', 2, 'MP-7890', 22),
-
+('2026-10-21', 'Control clinico general', 'Paciente activo sin hallazgos patologicos', 'Ninguno', 3, 'MP-1234', 23),
+('2026-10-22', 'Vacunacion anual', 'Control de peso y aplicacion sin complicaciones', 'Proximo control anual', 4, 'MP-2345', 24),
+('2026-10-23', 'Evaluacion prequirurgica', 'Analisis clinicos dentro de parametros normales', 'Indicaciones preoperatorias', 5, 'MP-3456', 25),
+('2026-10-26', 'Revision de rutina', 'Buen estado de pelaje y mucosa', 'Control en 6 meses', 6, 'MP-4567', 26),
 
 
 
