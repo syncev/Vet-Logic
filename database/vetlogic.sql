@@ -103,7 +103,7 @@ INSERT INTO cliente (dni, nombre, apellido, telefono, mail, domicilio, estado) V
 ('23456789', 'Martin', 'Sanchez', '1133445566', 'martin.sanchez@hotmail.com', 'Calle Falsa 123', 'ACTIVO'),
 ('34568890', 'Calvin', 'Klein', '1144556677', 'calvin@fashion.com', 'Av. Libertador 4500', 'ACTIVO'),
 ('45678901', 'Clark', 'Kent', '1155667788', 'clark.kent@dailyplanet.com', 'Metrópolis 987', 'ACTIVO'),
-('56780012', 'Maria', 'del Barrio', '1166778899', 'mariadelbarrio@yahoo.com', 'Rivadavia 7890', 'ACTIVO'),
+('56700012', 'Maria', 'del Barrio', '1166778899', 'mariadelbarrio@yahoo.com', 'Rivadavia 7890', 'ACTIVO'),
 ('67890123', 'Esteban', 'Caracas', '1177889900', 'esteban.caracas@gmail.com', 'Suipacha 450', 'ACTIVO'),
 ('78901234', 'Philomena', 'Cunk', '1188990011', 'cunk@bbc.co.uk', 'Belgrano 321', 'ACTIVO'),
 ('89012345', 'Lydia', 'Deetz', '1199001122', 'lydia.art@gmail.com', 'San Juan 654', 'ACTIVO'),
