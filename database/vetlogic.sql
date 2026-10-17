@@ -286,4 +286,7 @@ INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_pac
 ('2026-12-04', 'Revision de rutina', 'Buen estado nutricional y denticion limpia', 'Control anual', 2, 'MP-4567', 52),
 ('2026-12-07', 'Consulta dermatologica', 'Piel sana sin evidencias de dermatitis', 'Uso de jabon neutro en banos', 3, 'MP-3456', 53),
 ('2026-12-08', 'Vacunacion anual', 'Refuerzo aplicado exitosamente', 'Carnet al dia', 4, 'MP-5578', 54),
+('2026-12-09', 'Consulta por control de peso', 'Indice de masa corporal adecuado', 'Mantener racion diaria', 5, 'MP-1234', 55),
+('2026-12-10', 'Control post-tratamiento', 'Recuperacion completa de lesion cutanea', 'Alta de tratamiento', 6, 'MP-2345', 56),
+('2026-12-11', 'Chequeo clinico general', 'Auscultacion y palpacion sin anomalias', 'Sin medicacion', 7, 'MP-3856', 57),
 
