@@ -246,8 +246,10 @@ INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_pac
 ('2026-11-12', 'Control digestivo', 'Sin síntomas actuales', 'Continuar dieta habitual', 12, 'MP-2345', 72),
 ('2026-10-13', 'Control postoperatorio', 'Evolución favorable', 'Mantener reposo', 13, 'MP-2345', 73),
 ('2026-10-14', 'Vacunación anual', 'Sin reacciones previas', 'Aplicar dosis anual', 14, 'MP-5578', 74),
-('2026-10-15', 'Control preventivo', 'Paciente estable', 'Nuevo control en seis meses', 15, 'MP-5678', 75);
-
+('2026-10-15', 'Control preventivo', 'Paciente estable', 'Nuevo control en seis meses', 15, 'MP-5678', 75),
+('2026-10-08', 'Control general de rutina', 'Examen físico completo, sin anomalías', 'Monitoreo preventivo', 6, 'MP-1234', 16),
+('2026-10-12', 'Control post-vacunación', 'Sin fiebre ni reacciones adversas', 'Ninguno', 7, 'MP-2345', 17),
+('2026-10-13', 'Evaluación quirúrgica previa', 'Estudios prequirúrgicos en orden', 'Apto para procedimiento', 8, 'MP-3456', 18),
 
 
 
