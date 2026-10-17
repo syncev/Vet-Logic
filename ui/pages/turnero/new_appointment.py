@@ -1,13 +1,16 @@
 import tkinter as tk
 from datetime import datetime, timedelta
-from tkinter import ttk
+from tkinter import messagebox, ttk
 from zoneinfo import ZoneInfo
 
 from ui.pages.turnero.horarios_selector import HorariosSelector
 from ui.widgets.calendar_picker import CalendarPicker
 
 from core.db import conectar
-from repositories.turno import registrar_turno_con_paciente_nuevo
+from repositories.turno import (
+    ClienteInhabilitadoError,
+    registrar_turno_con_paciente_nuevo,
+)
 
 import psycopg
 # from core.db import conectar
@@ -374,9 +377,14 @@ class NewAppointmentPage(tk.Frame):
                     )
                     datos["hc"] = resultado["id_paciente"]
                     datos["id_turno"] = resultado["id_turno"]
+            except ClienteInhabilitadoError as error:
+                messagebox.showwarning(
+                    "Cliente inhabilitado",
+                    str(error),
+                    parent=dialog,
+                )
+                return
             except Exception as error:
-                from tkinter import messagebox
-
                 messagebox.showerror(
                     "Error al registrar turno",
                     f"No se pudo guardar en la base de datos:\n{error}",
