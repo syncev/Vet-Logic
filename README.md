@@ -202,6 +202,51 @@ está vacía, crea las tablas y carga los datos de prueba desde
 `database/vetlogic.sql`. Si ya encuentra tablas, no ejecuta ese script para
 evitar borrar información.
 
+Si ya existe una base de desarrollo con datos, no vuelvas a ejecutar el script.
+En su lugar, aplica desde el Query Tool de pgAdmin únicamente las migraciones
+que todavía no hayas aplicado.
+
+Para agregar el estado de cliente:
+
+```sql
+ALTER TABLE cliente
+ADD COLUMN estado VARCHAR(10) NOT NULL DEFAULT 'ACTIVO';
+
+ALTER TABLE cliente
+ADD CONSTRAINT ck_cliente_estado
+CHECK (estado IN ('ACTIVO', 'INACTIVO'));
+```
+
+Para agregar el estado de la historia clínica (paciente):
+
+```sql
+ALTER TABLE paciente
+ADD COLUMN estado VARCHAR(10) NOT NULL DEFAULT 'ACTIVO';
+
+ALTER TABLE paciente
+ADD CONSTRAINT ck_paciente_estado
+CHECK (estado IN ('ACTIVO', 'INACTIVO'));
+```
+
+Para verificar los clientes inactivos:
+
+```sql
+SELECT dni, nombre, apellido, estado
+FROM cliente
+WHERE estado = 'INACTIVO';
+```
+
+Para verificar las historias clínicas (pacientes) inactivas:
+
+```sql
+SELECT id_paciente, nombre, estado
+FROM paciente
+WHERE estado = 'INACTIVO';
+```
+
+Estas consultas solo muestran registros; no modifican la base de datos.
+
+### 3. Configurar la conexión de la aplicación
 Si detecta el esquema legado o una estructura desconocida, guarda la conexión
 validada para permitir crear un respaldo, pero informa que la app todavía no
 está lista para ejecutarse. No modifica esas tablas automáticamente.
