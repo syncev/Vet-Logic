@@ -120,18 +120,20 @@ class Searchbar(tk.Frame):
             self.search_entry.insert(0, self.PLACEHOLDER_DEFAULT)
             self.search_entry.configure(fg="#888888")
 
+    def get_search_text(self):
+        text = self.search_entry.get().strip()
+        return "" if text == self.PLACEHOLDER_DEFAULT else text
+
     def search(self):
         self.search_button.config(
             bg="#8A2BE2",
             fg="white",
         )
 
-        text = self.search_entry.get().strip()
-        query = "" if text == self.PLACEHOLDER_DEFAULT else text
         selected_filter = self.filter_options.get()
 
         if self.on_search is not None:
-            self.on_search(query, selected_filter)
+            self.on_search(self.get_search_text(), selected_filter)
 
 # filtros
     def _build_filter(self):
