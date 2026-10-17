@@ -289,4 +289,7 @@ INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_pac
 ('2026-12-09', 'Consulta por control de peso', 'Indice de masa corporal adecuado', 'Mantener racion diaria', 5, 'MP-1234', 55),
 ('2026-12-10', 'Control post-tratamiento', 'Recuperacion completa de lesion cutanea', 'Alta de tratamiento', 6, 'MP-2345', 56),
 ('2026-12-11', 'Chequeo clinico general', 'Auscultacion y palpacion sin anomalias', 'Sin medicacion', 7, 'MP-3856', 57),
+('2026-12-14', 'Aplicacion de vacuna', 'Refuerzo quintuple administrado sin reacciones', 'Proximo control en 1 ano', 8, 'MP-4567', 58),
+('2026-12-15', 'Consulta de rutina', 'Excelente estado general e hidratacion', 'Continuar plan de vida saludable', 9, 'MP-7867', 59),
+('2026-12-16', 'Evaluacion prequirurgica', 'Analisis de laboratorio estables', 'Apto para procedimiento quirurgico', 10, 'MP-5578', 60),
 
