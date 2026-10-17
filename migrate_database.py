@@ -7,6 +7,7 @@ from pathlib import Path
 import psycopg
 
 from backup_database import archivo_pgpass, crear_respaldo
+from database.seed_merge import fusionar_seed
 from setup_database import identificar_esquema
 
 ROOT_DIR = Path(__file__).resolve().parent
@@ -101,6 +102,17 @@ def main() -> int:
                 "La migración terminó, pero la verificación del esquema no pasó. "
                 f"Conserve el respaldo: {backup_path.name}."
             )
+        with (
+            psycopg.connect(**configuracion) as conexion,
+            conexion.cursor() as cursor,
+        ):
+            try:
+                fusion_counts = fusionar_seed(cursor)
+            except (OSError, psycopg.Error) as error:
+                raise RuntimeError(
+                    "El esquema se migró, pero falló la fusión del seed. "
+                    f"El respaldo previo se conserva en {backup_path.name}: {error}"
+                ) from error
     except (
         FileNotFoundError,
         KeyError,
@@ -114,6 +126,10 @@ def main() -> int:
         return 1
 
     print("Migración completada. Ya puede iniciar la aplicación con: python main.py")
+    print("Seed fusionado sin reemplazar los registros locales: " + ", ".join(
+        f"{tabla}={cantidad}"
+        for tabla, cantidad in fusion_counts.items()
+    ))
     return 0
 
 
