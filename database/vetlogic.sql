@@ -103,7 +103,7 @@ INSERT INTO cliente (dni, nombre, apellido, telefono, mail, domicilio, estado) V
 ('23456789', 'Martin', 'Sanchez', '1133445566', 'martin.sanchez@hotmail.com', 'Calle Falsa 123', 'ACTIVO'),
 ('34568890', 'Calvin', 'Klein', '1144556677', 'calvin@fashion.com', 'Av. Libertador 4500', 'ACTIVO'),
 ('45678901', 'Clark', 'Kent', '1155667788', 'clark.kent@dailyplanet.com', 'Metrópolis 987', 'ACTIVO'),
-('56780012', 'Maria', 'del Barrio', '1166778899', 'mariadelbarrio@yahoo.com', 'Rivadavia 7890', 'ACTIVO'),
+('56700012', 'Maria', 'del Barrio', '1166778899', 'mariadelbarrio@yahoo.com', 'Rivadavia 7890', 'ACTIVO'),
 ('67890123', 'Esteban', 'Caracas', '1177889900', 'esteban.caracas@gmail.com', 'Suipacha 450', 'ACTIVO'),
 ('78901234', 'Philomena', 'Cunk', '1188990011', 'cunk@bbc.co.uk', 'Belgrano 321', 'ACTIVO'),
 ('89012345', 'Lydia', 'Deetz', '1199001122', 'lydia.art@gmail.com', 'San Juan 654', 'ACTIVO'),
@@ -146,9 +146,9 @@ INSERT INTO paciente (nombre, especie, raza, sexo, fecha_nacimiento, peso, castr
 ('Uma', 'Perro', 'Pitbull', 'Hembra', '2022-07-30', 24.00, true, '89012345', 'ACTIVO'),
 ('Corcho', 'Perro', 'Beagle', 'Macho', '2019-12-10', 12.00, true, '90123456', 'ACTIVO'),
 ('Simba', 'Gato', 'Maine Coon', 'Macho', '2021-06-25', 7.50, true, '01234567', 'ACTIVO'),
-('Magnolia', 'Gato', 'Siamés', 'Hembra', '2024-06-15', 2.20, false,'12348678', 'ACTIVO'),
+('Magnolia', 'Gato', 'Siamés', 'Hembra', '2024-06-15', 2.20, false,'45678912', 'ACTIVO'),
 ('Pepe', 'Gato', 'Shorthair', 'Macho', '2026-01-15', 1.40, true,'34567890', 'ACTIVO'),
-('Umma', 'Perro', 'Ovejero Alemán', 'Hembra', '2026-09-15', 4.20, true, '145678901', 'ACTIVO'),
+('Umma', 'Perro', 'Ovejero Alemán', 'Hembra', '2026-09-15', 4.20, true, '67890123', 'ACTIVO'),
 ('Homero', 'Perro', 'Golden Retriever', 'Macho', '2023-04-15', 30.00, true, '45678901', 'ACTIVO'),
 ('Ciro', 'Gato', 'Persa', 'Macho', '2024-06-22', 3.50, true, '56789012', 'ACTIVO');
 
@@ -159,9 +159,9 @@ INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente) VA
 ('2026-10-09', '10:20:00', '11:00:00', 'CIRUGIA', 'ATENDIDO', 3),
 ('2026-09-15', '11:00:00', '11:40:00', 'VACUNACION', 'ATENDIDO', 4),
 ('2026-11-23', '11:40:00', '12:20:00', 'CLINICA', 'PENDIENTE', 5),
-('2026-10-30', '16:00:00', '16:40:00', 'CLINICA', 'CANCELADO', 6),
+('2026-10-30', '16:00:00', '16:40:00', 'CLINICA', 'PENDIENTE', 6),
 ('2026-11-20', '16:40:00', '17:20:00', 'CLINICA', 'PENDIENTE', 7),
-('2026-10-16', '17:20:00', '18:00:00', 'VACUNACION', 'PENDIENTE', 8),
+('2026-10-16', '17:20:00', '18:00:00', 'VACUNACION', 'ATENDIDO', 8),
 ('2026-07-09', '18:00:00', '18:40:00', 'CLINICA', 'ATENDIDO', 9),
 ('2026-12-22', '18:40:00', '19:20:00', 'CLINICA', 'PENDIENTE', 10),
 ('2026-10-01', '10:20:00', '11:00:00', 'CLINICA', 'ATENDIDO', 1),
@@ -232,21 +232,21 @@ INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente) VA
 
 -- 5. Tabla consulta
 INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_paciente, matricula_veterinario, id_turno) VALUES
-('2026-10-15', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 1, 'MP-2345', 1),
-('2026-11-06', 'Aplicación de vacuna anual', 'Paciente tranquilo', 'Dosis séxtuple aplicada', 2, 'MP-4567', 2),
-('2026-09-25', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 3, 'MP-2345', 3),
-('2026-11-05', 'Aplicación de vacuna anual', 'Paciente tranquilo', 'Dosis séxtuple aplicada', 4, 'MP-1234', 4),
-('2026-06-07', 'Control preventivo general', 'Buen estado general de salud', 'Ninguno', 5, 'MP-5678', 5),
-('2026-08-19', 'Gastroenteritis leve por dieta', 'Vómitos ocasionales', 'Dieta blanda y protector gástrico', 6, 'MP-3856', 6),
-('2026-04-21', 'Chequeo dermatológico', 'Alergia estacional leve', 'Baño con shampoo medicado', 7, 'MP-3456', 7),
-('2026-05-30', 'Vacunación antirrábica', 'Sin reacciones adversas', 'Aplicación correcta', 8, 'MP-5578', 8),
-('2026-07-15', 'Revisión oftalmológica', 'Ojos limpios y sin lesiones', 'Gotas lubricantes', 9, 'MP-7890', 9),
-('2026-05-12', 'Control geriátrico preventivo', 'Se solicitan análisis de sangre', 'Vitaminas y suplementos', 10, 'MP-7867', 10),
-('2026-10-15', 'Control general', 'Buen estado de salud', 'Control anual', 11, 'MP-1234', 11),
-('2026-10-12', 'Control digestivo', 'Sin síntomas actuales', 'Continuar dieta habitual', 12, 'MP-2345', 12),
-('2026-10-13', 'Control postoperatorio', 'Evolución favorable', 'Mantener reposo', 13, 'MP-2345', 13),
-('2026-10-14', 'Vacunación anual', 'Sin reacciones previas', 'Aplicar dosis anual', 14, 'MP-5578', 14),
-('2026-10-15', 'Control preventivo', 'Paciente estable', 'Nuevo control en seis meses', 15, 'MP-5678', 15);
+('2026-08-12', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 1, 'MP-2345', 1),
+('2026-09-01', 'Aplicación de vacuna anual', 'Paciente tranquilo', 'Dosis séxtuple aplicada', 2, 'MP-4567', 2),
+('2026-10-09', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 3, 'MP-2345', 3),
+('2026-09-15', 'Aplicación de vacuna anual', 'Paciente tranquilo', 'Dosis séxtuple aplicada', 4, 'MP-1234', 4),
+('2026-11-23', 'Control preventivo general', 'Buen estado general de salud', 'Ninguno', 5, 'MP-5678', 5),
+('2026-10-30', 'Gastroenteritis leve por dieta', 'Vómitos ocasionales', 'Dieta blanda y protector gástrico', 6, 'MP-3856', 6),
+('2026-11-20', 'Chequeo dermatológico', 'Alergia estacional leve', 'Baño con shampoo medicado', 7, 'MP-3456', 7),
+('2026-10-16', 'Vacunación antirrábica', 'Sin reacciones adversas', 'Aplicación correcta', 8, 'MP-5578', 8),
+('2026-07-09', 'Revisión oftalmológica', 'Ojos limpios y sin lesiones', 'Gotas lubricantes', 9, 'MP-7890', 9),
+('2026-12-22', 'Control geriátrico preventivo', 'Se solicitan análisis de sangre', 'Vitaminas y suplementos', 10, 'MP-7867', 10),
+('2026-10-15', 'Control general', 'Buen estado de salud', 'Control anual', 11, 'MP-1234', 71),
+('2026-11-12', 'Control digestivo', 'Sin síntomas actuales', 'Continuar dieta habitual', 12, 'MP-2345', 72),
+('2026-10-13', 'Control postoperatorio', 'Evolución favorable', 'Mantener reposo', 13, 'MP-2345', 73),
+('2026-10-14', 'Vacunación anual', 'Sin reacciones previas', 'Aplicar dosis anual', 14, 'MP-5578', 74),
+('2026-10-15', 'Control preventivo', 'Paciente estable', 'Nuevo control en seis meses', 15, 'MP-5678', 75);
 
 
 
