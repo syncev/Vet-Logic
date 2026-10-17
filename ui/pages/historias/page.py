@@ -12,9 +12,11 @@ from repositories.historias import (
     obtener_detalle_paciente,
     obtener_historias,
     obtener_veterinarios_activos,
+    registrar_cliente_y_paciente,
     registrar_consulta,
     obtener_turnos_pendientes_hoy,
     eliminar_historia_clinica,
+    inhabilitar_cliente_de_paciente,
 )
 
 class HistoriasPage(tk.Frame):
@@ -446,6 +448,10 @@ class HistoriasPage(tk.Frame):
                     id_turno=id_turno,
                 )
                 consultas = obtener_consultas_paciente(
+                    conexion,
+                    self.id_paciente_seleccionado,
+                )
+                turnos_pendientes = obtener_turnos_pendientes_hoy(
                     conexion,
                     self.id_paciente_seleccionado,
                 )
