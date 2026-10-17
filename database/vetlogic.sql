@@ -262,6 +262,8 @@ INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_pac
 ('2026-10-28', 'Vacunacion antirrabica anual', 'Sin reacciones adversas tras la aplicacion', 'Certificado emitido', 8, 'MP-3456', 28),
 ('2026-10-29', 'Consulta oftalmologica de control', 'Presion intraocular en valores normales', 'Mantener gotas lubricantes', 9, 'MP-7890', 29),
 ('2026-11-02', 'Revision general de rutina', 'Examen fisico sin alteraciones', 'Dieta equilibrada', 10, 'MP-1234', 30),
-
+('2026-11-03', 'Vacunacion de refuerzo', 'Sextuple aplicada sin inconvenientes', 'Control en 1 año', 1, 'MP-2345', 31),
+('2026-11-04', 'Consulta clinica general', 'Chequeo de denticion y mucosas', 'Higiene dental recomendada', 2, 'MP-4567', 32),
+('2026-11-05', 'Control post-vacunacion', 'Paciente activo y respondiendo bien', 'Ninguno', 3, 'MP-5678', 33),
 
 
