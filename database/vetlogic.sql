@@ -223,7 +223,7 @@ INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente) VA
 ('2026-12-29', '09:00:00', '09:40:00', 'CLINICA', 'PENDIENTE', 7),
 ('2026-12-30', '16:00:00', '16:40:00', 'VACUNACION', 'PENDIENTE', 8),
 ('2026-12-31', '10:20:00', '11:00:00', 'CLINICA', 'PENDIENTE', 9),
-('2026-12-31', '18:40:00', '19:20:00', 'CIRUGIA', 'PENDIENTE', 10);
+('2026-12-31', '18:40:00', '19:20:00', 'CIRUGIA', 'PENDIENTE', 10),
 ('2026-10-15', '09:00:00', '09:40:00', 'CLINICA', 'ATENDIDO', 11),
 ('2026-11-12', '09:40:00', '10:20:00', 'CLINICA', 'PENDIENTE', 12),
 ('2026-10-13', '10:20:00', '11:00:00', 'CIRUGIA', 'ATENDIDO', 13),
