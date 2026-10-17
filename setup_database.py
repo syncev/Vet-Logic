@@ -1,10 +1,15 @@
+import argparse
 import os
+import subprocess
 from configparser import ConfigParser
 from getpass import getpass
 from pathlib import Path
 
 import psycopg
 from psycopg import sql
+
+from backup_database import crear_respaldo
+from database.seed_merge import fusionar_seed
 
 ROOT_DIR = Path(__file__).resolve().parent
 CONFIG_FILE = ROOT_DIR / "database.ini"
@@ -125,6 +130,24 @@ def crear_base_si_no_existe(configuracion: dict[str, str | int]) -> str:
     return estado_esquema
 
 
+def reemplazar_datos(configuracion: dict[str, str | int]) -> None:
+    parametros = {**configuracion, "dbname": DATABASE_NAME}
+    with (
+        psycopg.connect(**parametros) as conexion,
+        conexion.cursor() as cursor,
+    ):
+        cursor.execute(SCHEMA_FILE.read_text(encoding="utf-8"))
+
+
+def fusionar_datos(configuracion: dict[str, str | int]) -> dict[str, int]:
+    parametros = {**configuracion, "dbname": DATABASE_NAME}
+    with (
+        psycopg.connect(**parametros) as conexion,
+        conexion.cursor() as cursor,
+    ):
+        return fusionar_seed(cursor)
+
+
 def guardar_configuracion(configuracion: dict[str, str | int]) -> None:
     config = ConfigParser(interpolation=None)
     config["database"] = {
@@ -140,6 +163,20 @@ def guardar_configuracion(configuracion: dict[str, str | int]) -> None:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Configura la base de Vet Logic.")
+    modos = parser.add_mutually_exclusive_group()
+    modos.add_argument(
+        "--replace",
+        action="store_true",
+        help="reemplaza los datos locales por el seed actual después de respaldarlos",
+    )
+    modos.add_argument(
+        "--merge",
+        action="store_true",
+        help="fusiona los datos del seed sin sobrescribir los registros locales",
+    )
+    argumentos = parser.parse_args()
+
     if not confirmar_reemplazo_configuracion():
         print("No se modificó la configuración existente.")
         return 0
@@ -147,9 +184,45 @@ def main() -> int:
     try:
         configuracion = solicitar_configuracion()
         estado_esquema = crear_base_si_no_existe(configuracion)
-        # Una conexión validada también permite respaldar bases que aún necesitan migración.
         guardar_configuracion(configuracion)
-    except (OSError, ValueError, psycopg.Error) as error:
+        if argumentos.replace and estado_esquema != "vacio":
+            if estado_esquema not in ("actual", "legado"):
+                raise ValueError(
+                    "No se reemplaza una estructura desconocida. Revise su origen."
+                )
+            print(
+                "Esta operación borrará todos los datos de "
+                f"{DATABASE_NAME} y cargará el seed actual."
+            )
+            if input("Para continuar, escriba BORRAR TODO: ").strip() != "BORRAR TODO":
+                print("Reemplazo cancelado; la base no fue modificada.")
+                return 0
+            backup_path = crear_respaldo()
+            print(f"Respaldo creado: {backup_path.relative_to(ROOT_DIR)}")
+            reemplazar_datos(configuracion)
+            estado_esquema = "actual"
+        elif argumentos.merge and estado_esquema == "actual":
+            print(
+                "Se agregarán registros del seed cuando no coincidan con los "
+                "locales. Los conflictos de turnos se resuelven conservando el local."
+            )
+            if input("Para continuar, escriba FUSIONAR: ").strip() != "FUSIONAR":
+                print("Fusión cancelada; la base no fue modificada.")
+                return 0
+            backup_path = crear_respaldo()
+            print(f"Respaldo creado: {backup_path.relative_to(ROOT_DIR)}")
+            fusion_counts = fusionar_datos(configuracion)
+            print("Registros agregados: " + ", ".join(
+                f"{tabla}={cantidad}"
+                for tabla, cantidad in fusion_counts.items()
+            ))
+    except (
+        KeyError,
+        OSError,
+        ValueError,
+        psycopg.Error,
+        subprocess.CalledProcessError,
+    ) as error:
         print(f"No se pudo configurar Vet Logic: {error}")
         return 1
 
@@ -168,8 +241,14 @@ def main() -> int:
         return 2
     if estado_esquema == "vacio":
         print("Base creada y datos iniciales cargados desde vetlogic.sql.")
-    else:
+    elif not argumentos.replace and not argumentos.merge:
         print("Se encontró una base con el esquema actual; no se recargó el seed.")
+    elif argumentos.merge and estado_esquema != "actual":
+        print(
+            "La fusión requiere el esquema actual. Para una base legada, "
+            "ejecute migrate_database.py."
+        )
+        return 2
     print("Ya puede iniciar la aplicación con: python main.py")
     return 0
 

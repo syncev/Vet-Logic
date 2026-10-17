@@ -220,12 +220,43 @@ La conexión se guarda en `database.ini`. Si ese archivo ya existe, el asistente
 pregunta antes de reemplazarlo. Conservá el archivo al actualizar el proyecto y
 no lo compartas.
 
-### Actualizar una base existente
+### Reemplazar todos los datos locales
+
+Si cambió el archivo `database/vetlogic.sql` y querés que la base local quede
+exactamente con su esquema y datos de prueba actuales, ejecutá:
+
+```bash
+python3 setup_database.py --replace
+```
+
+El asistente crea un respaldo y exige escribir `BORRAR TODO` antes de continuar.
+Después recrea las tablas y carga el contenido completo del archivo. Esta
+operación elimina todos los datos locales existentes; no la uses para una
+actualización que deba conservar información.
+
+### Fusionar el seed sin perder datos locales
+
+Para agregar a una base actual los registros que falten en el archivo
+`database/vetlogic.sql`, conservando los datos existentes, ejecutá:
+
+```bash
+python3 setup_database.py --merge
+```
+
+El asistente crea un respaldo y pide confirmación con `FUSIONAR`. Los clientes
+se reconocen por DNI y los veterinarios por matrícula. Los pacientes se
+reconocen por DNI del dueño, nombre, especie y fecha de nacimiento coincidente
+(no se fusionan automáticamente si falta la fecha). Si un turno del seed ocupa
+un horario activo ya usado localmente, se conserva el turno local y se omite el
+del seed. Los datos locales coincidentes no se sobrescriben.
+
+### Migrar una base existente
 
 `setup_database.py` no actualiza el esquema de una base que ya contiene tablas.
 Si detecta el esquema actual, simplemente conserva los registros y no recarga
-los datos de prueba. Si detecta el esquema legado de Vet Logic, usá el comando
-de migración siguiente; pgAdmin no es necesario.
+los datos de prueba. Para convertir el esquema legado y luego fusionar el seed
+sin reemplazar los registros locales, usá el comando siguiente; pgAdmin no es
+necesario.
 
 Cerrá la aplicación y ejecutá:
 
@@ -243,10 +274,11 @@ python3 migrate_database.py
 
 El comando comprueba que la base tenga el esquema legado y solicita escribir
 `MIGRAR`. Solo después de esa confirmación crea un respaldo en `backups/` y
-aplica los cambios dentro de una transacción. Si la migración encuentra datos
-que no puede convertir, revierte los cambios y deja la base legado intacta; el
-respaldo se conserva. Si termina correctamente, la base queda en el esquema
-actual y se puede volver a ejecutar la aplicación.
+aplica los cambios dentro de una transacción. Después incorpora los registros
+faltantes del seed con las mismas reglas de conservación descritas arriba. Si
+la migración encuentra datos que no puede convertir, revierte los cambios y
+deja la base legado intacta; el respaldo se conserva. Si termina correctamente,
+la base queda en el esquema actual y se puede volver a ejecutar la aplicación.
 
 Si la estructura se detecta como desconocida, el comando de migración se niega a
 continuar. No borres ni recrees esa base; primero hay que identificar su origen.
