@@ -188,57 +188,68 @@ crear `vetlogic_desarrollo` y las guardará para la conexión de la aplicación.
 Las herramientas cliente `psql` y `pg_dump` se necesitan para migraciones y
 respaldos; no hace falta abrir pgAdmin.
 
-### 1. Configurar la base de datos
+### Primera configuración
 
-Desde la carpeta raíz del proyecto, ejecutar:
+Desde la carpeta del proyecto, ejecutá el asistente:
 
-```bash
-python setup_database.py
+Windows:
+
+```powershell
+py setup_database.py
 ```
 
-El asistente solicita host, puerto, usuario y contraseña de PostgreSQL. Con
-esas credenciales crea `vetlogic_desarrollo` si todavía no existe. Si la base
-está vacía, crea las tablas y carga los datos de prueba desde
-`database/vetlogic.sql`. Si ya encuentra tablas, no ejecuta ese script para
-evitar borrar información.
-
-Si ya existe una base de desarrollo con datos, no vuelvas a ejecutar el script.
-En su lugar, aplica desde el Query Tool de pgAdmin únicamente las migraciones
-que todavía no hayas aplicado.
-
-### 3. Configurar la conexión de la aplicación
-Si detecta el esquema legado o una estructura desconocida, guarda la conexión
-validada para permitir crear un respaldo, pero informa que la app todavía no
-está lista para ejecutarse. No modifica esas tablas automáticamente.
-
-Para actualizar una base con el esquema legado, cierre la aplicación y ejecute:
+macOS o Linux:
 
 ```bash
-python migrate_database.py
+python3 setup_database.py
 ```
 
-El comando pide confirmación, crea un respaldo automático y aplica la migración
-en una sola transacción. Si detecta datos incompatibles, cancela los cambios y
-conserva el respaldo para corregir el caso antes de volver a intentarlo.
+Ingresá host, puerto, usuario y contraseña de PostgreSQL. El usuario debe poder
+conectarse a la base administrativa `postgres` y tener permiso `CREATEDB`.
+Para una instalación local, normalmente se usan `localhost` y el puerto `5432`.
 
-La configuración se guarda localmente en `database.ini`, que está excluido del
-control de versiones. No compartir ese archivo: contiene credenciales privadas.
-Si ya existe, el asistente solicita confirmación antes de reemplazarlo.
+El resultado depende del estado de `vetlogic_desarrollo`:
 
-Cada instalación usa su propia base local. La aplicación no se conecta a la
-base de datos de otra computadora.
+- Si no existe, el asistente la crea, crea las tablas y carga los datos de prueba.
+- Si existe pero está vacía, crea las tablas y carga los datos de prueba.
+- Si ya tiene el esquema actual, conserva sus datos y no vuelve a cargar el seed.
+- Si detecta el esquema legado, no lo modifica; guarda la conexión e indica que requiere migración.
+- Si encuentra una estructura desconocida, no la modifica y detiene la configuración para evitar cambios incorrectos.
 
-### Crear un respaldo antes de actualizar
+La conexión se guarda en `database.ini`. Si ese archivo ya existe, el asistente
+pregunta antes de reemplazarlo. Conservá el archivo al actualizar el proyecto y
+no lo compartas.
 
-Para generar un respaldo manual en cualquier momento, ejecutar:
+### Actualizar una base existente
+
+`setup_database.py` no actualiza el esquema de una base que ya contiene tablas.
+Si detecta el esquema actual, simplemente conserva los registros y no recarga
+los datos de prueba. Si detecta el esquema legado de Vet Logic, usá el comando
+de migración siguiente; pgAdmin no es necesario.
+
+Cerrá la aplicación y ejecutá:
+
+Windows:
+
+```powershell
+py migrate_database.py
+```
+
+macOS o Linux:
 
 ```bash
-python backup_database.py
+python3 migrate_database.py
 ```
 
-El archivo de respaldo se guarda en `backups/` en formato PostgreSQL restaurable.
-La carpeta está excluida de Git para evitar subir datos personales. La migración
-también genera un respaldo antes de modificar el esquema.
+El comando comprueba que la base tenga el esquema legado y solicita escribir
+`MIGRAR`. Solo después de esa confirmación crea un respaldo en `backups/` y
+aplica los cambios dentro de una transacción. Si la migración encuentra datos
+que no puede convertir, revierte los cambios y deja la base legado intacta; el
+respaldo se conserva. Si termina correctamente, la base queda en el esquema
+actual y se puede volver a ejecutar la aplicación.
+
+Si la estructura se detecta como desconocida, el comando de migración se niega a
+continuar. No borres ni recrees esa base; primero hay que identificar su origen.
 
 ## Ejecución
 
