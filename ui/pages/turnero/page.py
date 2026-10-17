@@ -10,6 +10,8 @@ from repositories.turno import (
     resolver_estado_visual,
     cancelar_turno,
     buscar_turnos,
+    buscar_pacientes_para_turno,
+    registrar_turno_paciente_existente,
 )
 
 from ui.widgets.searchbar import Searchbar
@@ -468,53 +470,55 @@ class TurneroPage(tk.Frame):
             return
 
         self.new_appointment_modal = tk.Toplevel(self)
-        self.new_appointment_modal.geometry("600x400")
+        self.new_appointment_modal.geometry("640x520")
         self.new_appointment_modal.resizable(False, False)
         self.new_appointment_modal.transient(self.winfo_toplevel())
-        self.new_appointment_modal.grab_set()  # esto bloquea la interaccion de la app mientras el modal esta abierto
+        self.new_appointment_modal.grab_set()
         self._centrar_ventana(self.new_appointment_modal)
 
         content = tk.Frame(self.new_appointment_modal, bg="white")
-        content.pack(fill="both", expand=True, padx=10, pady=10)
+        content.pack(fill="both", expand=True, padx=16, pady=16)
 
         header = tk.Frame(content, bg="white")
         header.pack(fill="x")
-#boton del modal de crear turno
+
         tk.Button(
             header,
             text="←",
-            font=("Arial", 24, "bold"),
+            font=("Arial", 22, "bold"),
             bg="white",
             fg="#666666",
             relief="flat",
             bd=0,
             cursor="hand2",
             command=self.new_appointment_modal.destroy,
-        ).pack(side="left", padx=(24, 0), pady=(18, 0))
+        ).pack(side="left", padx=(10, 0), pady=(4, 0))
 
+        # Botón para paciente nuevo
         tk.Button(
             content,
             text="Registrar paciente nuevo",
-            font=("Arial", 16),
+            font=("Arial", 14, "bold"),
             bg="#D2C2ED",
             fg="#111111",
             activebackground="#C7B2E8",
-            relief="raised",
-            bd=2,
+            relief="flat",
+            bd=0,
             cursor="hand2",
             command=self._show_new_patient_form,
-        ).pack(fill="x", padx=85, pady=(16, 65), ipady=14)
-#buscador del modal de crear turno
-        search_area = tk.Frame(content, bg="#A8E5A8", height=105)
-        search_area.pack(fill="x", padx=85)
-        search_area.pack_propagate(False)
+        ).pack(fill="x", padx=40, pady=(12, 20), ipady=10)
 
-        search_box = tk.Frame(search_area, bg="white", height=42)
-        search_box.place(relx=0.11, rely=0.29, relwidth=0.78, relheight=0.42)
+        # Contenedor verde del buscador de HC según Figma
+        search_area = tk.Frame(content, bg="#A8E5A8", padx=16, pady=16)
+        search_area.pack(fill="both", expand=True, padx=40, pady=(0, 10))
+
+        search_box = tk.Frame(search_area, bg="white", height=38)
+        search_box.pack(fill="x", pady=(0, 10))
+        search_box.pack_propagate(False)
 
         self.patient_search_entry = tk.Entry(
             search_box,
-            font=("Arial", 12),
+            font=("Arial", 11),
             bd=0,
             fg="#888888",
             relief="flat",
@@ -538,30 +542,242 @@ class TurneroPage(tk.Frame):
             "<FocusOut>",
             self._restore_patient_search_placeholder,
         )
-        search_icon = tk.Canvas(
+        # Búsqueda dinámica al presionar Enter o mientras se escribe
+        self.patient_search_entry.bind(
+            "<KeyRelease>",
+            lambda event: self._buscar_pacientes_existentes(),
+        )
+        self.patient_search_entry.bind(
+            "<Return>",
+            lambda event: self._buscar_pacientes_existentes(),
+        )
+
+        search_btn = tk.Button(
             search_box,
-            width=38,
-            height=38,
+            text="🔍",
+            font=("Arial", 12),
             bg="white",
-            highlightthickness=0,
+            relief="flat",
+            bd=0,
+            cursor="hand2",
+            command=self._buscar_pacientes_existentes,
         )
-        search_icon.pack(side="right", padx=(0, 8), pady=2)
-        search_icon.create_oval(
-            8,
-            7,
-            22,
-            21,
-            outline="#888888",
-            width=2,
+        search_btn.pack(side="right", padx=(0, 6))
+
+        # Tabla de resultados desplegable (Figma: Cliente, Paciente, Especie, HC)
+        table_frame = tk.Frame(search_area, bg="white")
+        table_frame.pack(fill="both", expand=True)
+
+        columnas = ("cliente", "paciente", "especie", "hc")
+        self.patient_results_table = ttk.Treeview(
+            table_frame,
+            columns=columnas,
+            show="headings",
+            height=6,
         )
-        search_icon.create_line(
-            19,
-            19,
-            27,
-            27,
-            fill="#888888",
-            width=2,
+
+        self.patient_results_table.heading("cliente", text="Cliente", anchor="w")
+        self.patient_results_table.heading("paciente", text="Paciente", anchor="w")
+        self.patient_results_table.heading("especie", text="Especie", anchor="center")
+        self.patient_results_table.heading("hc", text="HC", anchor="center")
+
+        self.patient_results_table.column("cliente", width=160, anchor="w")
+        self.patient_results_table.column("paciente", width=120, anchor="w")
+        self.patient_results_table.column("especie", width=80, anchor="center")
+        self.patient_results_table.column("hc", width=60, anchor="center")
+
+        self.patient_results_table.pack(fill="both", expand=True)
+        self.patient_results_table.bind(
+            "<Double-1>",
+            self._seleccionar_paciente_existente,
         )
+        self.pacientes_encontrados_cache = {}
+
+    def _buscar_pacientes_existentes(self):
+        termino = self.patient_search_entry.get().strip()
+        if termino == "Buscar por paciente, cliente, HC,...":
+            termino = ""
+
+        for item in self.patient_results_table.get_children():
+            self.patient_results_table.delete(item)
+        self.pacientes_encontrados_cache.clear()
+
+        if not termino:
+            return
+
+        try:
+            with conectar() as conexion:
+                pacientes = buscar_pacientes_para_turno(conexion, termino)
+        except Exception as error:
+            messagebox.showerror(
+                "Error al buscar pacientes",
+                f"No se pudieron buscar pacientes existentes:\n{error}",
+                parent=self.new_appointment_modal,
+            )
+            return
+
+        for paciente_data in pacientes:
+            id_paciente, cliente, paciente, especie, contacto, dni = paciente_data
+            hc_str = str(id_paciente)
+            self.pacientes_encontrados_cache[hc_str] = {
+                "id_paciente": id_paciente,
+                "cliente": cliente,
+                "paciente": paciente,
+                "especie": especie,
+                "contacto": contacto or "No informado",
+                "dni": dni,
+            }
+            self.patient_results_table.insert(
+                "",
+                "end",
+                iid=hc_str,
+                values=(cliente, paciente, especie, hc_str),
+            )
+
+    def _seleccionar_paciente_existente(self, event):
+        seleccion = self.patient_results_table.selection()
+        if not seleccion:
+            return
+
+        hc_str = seleccion[0]
+        datos_paciente = self.pacientes_encontrados_cache.get(hc_str)
+        if not datos_paciente:
+            return
+
+        self._mostrar_selector_turno_paciente_existente(datos_paciente)
+
+    def _mostrar_selector_turno_paciente_existente(self, datos_paciente):
+        for widget in self.new_appointment_modal.winfo_children():
+            widget.destroy()
+
+        self.new_appointment_modal.title(f"Turno: {datos_paciente['paciente']}")
+        self.new_appointment_modal.geometry("780x640")
+        self._centrar_ventana(self.new_appointment_modal)
+
+        # Cabecera con datos del paciente
+        header = tk.Frame(self.new_appointment_modal, bg="#D2C2ED", height=48)
+        header.pack(fill="x")
+        header.pack_propagate(False)
+
+        tk.Button(
+            header,
+            text="←",
+            font=("Arial", 20, "bold"),
+            bg="#D2C2ED",
+            fg="#666666",
+            relief="flat",
+            bd=0,
+            cursor="hand2",
+            command=self._volver_al_buscador_pacientes,
+        ).pack(side="left", padx=16)
+
+        tk.Label(
+            header,
+            text=f"Turno: {datos_paciente['paciente']} (HC: {datos_paciente['id_paciente']}) - Cliente: {datos_paciente['cliente']}",
+            font=("Arial", 13, "bold"),
+            bg="#D2C2ED",
+            fg="#111111",
+        ).pack(side="left", padx=10)
+
+        cuerpo = tk.Frame(self.new_appointment_modal, bg="white", padx=24, pady=16)
+        cuerpo.pack(fill="both", expand=True)
+
+        # Motivo y Calendario
+        top_row = tk.Frame(cuerpo, bg="white")
+        top_row.pack(fill="x", pady=(0, 10))
+
+        tk.Label(
+            top_row,
+            text="Motivo:",
+            font=("Arial", 11, "bold"),
+            bg="white",
+        ).pack(side="left", padx=(0, 6))
+        motivo_var = tk.StringVar(value="Clinica")
+        motivo_cb = ttk.Combobox(
+            top_row,
+            textvariable=motivo_var,
+            values=("Clinica", "Vacunacion", "Cirugia", "Otros"),
+            state="readonly",
+            width=16,
+        )
+        motivo_cb.pack(side="left", padx=(0, 30))
+
+        fecha_sel = [datetime.now(ZoneInfo("America/Argentina/Buenos_Aires")).date()]
+        horario_sel = [None]
+
+        # Selector de Horarios
+        tk.Label(
+            cuerpo,
+            text="Horarios disponibles:",
+            font=("Arial", 11, "bold"),
+            bg="white",
+        ).pack(anchor="w", pady=(8, 4))
+
+        from ui.pages.turnero.horarios_selector import HorariosSelector
+
+        selector_horarios = HorariosSelector(
+            cuerpo,
+            fecha_base=fecha_sel[0],
+            horarios_ocupados=set(),
+        )
+        selector_horarios.pack(fill="both", expand=True, pady=(0, 10))
+
+        def on_horario(dia, hora):
+            horario_sel[0] = (dia, hora)
+            btn_agendar.config(state="normal")
+
+        selector_horarios.on_horario_seleccionado = on_horario
+
+        def confirmar_y_guardar():
+            if not horario_sel[0]:
+                return
+
+            dia, hora = horario_sel[0]
+            datos_turno = {
+                "id_paciente": datos_paciente["id_paciente"],
+                "paciente": datos_paciente["paciente"],
+                "cliente": datos_paciente["cliente"],
+                "contacto": datos_paciente["contacto"],
+                "hc": datos_paciente["id_paciente"],
+                "fecha": dia,
+                "hora": hora,
+                "motivo": motivo_var.get(),
+            }
+
+            try:
+                with conectar() as conexion:
+                    id_turno = registrar_turno_paciente_existente(
+                        conexion,
+                        datos_turno,
+                    )
+                    datos_turno["id_turno"] = id_turno
+            except Exception as error:
+                messagebox.showerror(
+                    "Error al registrar turno",
+                    f"No se pudo guardar el turno:\n{error}",
+                    parent=self.new_appointment_modal,
+                )
+                return
+
+            self._mostrar_datos_turno_nuevo(datos_turno)
+
+        btn_agendar = tk.Button(
+            cuerpo,
+            text="Agendar Turno",
+            bg="#61D161",
+            font=("Arial", 12, "bold"),
+            relief="flat",
+            cursor="hand2",
+            state="disabled",
+            padx=20,
+            pady=8,
+            command=confirmar_y_guardar,
+        )
+        btn_agendar.pack(pady=10)
+
+    def _volver_al_buscador_pacientes(self):
+        self.new_appointment_modal.destroy()
+        self._open_new_appointment_type_modal()
 
     def _clear_patient_search_placeholder(self, event):
         if self.patient_search_entry.get() == "Buscar por paciente, cliente, HC,...":
