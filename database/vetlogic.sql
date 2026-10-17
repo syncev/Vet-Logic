@@ -98,17 +98,22 @@ CREATE TABLE consulta (
 -- Insertar datos de prueba para Vetlogic
 
 -- 1. Tabla cliente
-INSERT INTO cliente (dni, nombre, apellido, telefono, mail, domicilio) VALUES
-('12345678', 'Silvia', 'Moreno', '1122334455', 'silvia.moreno@gmail.com', 'Av. Corrientes 1234'),
-('23456789', 'Martin', 'Sanchez', '1133445566', 'martin.sanchez@hotmail.com', 'Calle Falsa 123'),
-('34567890', 'Calvin', 'Klein', '1144556677', 'calvin@fashion.com', 'Av. Libertador 4500'),
-('45678901', 'Clark', 'Kent', '1155667788', 'clark.kent@dailyplanet.com', 'Metrópolis 987'),
-('56789012', 'Maria', 'del Barrio', '1166778899', 'mariadelbarrio@yahoo.com', 'Rivadavia 7890'),
-('67890123', 'Esteban', 'Caracas', '1177889900', 'esteban.caracas@gmail.com', 'Suipacha 450'),
-('78901234', 'Philomena', 'Cunk', '1188990011', 'cunk@bbc.co.uk', 'Belgrano 321'),
-('89012345', 'Lydia', 'Deetz', '1199001122', 'lydia.art@gmail.com', 'San Juan 654'),
-('90123456', 'Sabrina', 'Carpintera', '1122112211', 'sabrina@music.com', 'Mitre 1500'),
-('01234567', 'Britney', 'Lanzas', '1133223322', 'britney@pop.com', 'Pueyrredón 888');
+INSERT INTO cliente (dni, nombre, apellido, telefono, mail, domicilio, estado) VALUES
+('12345678', 'Silvia', 'Moreno', '1122334455', 'silvia.moreno@gmail.com', 'Av. Corrientes 1234', 'ACTIVO'),
+('23456789', 'Martin', 'Sanchez', '1133445566', 'martin.sanchez@hotmail.com', 'Calle Falsa 123', 'ACTIVO'),
+('34568890', 'Calvin', 'Klein', '1144556677', 'calvin@fashion.com', 'Av. Libertador 4500', 'ACTIVO'),
+('45678901', 'Clark', 'Kent', '1155667788', 'clark.kent@dailyplanet.com', 'Metrópolis 987', 'ACTIVO'),
+('56780012', 'Maria', 'del Barrio', '1166778899', 'mariadelbarrio@yahoo.com', 'Rivadavia 7890', 'ACTIVO'),
+('67890123', 'Esteban', 'Caracas', '1177889900', 'esteban.caracas@gmail.com', 'Suipacha 450', 'ACTIVO'),
+('78901234', 'Philomena', 'Cunk', '1188990011', 'cunk@bbc.co.uk', 'Belgrano 321', 'ACTIVO'),
+('89012345', 'Lydia', 'Deetz', '1199001122', 'lydia.art@gmail.com', 'San Juan 654', 'ACTIVO'),
+('90123456', 'Sabrina', 'Carpintera', '1122112211', 'sabrina@music.com', 'Mitre 1500', 'ACTIVO'),
+('01234567', 'Britney', 'Lanzas', '1133223322', 'britney@pop.com', 'Pueyrredón 888', 'ACTIVO'),
+('12345878', 'Silvina', 'Moreno', '1155203455','silvinay@gmail.com', 'San Martín 885', 'ACTIVO'),
+('23456789', 'Martin', 'Sanchez', '1133145566','sanchezm@pop.com', 'San Luis 778', 'ACTIVO'),
+('34567890', 'Calvin', 'Kevin', '1143356677','calvink@gmail.com', 'La Rioja 128', 'ACTIVO'),
+('45678901', 'Clark', 'Leiva', '1155667558','kent5@pop.com', 'Catamarca 1488', 'ACTIVO'),
+('56789012', 'Mariela', 'Barrionuevo', '1161878899','mariabarrionuevo@pop.com', 'Chubut 1888', 'ACTIVO');
 
 -- 2. Tabla veterinario
 INSERT INTO veterinario (matricula_veterinario, nombre, apellido, contacto, estado, especialidad, domicilio, correo, contacto_emergencia) VALUES
@@ -121,20 +126,31 @@ INSERT INTO veterinario (matricula_veterinario, nombre, apellido, contacto, esta
 ('MP-7890', 'Jorge', 'Rivas', '1122334455', 'ACTIVO', 'Oftalmología', 'Urquiza 700', 'jorge@vet.com', 'Emergencia 7'),
 ('MP-8901', 'Ana', 'Sosa', '1133445566', 'ACTIVO', 'Neurología', 'España 800', 'ana@vet.com', 'Emergencia 8'),
 ('MP-9012', 'Federico', 'López', '1144332211', 'ACTIVO', 'Oncología', 'Ituzaingó 900', 'federico@vet.com', 'Emergencia 9'),
-('MP-0123', 'Sofía', 'Díaz', '1155443322', 'ACTIVO', 'Exóticos', 'Paso 1000', 'sofia@vet.com', 'Emergencia 10');
+('MP-0123', 'Sofía', 'Díaz', '1155443322', 'ACTIVO', 'Exóticos', 'Paso 1000', 'sofia@vet.com', 'Emergencia 10'),
+('MP-1534', 'Carlos', 'Gonzalez', '1144556678', 'ACTIVO', 'Exóticos', 'Paso de las Tropas 100', 'carlosg@vet.com', 'Emergencia 11'),
+('MP-3345', 'Mariela', 'Paez', '1155666688', 'ACTIVO', 'Cirugía', 'Jujuy 250', 'mpaez@vet.com', 'Emergencia 12'),
+('MP-3856', 'Sebastian', 'Hernandez', '1156778899', 'ACTIVO','Clinica General', 'Paso 1000', 'shernandez@vet.com', 'Emergencia 13'),
+('MP-7867', 'Laura', 'Juarez', '1177919900', 'ACTIVO','Felinos',  'La Rioja 579', 'ljuarez@vet.com', 'Emergencia 14'),
+('MP-5578', 'Matias', 'Bosco', '1188990411', 'ACTIVO','Cirugía', 'Sarmiento 415', 'matibosco@vet.com', 'Emergencia 15');
+
 
 -- 3. Tabla paciente
-INSERT INTO paciente (nombre, especie, raza, sexo, fecha_nacimiento, peso, castrado, dni) VALUES
-('Luna', 'Gato', 'Siamés', 'Hembra', '2023-01-15', 4.20, true, '12345678'),
-('Milo', 'Gato', 'Shorthair', 'Macho', '2024-05-10', 3.80, false, '23456789'),
-('Thor', 'Perro', 'Ovejero Alemán', 'Macho', '2021-08-20', 28.50, true, '34567890'),
-('Homero', 'Perro', 'Golden Retriever', 'Macho', '2022-03-12', 30.00, true, '45678901'),
-('Otto', 'Gato', 'Persa', 'Macho', '2020-11-05', 5.10, true, '56789012'),
-('Rafa', 'Perro', 'Caniche', 'Macho', '2023-09-01', 6.50, false, '67890123'),
-('Ara', 'Gato', 'Angora', 'Hembra', '2024-02-14', 3.20, false, '78901234'),
-('Uma', 'Perro', 'Pitbull', 'Hembra', '2022-07-30', 24.00, true, '89012345'),
-('Corcho', 'Perro', 'Beagle', 'Macho', '2019-12-10', 12.00, true, '90123456'),
-('Simba', 'Gato', 'Maine Coon', 'Macho', '2021-06-25', 7.50, true, '01234567');
+INSERT INTO paciente (nombre, especie, raza, sexo, fecha_nacimiento, peso, castrado, dni, estado) VALUES
+('Luna', 'Gato', 'Siamés', 'Hembra', '2023-01-15', 4.20, true, '12345678', 'ACTIVO'),
+('Milo', 'Gato', 'Shorthair', 'Macho', '2024-05-10', 3.80, false, '23456789', 'ACTIVO'),
+('Thor', 'Perro', 'Ovejero Alemán', 'Macho', '2021-08-20', 28.50, true, '34567890', 'ACTIVO'),
+('Homero', 'Perro', 'Golden Retriever', 'Macho', '2022-03-12', 30.00, true, '45678901', 'ACTIVO'),
+('Otto', 'Gato', 'Persa', 'Macho', '2020-11-05', 5.10, true, '56700012', 'ACTIVO'),
+('Rafa', 'Perro', 'Caniche', 'Macho', '2023-09-01', 6.50, false, '67890123', 'ACTIVO'),
+('Ara', 'Gato', 'Angora', 'Hembra', '2024-02-14', 3.20, false, '78901234', 'ACTIVO'),
+('Uma', 'Perro', 'Pitbull', 'Hembra', '2022-07-30', 24.00, true, '89012345', 'ACTIVO'),
+('Corcho', 'Perro', 'Beagle', 'Macho', '2019-12-10', 12.00, true, '90123456', 'ACTIVO'),
+('Simba', 'Gato', 'Maine Coon', 'Macho', '2021-06-25', 7.50, true, '01234567', 'ACTIVO'),
+('Magnolia', 'Gato', 'Siamés', 'Hembra', '2024-06-15', 2.20, false,'12348678', 'ACTIVO'),
+('Pepe', 'Gato', 'Shorthair', 'Macho', '2026-01-15', 1.40, true,'34567890', 'ACTIVO'),
+('Umma', 'Perro', 'Ovejero Alemán', 'Hembra', '2026-09-15', 4.20, true, '145678901', 'ACTIVO'),
+('Homero', 'Perro', 'Golden Retriever', 'Macho', '2023-04-15', 30.00, true, '45678901', 'ACTIVO'),
+('Ciro', 'Gato', 'Persa', 'Macho', '2024-06-22', 3.50, true, '56789012', 'ACTIVO');
 
 -- 4. Tabla turno
 INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente) VALUES
@@ -147,17 +163,34 @@ INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente) VA
 ('2026-11-20', '16:40:00', '17:20:00', 'CLINICA', 'PENDIENTE', 7),
 ('2026-10-16', '17:20:00', '18:00:00', 'VACUNACION', 'PENDIENTE', 8),
 ('2026-07-09', '18:00:00', '18:40:00', 'CLINICA', 'ATENDIDO', 9),
-('2026-12-22', '18:40:00', '19:20:00', 'CLINICA', 'PENDIENTE', 10);
+('2026-12-22', '18:40:00', '19:20:00', 'CLINICA', 'PENDIENTE', 10),
+('2026-10-15', '09:00:00', '09:40:00', 'CLINICA', 'ATENDIDO', 11),
+('2026-11-12', '09:40:00', '10:20:00', 'CLINICA', 'PENDIENTE', 12),
+('2026-10-13', '10:20:00', '11:00:00', 'CIRUGIA', 'ATENDIDO', 13),
+('2026-10-14', '11:00:00', '11:40:00', 'VACUNACION', 'ATENDIDO', 14),
+('2026-10-15', '11:40:00', '12:20:00', 'CLINICA', 'ATENDIDO', 15);
 
 -- 5. Tabla consulta
 INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_paciente, matricula_veterinario, id_turno) VALUES
-('2026-10-15', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 1, 'MP-3456', 1),
+('2026-10-15', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 1, 'MP-2345', 1),
 ('2026-11-06', 'Aplicación de vacuna anual', 'Paciente tranquilo', 'Dosis séxtuple aplicada', 2, 'MP-4567', 2),
-('2026-09-25', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 3, 'MP-3456', 3),
-('2026-11-05', 'Aplicación de vacuna anual', 'Paciente tranquilo', 'Dosis séxtuple aplicada', 4, 'MP-4567', 4),
+('2026-09-25', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 3, 'MP-2345', 3),
+('2026-11-05', 'Aplicación de vacuna anual', 'Paciente tranquilo', 'Dosis séxtuple aplicada', 4, 'MP-1234', 4),
 ('2026-06-07', 'Control preventivo general', 'Buen estado general de salud', 'Ninguno', 5, 'MP-5678', 5),
-('2026-08-19', 'Gastroenteritis leve por dieta', 'Vómitos ocasionales', 'Dieta blanda y protector gástrico', 6, 'MP-6789', 6),
-('2026-04-21', 'Chequeo dermatológico', 'Alergia estacional leve', 'Baño con shampoo medicado', 7, 'MP-7890', 7),
-('2026-05-30', 'Vacunación antirrábica', 'Sin reacciones adversas', 'Aplicación correcta', 8, 'MP-8901', 8),
-('2026-07-15', 'Revisión oftalmológica', 'Ojos limpios y sin lesiones', 'Gotas lubricantes', 9, 'MP-9012', 9),
-('2026-05-12', 'Control geriátrico preventivo', 'Se solicitan análisis de sangre', 'Vitaminas y suplementos', 10, 'MP-0123', 10);
+('2026-08-19', 'Gastroenteritis leve por dieta', 'Vómitos ocasionales', 'Dieta blanda y protector gástrico', 6, 'MP-3856', 6),
+('2026-04-21', 'Chequeo dermatológico', 'Alergia estacional leve', 'Baño con shampoo medicado', 7, 'MP-3456', 7),
+('2026-05-30', 'Vacunación antirrábica', 'Sin reacciones adversas', 'Aplicación correcta', 8, 'MP-5578', 8),
+('2026-07-15', 'Revisión oftalmológica', 'Ojos limpios y sin lesiones', 'Gotas lubricantes', 9, 'MP-7890', 9),
+('2026-05-12', 'Control geriátrico preventivo', 'Se solicitan análisis de sangre', 'Vitaminas y suplementos', 10, 'MP-7867', 10),
+('2026-10-15', 'Control general', 'Buen estado de salud', 'Control anual', 11, 'MP-1234', 11),
+('2026-10-12', 'Control digestivo', 'Sin síntomas actuales', 'Continuar dieta habitual', 12, 'MP-2345', 12),
+('2026-10-13', 'Control postoperatorio', 'Evolución favorable', 'Mantener reposo', 13, 'MP-2345', 13),
+('2026-10-14', 'Vacunación anual', 'Sin reacciones previas', 'Aplicar dosis anual', 14, 'MP-5578', 14),
+('2026-10-15', 'Control preventivo', 'Paciente estable', 'Nuevo control en seis meses', 15, 'MP-5678', 15);
+
+
+
+
+
+
+
