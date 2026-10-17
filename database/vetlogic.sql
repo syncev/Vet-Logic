@@ -298,4 +298,12 @@ INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_pac
 ('2026-12-22', 'Vacunacion anual', 'Aplicacion de dosis de refuerzo antirrabica', 'Carnet al dia', 4, 'MP-2345', 64),
 ('2026-12-23', 'Consulta odontologica', 'Sarro dental moderado sin inflamacion de encias', 'Limpieza ultrasonica recomendada', 5, 'MP-3856', 65),
 ('2026-12-28', 'Control clinico general', 'Evolucion favorable post-tratamiento', 'Alta medica definitiva', 6, 'MP-7867', 66),
-
+('2026-12-29', 'Chequeo dermatologico', 'Piel y pelaje en excelentes condiciones', 'Continuar pipeta mensual', 7, 'MP-1234', 67),
+('2026-12-30', 'Control nutricional', 'Peso estable dentro del rango ideal', 'Mantener racion actual', 8, 'MP-3456', 68),
+('2027-01-04', 'Consulta clinica general', 'Examen fisico sin alteraciones', 'Sin medicacion', 9, 'MP-4567', 69),
+('2027-01-05', 'Vacunacion anual', 'Refuerzo aplicado correctamente', 'Proximo control anual', 10, 'MP-5578', 70),
+('2027-01-06', 'Revision post-operatoria', 'Cicatrizacion completa y sin inflamacion', 'Alta definitiva', 1, 'MP-2345', 71),
+('2027-01-07', 'Consulta geriatrica de rutina', 'Movilidad conservada y buen estado general', 'Suplementacion articular recomendada', 2, 'MP-3856', 72),
+('2027-01-08', 'Control de parasitos', 'Sin evidencias de parasitos externos', 'Desparasitacion interna al dia', 3, 'MP-7867', 73),
+('2027-01-11', 'Evaluacion general', 'Constantes fisiologicas normales', 'Control preventivo en 6 meses', 4, 'MP-1234', 74),
+('2027-01-12', 'Control clinico de cierre', 'Paciente en perfecto estado de salud', 'Alta medica general', 5, 'MP-5578', 75);
