@@ -183,7 +183,11 @@ INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente) VA
 ('2026-11-19', '09:00:00', '09:40:00', 'CLINICA', 'PENDIENTE', 3),
 ('2026-11-24', '10:20:00', '11:00:00', 'VACUNACION', 'PENDIENTE', 4),
 ('2026-11-25', '16:40:00', '17:20:00', 'CLINICA', 'PENDIENTE', 5),
-('2026-11-26', '19:20:00', '20:00:00', 'OTROS', 'PENDIENTE', 6);
+('2026-11-26', '19:20:00', '20:00:00', 'OTROS', 'PENDIENTE', 6),
+('2026-11-27', '10:20:00', '11:00:00', 'CLINICA', 'PENDIENTE', 7),
+('2026-11-30', '11:40:00', '12:20:00', 'VACUNACION', 'PENDIENTE', 8),
+('2026-12-01', '16:40:00', '17:20:00', 'CIRUGIA', 'PENDIENTE', 9),
+('2026-12-02', '19:20:00', '20:00:00', 'OTROS', 'PENDIENTE', 10);
 
 -- 5. Tabla consulta
 INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_paciente, matricula_veterinario, id_turno) VALUES
