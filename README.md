@@ -190,6 +190,50 @@ archivo `database/vetlogic.sql` y ejecutar el script.
 únicamente en una base vacía o de prueba. No usarlo sobre una base con datos
 que se quieran conservar.
 
+Si ya existe una base de desarrollo con datos, no vuelvas a ejecutar el script.
+En su lugar, aplica desde el Query Tool de pgAdmin únicamente las migraciones
+que todavía no hayas aplicado.
+
+Para agregar el estado de cliente:
+
+```sql
+ALTER TABLE cliente
+ADD COLUMN estado VARCHAR(10) NOT NULL DEFAULT 'ACTIVO';
+
+ALTER TABLE cliente
+ADD CONSTRAINT ck_cliente_estado
+CHECK (estado IN ('ACTIVO', 'INACTIVO'));
+```
+
+Para agregar el estado de la historia clínica (paciente):
+
+```sql
+ALTER TABLE paciente
+ADD COLUMN estado VARCHAR(10) NOT NULL DEFAULT 'ACTIVO';
+
+ALTER TABLE paciente
+ADD CONSTRAINT ck_paciente_estado
+CHECK (estado IN ('ACTIVO', 'INACTIVO'));
+```
+
+Para verificar los clientes inactivos:
+
+```sql
+SELECT dni, nombre, apellido, estado
+FROM cliente
+WHERE estado = 'INACTIVO';
+```
+
+Para verificar las historias clínicas (pacientes) inactivas:
+
+```sql
+SELECT id_paciente, nombre, estado
+FROM paciente
+WHERE estado = 'INACTIVO';
+```
+
+Estas consultas solo muestran registros; no modifican la base de datos.
+
 ### 3. Configurar la conexión de la aplicación
 
 Desde PowerShell, ubicado en la carpeta raíz del proyecto —la misma que

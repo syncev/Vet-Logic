@@ -257,19 +257,12 @@ def registrar_consulta(
         return cursor.fetchone()[0]
 
 
-def eliminar_paciente(conexion, id_paciente):
+def inhabilitar_paciente(conexion, id_paciente):
     with conexion.cursor() as cursor:
         cursor.execute(
-            "DELETE FROM consulta WHERE id_paciente = %s",
-            (id_paciente,),
-        )
-        cursor.execute(
-            "DELETE FROM turno WHERE id_paciente = %s",
-            (id_paciente,),
-        )
-        cursor.execute(
             """
-            DELETE FROM paciente
+            UPDATE paciente
+            SET estado = 'INACTIVO'
             WHERE id_paciente = %s
             RETURNING id_paciente
             """,
@@ -278,50 +271,19 @@ def eliminar_paciente(conexion, id_paciente):
         return cursor.fetchone() is not None
 
 
-def eliminar_cliente_de_paciente(conexion, id_paciente):
+def inhabilitar_cliente_de_paciente(conexion, id_paciente):
     with conexion.cursor() as cursor:
         cursor.execute(
             """
-            SELECT cl.dni
-            FROM cliente AS cl
-            JOIN paciente AS p
-                ON p.dni = cl.dni
-            WHERE p.id_paciente = %s
-            FOR UPDATE OF cl
-            """,
-            (id_paciente,),
-        )
-        fila = cursor.fetchone()
-        if fila is None:
-            return False
-
-        dni = fila[0]
-        cursor.execute(
-            """
-            DELETE FROM consulta
-            WHERE id_paciente IN (
-                SELECT id_paciente
+            UPDATE cliente
+            SET estado = 'INACTIVO'
+            WHERE dni = (
+                SELECT dni
                 FROM paciente
-                WHERE dni = %s
+                WHERE id_paciente = %s
             )
-            """,
-            (dni,),
-        )
-        cursor.execute(
-            "DELETE FROM turno WHERE id_paciente IN "
-            "(SELECT id_paciente FROM paciente WHERE dni = %s)",
-            (dni,),
-        )
-        cursor.execute(
-            "DELETE FROM paciente WHERE dni = %s",
-            (dni,),
-        )
-        cursor.execute(
-            """
-            DELETE FROM cliente
-            WHERE dni = %s
             RETURNING dni
             """,
-            (dni,),
+            (id_paciente,),
         )
         return cursor.fetchone() is not None

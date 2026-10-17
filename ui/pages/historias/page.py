@@ -13,8 +13,8 @@ from repositories.historias import (
     obtener_veterinarios_activos,
     registrar_consulta,
     registrar_cliente_y_paciente,
-    eliminar_cliente_de_paciente,
-    eliminar_paciente,
+    inhabilitar_cliente_de_paciente,
+    inhabilitar_paciente,
 )
 
 class HistoriasPage(tk.Frame):
@@ -1065,9 +1065,9 @@ class HistoriasPage(tk.Frame):
         tk.Label(
             dialog,
             text=(
-                "Esta acción es irreversible. Se eliminarán\n"
-                "el paciente, su historia clínica, consultas\n"
-                "y turnos."
+                "La historia clínica quedará inactiva.\n"
+                "Se conservarán los datos del paciente,\n"
+                "sus consultas y sus turnos."
             ),
             font=("Arial", 10),
             justify="center",
@@ -1122,11 +1122,9 @@ class HistoriasPage(tk.Frame):
         dialog.grab_set()
 
     def _confirmar_eliminar_hc(self, dialog, id_paciente):
-        dialog.destroy()
-
         try:
             with conectar() as conexion:
-                eliminado = eliminar_paciente(conexion, id_paciente)
+                inhabilitado = inhabilitar_paciente(conexion, id_paciente)
                 historias = obtener_historias(
                     conexion,
                     self.searchbar.search_entry.get().strip(),
@@ -1134,25 +1132,28 @@ class HistoriasPage(tk.Frame):
                 )
         except (psycopg.Error, OSError, ValueError, KeyError) as error:
             messagebox.showerror(
-                "Error al eliminar la historia clínica",
-                f"No se pudo eliminar el paciente y sus registros:\n{error}",
+                "Error al inhabilitar la historia clínica",
+                f"No se pudo inhabilitar la historia clínica:\n{error}",
                 parent=self,
             )
             return
 
-        if not eliminado:
+        dialog.destroy()
+
+        if not inhabilitado:
             self._actualizar_historias_en_pantalla(historias)
             messagebox.showwarning(
                 "Paciente no encontrado",
-                "El paciente seleccionado ya no existe en la base de datos.",
+                "No se encontró el paciente seleccionado en la base de datos.",
                 parent=self,
             )
             return
 
         self._actualizar_historias_en_pantalla(historias)
         messagebox.showinfo(
-            "Historia clínica eliminada",
-            "Se eliminaron el paciente, sus consultas y sus turnos.",
+            "Historia clínica inhabilitada",
+            "La historia clínica quedó inactiva. Los datos del paciente, "
+            "sus consultas y sus turnos se conservaron.",
             parent=self,
         )
 
@@ -1183,8 +1184,8 @@ class HistoriasPage(tk.Frame):
         tk.Label(
             dialog,
             text=(
-                "Esta acción es irreversible. Se eliminarán\n"
-                "el cliente y todos sus pacientes, historias\n"
+                "El cliente quedará inhabilitado.\n"
+                "Se conservarán sus pacientes, historias\n"
                 "clínicas, consultas y turnos."
             ),
             font=("Arial", 10),
@@ -1243,11 +1244,9 @@ class HistoriasPage(tk.Frame):
         dialog.grab_set()
 
     def _confirmar_eliminar_cliente(self, dialog, id_paciente):
-        dialog.destroy()
-
         try:
             with conectar() as conexion:
-                eliminado = eliminar_cliente_de_paciente(
+                inhabilitado = inhabilitar_cliente_de_paciente(
                     conexion,
                     id_paciente,
                 )
@@ -1258,14 +1257,15 @@ class HistoriasPage(tk.Frame):
                 )
         except (psycopg.Error, OSError, ValueError, KeyError) as error:
             messagebox.showerror(
-                "Error al eliminar el cliente",
-                f"No se pudo eliminar el cliente y sus registros:\n{error}",
+                "Error al inhabilitar el cliente",
+                f"No se pudo inhabilitar el cliente:\n{error}",
                 parent=self,
             )
             return
 
-        if not eliminado:
-            self._actualizar_historias_en_pantalla(historias)
+        dialog.destroy()
+
+        if not inhabilitado:
             messagebox.showwarning(
                 "Cliente no encontrado",
                 "No se encontró el cliente asociado al paciente seleccionado.",
@@ -1275,8 +1275,9 @@ class HistoriasPage(tk.Frame):
 
         self._actualizar_historias_en_pantalla(historias)
         messagebox.showinfo(
-            "Cliente eliminado",
-            "Se eliminaron el cliente y sus pacientes, consultas y turnos.",
+            "Cliente inhabilitado",
+            "El cliente fue inhabilitado. Sus pacientes, historias clínicas, "
+            "consultas y turnos se conservaron.",
             parent=self,
         )
 
