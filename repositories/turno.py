@@ -2,6 +2,11 @@ from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 from core.db import conectar
 
+
+class ClienteInhabilitadoError(ValueError):
+    """Se intenta registrar un turno para un cliente inhabilitado."""
+
+
 def obtener_horarios_ocupados(conexion, fecha_base: date):
     fecha_final = fecha_base + timedelta(days=2)
 
@@ -135,6 +140,21 @@ def registrar_turno_con_paciente_nuevo(conexion, datos: dict) -> dict:
     hora_fin_str = (hora_dt + timedelta(minutes=40)).strftime("%H:%M")
 
     with conexion.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT estado
+            FROM cliente
+            WHERE dni = %s
+            FOR UPDATE
+            """,
+            (dni,),
+        )
+        cliente_existente = cursor.fetchone()
+        if cliente_existente and cliente_existente[0] == "INACTIVO":
+            raise ClienteInhabilitadoError(
+                "No se puede crear el turno porque el cliente está inhabilitado."
+            )
+
         # 1. Registrar o actualizar cliente por DNI
         cursor.execute(
             """
@@ -370,7 +390,8 @@ def buscar_pacientes_para_turno(conexion, termino: str) -> list[tuple]:
                 p.nombre AS paciente,
                 p.especie,
                 c.telefono,
-                c.dni
+                c.dni,
+                c.estado
             FROM paciente p
             INNER JOIN cliente c ON p.dni = c.dni
             WHERE p.id_paciente = %s
@@ -389,7 +410,8 @@ def buscar_pacientes_para_turno(conexion, termino: str) -> list[tuple]:
             p.nombre AS paciente,
             p.especie,
             c.telefono,
-            c.dni
+            c.dni,
+            c.estado
         FROM paciente p
         INNER JOIN cliente c ON p.dni = c.dni
         WHERE p.nombre ILIKE %s
@@ -416,12 +438,30 @@ def registrar_turno_paciente_existente(conexion, datos: dict) -> int:
     hora_dt = datetime.strptime(hora_inicio_str, "%H:%M")
     hora_fin_str = (hora_dt + timedelta(minutes=40)).strftime("%H:%M")
 
-    consulta = """
-        INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente)
-        VALUES (%s, %s, %s, %s, 'PENDIENTE', %s)
-        RETURNING id_turno;
-    """
     with conexion.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT c.estado
+            FROM paciente p
+            INNER JOIN cliente c ON c.dni = p.dni
+            WHERE p.id_paciente = %s
+            FOR UPDATE OF c
+            """,
+            (datos["id_paciente"],),
+        )
+        cliente = cursor.fetchone()
+        if cliente is None:
+            raise ValueError("No se encontró el cliente asociado al paciente.")
+        if cliente[0] == "INACTIVO":
+            raise ClienteInhabilitadoError(
+                "No se puede crear el turno porque el cliente está inhabilitado."
+            )
+
+        consulta = """
+            INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente)
+            VALUES (%s, %s, %s, %s, 'PENDIENTE', %s)
+            RETURNING id_turno;
+        """
         cursor.execute(
             consulta,
             (fecha, hora_inicio_str, hora_fin_str, motivo, datos["id_paciente"]),

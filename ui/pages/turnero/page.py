@@ -13,6 +13,7 @@ from repositories.turno import (
     encontrar_fecha_de_turno,
     buscar_pacientes_para_turno,
     registrar_turno_paciente_existente,
+    ClienteInhabilitadoError,
 )
 
 from ui.widgets.searchbar import Searchbar
@@ -615,7 +616,15 @@ class TurneroPage(tk.Frame):
             return
 
         for paciente_data in pacientes:
-            id_paciente, cliente, paciente, especie, contacto, dni = paciente_data
+            (
+                id_paciente,
+                cliente,
+                paciente,
+                especie,
+                contacto,
+                dni,
+                estado_cliente,
+            ) = paciente_data
             hc_str = str(id_paciente)
             self.pacientes_encontrados_cache[hc_str] = {
                 "id_paciente": id_paciente,
@@ -624,6 +633,7 @@ class TurneroPage(tk.Frame):
                 "especie": especie,
                 "contacto": contacto or "No informado",
                 "dni": dni,
+                "estado_cliente": estado_cliente,
             }
             self.patient_results_table.insert(
                 "",
@@ -640,6 +650,14 @@ class TurneroPage(tk.Frame):
         hc_str = seleccion[0]
         datos_paciente = self.pacientes_encontrados_cache.get(hc_str)
         if not datos_paciente:
+            return
+
+        if datos_paciente["estado_cliente"] == "INACTIVO":
+            messagebox.showwarning(
+                "Cliente inhabilitado",
+                "No se puede crear el turno porque el cliente está inhabilitado.",
+                parent=self.new_appointment_modal,
+            )
             return
 
         self._mostrar_selector_turno_paciente_existente(datos_paciente)
@@ -749,6 +767,13 @@ class TurneroPage(tk.Frame):
                         datos_turno,
                     )
                     datos_turno["id_turno"] = id_turno
+            except ClienteInhabilitadoError as error:
+                messagebox.showwarning(
+                    "Cliente inhabilitado",
+                    str(error),
+                    parent=self.new_appointment_modal,
+                )
+                return
             except Exception as error:
                 messagebox.showerror(
                     "Error al registrar turno",
