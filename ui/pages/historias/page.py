@@ -93,6 +93,10 @@ class HistoriasPage(tk.Frame):
             show="headings",
             height=10,
         )
+        self.hc_table.tag_configure(
+            "cliente_inactivo",
+            foreground="#888888",
+        )
 
         encabezados = (
             ("cliente", "Cliente", 130, "w"),
@@ -151,11 +155,21 @@ class HistoriasPage(tk.Frame):
         for item_id in self.hc_table.get_children():
             self.hc_table.delete(item_id)
         for fila in filas:
-            valores = list(fila)
+            valores = list(fila[:7])
             for indice in (5, 6):
                 if valores[indice] is None:
                     valores[indice] = "Sin consultas"
-            self.hc_table.insert("", "end", values=valores)
+            tags = (
+                ("cliente_inactivo",)
+                if (fila[7] or "").upper() == "INACTIVO"
+                else ()
+            )
+            self.hc_table.insert(
+                "",
+                "end",
+                values=valores,
+                tags=tags,
+            )
 
     def _cargar_veterinarios_activos(self):
         with conectar() as conexion:
