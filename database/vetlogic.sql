@@ -268,4 +268,6 @@ INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_pac
 ('2026-11-06', 'Control clinico general', 'Evolución favorable, constantes vitales normales', 'Sin medicación', 4, 'MP-1234', 34),
 ('2026-11-09', 'Revision preventiva', 'Examen fisico completo sin hallazgos', 'Proximo control en 6 meses', 5, 'MP-5678', 35),
 ('2026-11-10', 'Evaluacion prequirurgica', 'Estudios complementarios en orden', 'Apto para cirugia programada', 6, 'MP-2345', 36),
-
+('2026-11-11', 'Aplicacion de vacuna', 'Refuerzo quintuple aplicado correctamente', 'Control de peso registrado', 7, 'MP-3456', 37),
+('2026-11-12', 'Consulta clinica de rutina', 'Auscultacion cardiopulmonar normal', 'Plan nutricional adecuado', 8, 'MP-4567', 38),
+('2026-11-13', 'Chequeo dermatologico', 'Sin eritemas ni lesiones cutaneas', 'Mantener pipeta antipulgas', 9, 'MP-7890', 39),
