@@ -123,7 +123,7 @@ class HistoriasPage(tk.Frame):
         self.hc_table.bind("<Double-1>", self._abrir_historia_clinica)
 
     def _cargar_historias(self):
-        texto = self.searchbar.search_entry.get().strip()
+        texto = self.searchbar.get_search_text()
         filtro = self.searchbar.filter_options.get()
         conexion = conectar()
         try:
@@ -451,7 +451,7 @@ class HistoriasPage(tk.Frame):
                 )
                 historias = obtener_historias(
                     conexion,
-                    self.searchbar.search_entry.get().strip(),
+                    self.searchbar.get_search_text(),
                     self.searchbar.filter_options.get(),
                 )
         except (psycopg.Error, OSError, ValueError, KeyError) as error:
@@ -1293,7 +1293,7 @@ class HistoriasPage(tk.Frame):
                 )
                 historias = obtener_historias(
                     conexion,
-                    self.searchbar.search_entry.get().strip(),
+                    self.searchbar.get_search_text(),
                     self.searchbar.filter_options.get(),
                 )
         except (psycopg.Error, OSError, ValueError, KeyError) as error:
