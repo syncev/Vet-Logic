@@ -109,10 +109,10 @@ INSERT INTO cliente (dni, nombre, apellido, telefono, mail, domicilio, estado) V
 ('89012345', 'Lydia', 'Deetz', '1199001122', 'lydia.art@gmail.com', 'San Juan 654', 'ACTIVO'),
 ('90123456', 'Sabrina', 'Carpintera', '1122112211', 'sabrina@music.com', 'Mitre 1500', 'ACTIVO'),
 ('01234567', 'Britney', 'Lanzas', '1133223322', 'britney@pop.com', 'Pueyrredón 888', 'ACTIVO'),
-('12345878', 'Silvina', 'Moreno', '1155203455','silvinay@gmail.com', 'San Martín 885', 'ACTIVO'),
-('23456789', 'Martin', 'Sanchez', '1133145566','sanchezm@pop.com', 'San Luis 778', 'ACTIVO'),
-('34567890', 'Calvin', 'Kevin', '1143356677','calvink@gmail.com', 'La Rioja 128', 'ACTIVO'),
-('45678901', 'Clark', 'Leiva', '1155667558','kent5@pop.com', 'Catamarca 1488', 'ACTIVO'),
+('12345878', 'Silvina', 'Benitez', '1155203455','silvinay@gmail.com', 'San Martín 885', 'ACTIVO'),
+('23456987', 'Marcelo', 'Roldan', '1133145566','sanchezm@pop.com', 'San Luis 778', 'ACTIVO'),
+('34567890', 'Agustin', 'Kevin', '1143356677','calvink@gmail.com', 'La Rioja 128', 'ACTIVO'),
+('45678912', 'Nicolas', 'Leiva', '1155667558','kent5@pop.com', 'Catamarca 1488', 'ACTIVO'),
 ('56789012', 'Mariela', 'Barrionuevo', '1161878899','mariabarrionuevo@pop.com', 'Chubut 1888', 'ACTIVO');
 
 -- 2. Tabla veterinario
