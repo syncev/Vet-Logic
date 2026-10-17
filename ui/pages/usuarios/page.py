@@ -1,4 +1,5 @@
 import tkinter as tk
+import psycopg
 from tkinter import messagebox, ttk
 
 from core.db import conectar
@@ -14,6 +15,8 @@ class UsuariosPage(tk.Frame):
         self.add_professional_view = tk.Frame(self, bg="white")
         # 1. Agregamos el nuevo frame para ver el detalle del perfil
         self.profile_detail_view = tk.Frame(self, bg="white")
+
+        self.veterinarios_por_matricula = {}
 
         self._build_profiles_view()
         self._build_profile_detail_view()  # 2. Llamamos a la construcción del diseño
@@ -35,6 +38,7 @@ class UsuariosPage(tk.Frame):
 
         # Muestra únicamente la sección elegida
         if section == "perfiles":
+            self.cargar_profesionales()
             self.profiles_view.pack(fill="both", expand=True)
         elif section == "agregar_profesional":
             self.add_professional_view.pack(fill="both", expand=True)
@@ -96,36 +100,62 @@ class UsuariosPage(tk.Frame):
 
         self.tabla.pack(fill="both", expand=True)
 
-        # Cargar datos de prueba
-        self.cargar_datos_prueba()
-
         self.tabla.bind("<Double-1>", self._open_profile_detail)
 
-    def cargar_datos_prueba(self):
-        datos = [
-            (
-                "Britney Lanzas",
-                "A4738294",
-                "Activo",
-                "Veterinario",
-                "britney.lanzas@email.com",
-                "britneyl",
-            ),
-            (
-                "Raul Marian",
-                "A4738293",
-                "Activo",
-                "Asistente",
-                "raul.marian@email.com",
-                "raulm",
-            ),
-        ]
+    def cargar_profesionales(self):
+        consulta = """
+            SELECT matricula_veterinario, nombre, apellido, estado, contacto,
+                especialidad, domicilio, correo, contacto_emergencia
+            FROM veterinario
+            ORDER BY apellido, nombre, matricula_veterinario
+        """
 
-        for prof, mat, estado, rol, contacto, usuario in datos:
+        try:
+            with conectar() as conexion:
+                with conexion.cursor() as cursor:
+                    cursor.execute(consulta)
+                    filas = cursor.fetchall()
+        except (psycopg.Error, OSError, ValueError) as error:
+            messagebox.showerror(
+                "Error al cargar profesionales",
+                f"No se pudieron consultar los veterinarios de la base de datos:\n{error}",
+                parent=self,
+            )
+            return
+
+        veterinarios = {}
+        for matricula, nombre, apellido, estado, contacto, especialidad, domicilio, correo, emergencia in filas:
+            veterinarios[matricula] = {
+                "nombre": nombre,
+                "apellido": apellido,
+                "estado": estado,
+                "contacto": contacto,
+                "especialidad": especialidad,
+                "domicilio": domicilio,
+                "correo": correo,
+                "contacto_emergencia": emergencia,
+            }
+
+        self.veterinarios_por_matricula = veterinarios
+
+        for item_id in self.tabla.get_children():
+            self.tabla.delete(item_id)
+
+        for matricula, datos in veterinarios.items():
+            estado = "Activo" if datos["estado"] == "ACTIVO" else "Inactivo"
+            nombre_completo = f'{datos["nombre"]} {datos["apellido"]}'
+
             self.tabla.insert(
                 "",
                 "end",
-                values=(prof, mat, estado, rol, contacto, usuario),
+                values=(
+                    nombre_completo,
+                    matricula,
+                    estado,
+                    "Veterinario",
+                    datos["contacto"] or "No disponible",
+                    "No disponible",
+                ),
                 tags=("activo" if estado == "Activo" else "inactivo",),
             )
 
@@ -138,42 +168,46 @@ class UsuariosPage(tk.Frame):
         if not values:
             return "break"
 
-        self._update_profile_detail(values)
+        if not self._update_profile_detail(values):
+            return "break"
+
         self.show_section("ver_perfil")
         return "break"
 
     def _update_profile_detail(self, values):
         name, registration, status, role, contact, username = values
+        datos = self.veterinarios_por_matricula.get(registration)
+
+        if datos is None:
+            messagebox.showerror(
+                "Perfil no disponible",
+                "No se encontraron los datos del veterinario seleccionado.",
+                parent=self,
+            )
+            return False
+
         self.username_actual = username
         self.matricula_actual = registration
-
-        extra_details = {
-            "britneyl": {
-                "specialty": "Oftalmología felina",
-                "active_since": "07-02-2026",
-                "address": "Av. Siempreviva 742",
-                "contact": "35162947390",
-                "emergency_contact": "35162947392",
-            }
-        }.get(username, {})
 
         self.profile_detail_labels["username"].config(text=f"Usuario: {username}")
         self.profile_detail_labels["role"].config(text=f"Rol: {role}")
         self.profile_detail_labels["registration"].config(text=registration)
         self.profile_detail_labels["specialty"].config(
-            text=f"Especialidad: {extra_details.get('specialty', 'No disponible')}"
+            text=f"Especialidad: {datos['especialidad'] or 'No disponible'}"
         )
         self.profile_detail_labels["active_since"].config(
-            text=f"Activo desde: {extra_details.get('active_since', 'No disponible')}"
+            text="Activo desde: No disponible"
         )
+        self.profile_detail_labels["status"].config(text=f"Estado: {status}")
 
-       # Cargamos los datos en los Entry de la derecha
         datos_a_cargar = {
-            "name": name,
-            "address": extra_details.get('address', 'No disponible'),
-            "contact": extra_details.get('contact', 'No disponible'),
-            "email": contact,
-            "emergency_contact": extra_details.get('emergency_contact', 'No disponible'),
+            "name": f"{datos['nombre']} {datos['apellido']}",
+            "address": datos["domicilio"] or "No disponible",
+            "contact": datos["contacto"] or "No disponible",
+            "email": datos["correo"] or "No disponible",
+            "emergency_contact": (
+                datos["contacto_emergencia"] or "No disponible"
+            ),
         }
 
         for key, entry in self.profile_detail_entries.items():
@@ -181,8 +215,7 @@ class UsuariosPage(tk.Frame):
             entry.delete(0, tk.END)
             entry.insert(0, datos_a_cargar.get(key, ""))
             entry.config(state="disabled")
-
-        self.profile_detail_labels["status"].config(text=f"Estado: {status}")
+        return True
 
     def filtrar_profesionales(self, texto):
         pass
@@ -476,19 +509,6 @@ class UsuariosPage(tk.Frame):
             )
             return
 
-        self.tabla.insert(
-            "",
-            "end",
-            values=(
-                f"{nombre} {apellido}",
-                matricula,
-                "Activo",
-                self.var_rol.get().strip() or "Veterinario",
-                contacto,
-                self.var_usuario.get().strip(),
-            ),
-            tags=("activo",),
-        )
         messagebox.showinfo(
             "Éxito",
             "El profesional se ha registrado correctamente.",
