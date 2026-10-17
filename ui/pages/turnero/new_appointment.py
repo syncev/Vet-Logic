@@ -1,5 +1,5 @@
 import tkinter as tk
-from datetime import datetime
+from datetime import datetime, timedelta
 from tkinter import ttk
 from zoneinfo import ZoneInfo
 
@@ -9,10 +9,9 @@ from ui.widgets.calendar_picker import CalendarPicker
 from core.db import conectar
 from repositories.turno import registrar_turno_con_paciente_nuevo
 
-# Desactivado temporalmente mientras la base de datos no esta disponible.
-# import psycopg
+import psycopg
 # from core.db import conectar
-# from repositories.turno import obtener_horarios_ocupados
+from repositories.turno import obtener_horarios_ocupados
 
 
 class NewAppointmentPage(tk.Frame):
@@ -280,25 +279,22 @@ class NewAppointmentPage(tk.Frame):
         )
 
     def _get_occupied_slots(self, base_date):
-        # Rehabilitar la consulta cuando la base de datos este disponible:
-        # try:
-        #     with conectar() as connection:
-        #         occupied = obtener_horarios_ocupados(connection, base_date)
-        #     self.schedule_status.configure(text="")
-        #     return occupied
-        # except (psycopg.Error, OSError, ValueError, KeyError) as error:
-        #     self.schedule_status.configure(
-        #         text="No se pudieron consultar los horarios; quedan deshabilitados."
-        #     )
-        #     print(f"Error al consultar horarios: {error}")
-        #     return {
-        #         (base_date + timedelta(days=offset), hour)
-        #         for offset in range(3)
-        #         for hour in HorariosSelector.HORARIOS
-        #     }
+        try:
+            with conectar() as connection:
+                occupied = obtener_horarios_ocupados(connection, base_date)
 
-        self.schedule_status.configure(text="")
-        return set()
+            self.schedule_status.configure(text="")
+            return occupied
+        except (psycopg.Error, OSError, ValueError, KeyError) as error:
+            self.schedule_status.configure(
+                text="No se pudieron consultar los horarios; quedan deshabilitados."
+            )
+            print(f"Error al consultar horarios: {error}")
+            return {
+                (base_date + timedelta(days=offset), hour)
+                for offset in range(3)
+                for hour in HorariosSelector.HORARIOS
+            }
 
     def _confirmar_turno(self):
         if self.horario_seleccionado is None:
