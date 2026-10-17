@@ -51,7 +51,8 @@ def obtener_historias(conexion, texto="", filtro="Todos"):
             p.id_paciente AS hc,
             cl.telefono AS contacto,
             MIN(co.fecha) AS primera_consulta,
-            MAX(co.fecha) AS ultima_visita
+            MAX(co.fecha) AS ultima_visita,
+            cl.estado AS estado_cliente
         FROM paciente AS p
         JOIN cliente AS cl
             ON cl.dni = p.dni
@@ -64,7 +65,8 @@ def obtener_historias(conexion, texto="", filtro="Todos"):
             p.especie,
             cl.nombre,
             cl.apellido,
-            cl.telefono
+            cl.telefono,
+            cl.estado
         ORDER BY
             MAX(co.fecha) DESC NULLS LAST,
             cl.apellido,

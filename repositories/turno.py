@@ -29,7 +29,8 @@ def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
     """
     Recupera los turnos de una fecha para poblar la tabla del turnero.
     Retorna tuplas con el formato:
-    (id_turno, hora, cliente, paciente, especie, motivo, hc, ultimo_turno, estado)
+    (id_turno, hora, cliente, paciente, especie, motivo, hc, ultimo_turno,
+    estado_turno, estado_cliente)
     """
     marcar_turnos_ausentes(conexion)
     
@@ -53,7 +54,8 @@ def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
                 ),
                 '-'
             ) AS ultimo_turno,
-            t.estado
+            t.estado,
+            c.estado
         FROM turno t
         INNER JOIN paciente p ON t.id_paciente = p.id_paciente
         INNER JOIN cliente c ON p.dni = c.dni
@@ -267,7 +269,8 @@ def buscar_turnos(
                 ),
                 '-'
             ) AS ultimo_turno,
-            t.estado
+            t.estado,
+            c.estado
         FROM turno t
         INNER JOIN paciente p ON t.id_paciente = p.id_paciente
         INNER JOIN cliente c ON p.dni = c.dni
