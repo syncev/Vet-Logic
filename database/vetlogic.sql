@@ -97,7 +97,7 @@ CREATE TABLE consulta (
 
 -- Insertar datos de prueba para Vetlogic
 
--- 1. Tabla cliente
+
 INSERT INTO cliente (dni, nombre, apellido, telefono, mail, domicilio, estado) VALUES
 ('12345678', 'Silvia', 'Moreno', '1122334455', 'silvia.moreno@gmail.com', 'Av. Corrientes 1234', 'ACTIVO'),
 ('23456789', 'Martin', 'Sanchez', '1133445566', 'martin.sanchez@hotmail.com', 'Calle Falsa 123', 'ACTIVO'),
@@ -109,13 +109,12 @@ INSERT INTO cliente (dni, nombre, apellido, telefono, mail, domicilio, estado) V
 ('89012345', 'Lydia', 'Deetz', '1199001122', 'lydia.art@gmail.com', 'San Juan 654', 'ACTIVO'),
 ('90123456', 'Sabrina', 'Carpintera', '1122112211', 'sabrina@music.com', 'Mitre 1500', 'ACTIVO'),
 ('01234567', 'Britney', 'Lanzas', '1133223322', 'britney@pop.com', 'Pueyrredón 888', 'ACTIVO'),
-('12345878', 'Silvina', 'Benitez', '1155203455','silvinay@gmail.com', 'San Martín 885', 'ACTIVO'),
-('23456987', 'Marcelo', 'Roldan', '1133145566','sanchezm@pop.com', 'San Luis 778', 'ACTIVO'),
-('34567890', 'Agustin', 'Kevin', '1143356677','calvink@gmail.com', 'La Rioja 128', 'ACTIVO'),
-('45678912', 'Nicolas', 'Leiva', '1155667558','kent5@pop.com', 'Catamarca 1488', 'ACTIVO'),
-('56789012', 'Mariela', 'Barrionuevo', '1161878899','mariabarrionuevo@pop.com', 'Chubut 1888', 'ACTIVO');
+('12345878', 'Silvina', 'Benitez', '1155203455', 'silvinay@gmail.com', 'San Martín 885', 'ACTIVO'),
+('23456987', 'Marcelo', 'Roldan', '1133145566', 'sanchezm@pop.com', 'San Luis 778', 'ACTIVO'),
+('34567890', 'Agustin', 'Kevin', '1143356677', 'calvink@gmail.com', 'La Rioja 128', 'ACTIVO'),
+('45678912', 'Nicolas', 'Leiva', '1155667558', 'kent5@pop.com', 'Catamarca 1488', 'ACTIVO'),
+('56789012', 'Mariela', 'Barrionuevo', '1161878899', 'mariabarrionuevo@pop.com', 'Chubut 1888', 'ACTIVO');
 
--- 2. Tabla veterinario
 INSERT INTO veterinario (matricula_veterinario, nombre, apellido, contacto, estado, especialidad, domicilio, correo, contacto_emergencia) VALUES
 ('MP-1234', 'Carlos', 'Gómez', '1144556677', 'ACTIVO', 'Clinica General', 'Mitre 100', 'carlos@vet.com', 'Emergencia 1'),
 ('MP-2345', 'María', 'Pérez', '1155667788', 'ACTIVO', 'Cirugía', 'Belgrano 200', 'maria@vet.com', 'Emergencia 2'),
@@ -129,12 +128,10 @@ INSERT INTO veterinario (matricula_veterinario, nombre, apellido, contacto, esta
 ('MP-0123', 'Sofía', 'Díaz', '1155443322', 'ACTIVO', 'Exóticos', 'Paso 1000', 'sofia@vet.com', 'Emergencia 10'),
 ('MP-1534', 'Carlos', 'Gonzalez', '1144556678', 'ACTIVO', 'Exóticos', 'Paso de las Tropas 100', 'carlosg@vet.com', 'Emergencia 11'),
 ('MP-3345', 'Mariela', 'Paez', '1155666688', 'ACTIVO', 'Cirugía', 'Jujuy 250', 'mpaez@vet.com', 'Emergencia 12'),
-('MP-3856', 'Sebastian', 'Hernandez', '1156778899', 'ACTIVO','Clinica General', 'Paso 1000', 'shernandez@vet.com', 'Emergencia 13'),
-('MP-7867', 'Laura', 'Juarez', '1177919900', 'ACTIVO','Felinos',  'La Rioja 579', 'ljuarez@vet.com', 'Emergencia 14'),
-('MP-5578', 'Matias', 'Bosco', '1188990411', 'ACTIVO','Cirugía', 'Sarmiento 415', 'matibosco@vet.com', 'Emergencia 15');
+('MP-3856', 'Sebastian', 'Hernandez', '1156778899', 'ACTIVO', 'Clinica General', 'Paso 1000', 'shernandez@vet.com', 'Emergencia 13'),
+('MP-7867', 'Laura', 'Juarez', '1177919900', 'ACTIVO', 'Felinos', 'La Rioja 579', 'ljuarez@vet.com', 'Emergencia 14'),
+('MP-5578', 'Matias', 'Bosco', '1188990411', 'ACTIVO', 'Cirugía', 'Sarmiento 415', 'matibosco@vet.com', 'Emergencia 15');
 
-
--- 3. Tabla paciente
 INSERT INTO paciente (nombre, especie, raza, sexo, fecha_nacimiento, peso, castrado, dni, estado) VALUES
 ('Luna', 'Gato', 'Siamés', 'Hembra', '2023-01-15', 4.20, true, '12345678', 'ACTIVO'),
 ('Milo', 'Gato', 'Shorthair', 'Macho', '2024-05-10', 3.80, false, '23456789', 'ACTIVO'),
@@ -146,13 +143,12 @@ INSERT INTO paciente (nombre, especie, raza, sexo, fecha_nacimiento, peso, castr
 ('Uma', 'Perro', 'Pitbull', 'Hembra', '2022-07-30', 24.00, true, '89012345', 'ACTIVO'),
 ('Corcho', 'Perro', 'Beagle', 'Macho', '2019-12-10', 12.00, true, '90123456', 'ACTIVO'),
 ('Simba', 'Gato', 'Maine Coon', 'Macho', '2021-06-25', 7.50, true, '01234567', 'ACTIVO'),
-('Magnolia', 'Gato', 'Siamés', 'Hembra', '2024-06-15', 2.20, false,'45678912', 'ACTIVO'),
-('Pepe', 'Gato', 'Shorthair', 'Macho', '2026-01-15', 1.40, true,'34567890', 'ACTIVO'),
+('Magnolia', 'Gato', 'Siamés', 'Hembra', '2024-06-15', 2.20, false, '45678912', 'ACTIVO'),
+('Pepe', 'Gato', 'Shorthair', 'Macho', '2026-01-15', 1.40, true, '34567890', 'ACTIVO'),
 ('Umma', 'Perro', 'Ovejero Alemán', 'Hembra', '2026-09-15', 4.20, true, '67890123', 'ACTIVO'),
 ('Homero', 'Perro', 'Golden Retriever', 'Macho', '2023-04-15', 30.00, true, '45678901', 'ACTIVO'),
 ('Ciro', 'Gato', 'Persa', 'Macho', '2024-06-22', 3.50, true, '56789012', 'ACTIVO');
 
--- 4. Tabla turno
 INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente) VALUES
 ('2026-08-12', '09:00:00', '09:40:00', 'CLINICA', 'ATENDIDO', 1),
 ('2026-09-01', '09:40:00', '10:20:00', 'CLINICA', 'ATENDIDO', 2),
@@ -230,80 +226,44 @@ INSERT INTO turno (fecha, hora_inicio, hora_fin, motivo, estado, id_paciente) VA
 ('2026-10-14', '11:00:00', '11:40:00', 'VACUNACION', 'ATENDIDO', 14),
 ('2026-10-15', '11:40:00', '12:20:00', 'CLINICA', 'ATENDIDO', 15);
 
--- 5. Tabla consulta
-INSERT INTO consulta (fecha, motivo_consulta, observaciones, tratamiento, id_paciente, matricula_veterinario, id_turno) VALUES
-('2026-08-12', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 1, 'MP-2345', 1),
-('2026-09-01', 'Aplicación de vacuna anual', 'Paciente tranquilo', 'Dosis séxtuple aplicada', 2, 'MP-4567', 2),
-('2026-10-09', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación post-quirúrgica', 3, 'MP-2345', 3),
+-- Se registran consultas únicamente para turnos ATENDIDOS.
+-- Los id_turno corresponden al orden de inserción de los 75 turnos.
+
+INSERT INTO consulta (
+    fecha,
+    motivo_consulta,
+    observaciones,
+    tratamiento,
+    id_paciente,
+    matricula_veterinario,
+    id_turno
+) VALUES
+-- Turnos 1 a 4
+('2026-08-12', 'Control general', 'Paciente en buen estado general', 'Control de rutina', 1, 'MP-1234', 1),
+('2026-09-01', 'Control general', 'Sin alteraciones clínicas aparentes', 'Control de rutina', 2, 'MP-4567', 2),
+('2026-10-09', 'Cirugía programada de esterilización', 'Ayuno previo completado', 'Medicación postquirúrgica', 3, 'MP-2345', 3),
 ('2026-09-15', 'Aplicación de vacuna anual', 'Paciente tranquilo', 'Dosis séxtuple aplicada', 4, 'MP-1234', 4),
-('2026-11-23', 'Control preventivo general', 'Buen estado general de salud', 'Ninguno', 5, 'MP-5678', 5),
-('2026-10-30', 'Gastroenteritis leve por dieta', 'Vómitos ocasionales', 'Dieta blanda y protector gástrico', 6, 'MP-3856', 6),
-('2026-11-20', 'Chequeo dermatológico', 'Alergia estacional leve', 'Baño con shampoo medicado', 7, 'MP-3456', 7),
+
+-- Turnos 8 y 9
 ('2026-10-16', 'Vacunación antirrábica', 'Sin reacciones adversas', 'Aplicación correcta', 8, 'MP-5578', 8),
 ('2026-07-09', 'Revisión oftalmológica', 'Ojos limpios y sin lesiones', 'Gotas lubricantes', 9, 'MP-7890', 9),
-('2026-12-22', 'Control geriátrico preventivo', 'Se solicitan análisis de sangre', 'Vitaminas y suplementos', 10, 'MP-7867', 10),
-('2026-10-15', 'Control general', 'Buen estado de salud', 'Control anual', 11, 'MP-1234', 71),
-('2026-11-12', 'Control digestivo', 'Sin síntomas actuales', 'Continuar dieta habitual', 12, 'MP-2345', 72),
-('2026-10-13', 'Control postoperatorio', 'Evolución favorable', 'Mantener reposo', 13, 'MP-2345', 73),
-('2026-10-14', 'Vacunación anual', 'Sin reacciones previas', 'Aplicar dosis anual', 14, 'MP-5578', 74),
-('2026-10-15', 'Control preventivo', 'Paciente estable', 'Nuevo control en seis meses', 15, 'MP-5678', 75),
+
+-- Turnos 11 a 15
+('2026-10-01', 'Control general', 'Paciente en buen estado de salud', 'Control de rutina', 1, 'MP-1234', 11),
+('2026-10-02', 'Control preventivo', 'Sin síntomas actuales', 'Continuar controles habituales', 2, 'MP-2345', 12),
+('2026-10-05', 'Evaluación quirúrgica', 'Estudios prequirúrgicos en orden', 'Apto para procedimiento', 3, 'MP-3456', 13),
+('2026-10-06', 'Control clínico general', 'Sin alteraciones aparentes', 'Seguimiento de rutina', 4, 'MP-4567', 14),
+('2026-10-07', 'Vacunación de refuerzo', 'Sin reacciones adversas previas', 'Dosis de refuerzo aplicada', 5, 'MP-5678', 15),
+
+-- Turnos 16 a 20
 ('2026-10-08', 'Control general de rutina', 'Examen físico completo, sin anomalías', 'Monitoreo preventivo', 6, 'MP-1234', 16),
 ('2026-10-12', 'Control post-vacunación', 'Sin fiebre ni reacciones adversas', 'Ninguno', 7, 'MP-2345', 17),
 ('2026-10-13', 'Evaluación quirúrgica previa', 'Estudios prequirúrgicos en orden', 'Apto para procedimiento', 8, 'MP-3456', 18),
-('2026-10-14', 'Consulta clinica general', 'Cuadro de deshidratacion leve', 'Suero oral y reposo', 9, 'MP-4567', 19),
-('2026-10-15', 'Vacunacion de refuerzo', 'Aplicación exitosa', 'Ninguno', 10, 'MP-5678', 20),
-('2026-10-19', 'Evaluacion quirurgica', 'Paciente en ayunas', 'Reposo pre-quirurgico', 1, 'MP-6789', 21),
-('2026-10-20', 'Control dermatologico', 'Sin presencia de ectoparásitos', 'Shampoo neutro', 2, 'MP-7890', 22),
-('2026-10-21', 'Control clinico general', 'Paciente activo sin hallazgos patologicos', 'Ninguno', 3, 'MP-1234', 23),
-('2026-10-22', 'Vacunacion anual', 'Control de peso y aplicacion sin complicaciones', 'Proximo control anual', 4, 'MP-2345', 24),
-('2026-10-23', 'Evaluacion prequirurgica', 'Analisis clinicos dentro de parametros normales', 'Indicaciones preoperatorias', 5, 'MP-3456', 25),
-('2026-10-26', 'Revision de rutina', 'Buen estado de pelaje y mucosa', 'Control en 6 meses', 6, 'MP-4567', 26),
-('2026-10-27', 'Control clinico periodico', 'Evolucion favorable de alergia estacional', 'Continuar mantenimiento', 7, 'MP-5678', 27),
-('2026-10-28', 'Vacunacion antirrabica anual', 'Sin reacciones adversas tras la aplicacion', 'Certificado emitido', 8, 'MP-3456', 28),
-('2026-10-29', 'Consulta oftalmologica de control', 'Presion intraocular en valores normales', 'Mantener gotas lubricantes', 9, 'MP-7890', 29),
-('2026-11-02', 'Revision general de rutina', 'Examen fisico sin alteraciones', 'Dieta equilibrada', 10, 'MP-1234', 30),
-('2026-11-03', 'Vacunacion de refuerzo', 'Sextuple aplicada sin inconvenientes', 'Control en 1 año', 1, 'MP-2345', 31),
-('2026-11-04', 'Consulta clinica general', 'Chequeo de denticion y mucosas', 'Higiene dental recomendada', 2, 'MP-4567', 32),
-('2026-11-05', 'Control post-vacunacion', 'Paciente activo y respondiendo bien', 'Ninguno', 3, 'MP-5678', 33),
-('2026-11-06', 'Control clinico general', 'Evolución favorable, constantes vitales normales', 'Sin medicación', 4, 'MP-1234', 34),
-('2026-11-09', 'Revision preventiva', 'Examen fisico completo sin hallazgos', 'Proximo control en 6 meses', 5, 'MP-5678', 35),
-('2026-11-10', 'Evaluacion prequirurgica', 'Estudios complementarios en orden', 'Apto para cirugia programada', 6, 'MP-2345', 36),
-('2026-11-11', 'Aplicacion de vacuna', 'Refuerzo quintuple aplicado correctamente', 'Control de peso registrado', 7, 'MP-3456', 37),
-('2026-11-12', 'Consulta clinica de rutina', 'Auscultacion cardiopulmonar normal', 'Plan nutricional adecuado', 8, 'MP-4567', 38),
-('2026-11-13', 'Chequeo dermatologico', 'Sin eritemas ni lesiones cutaneas', 'Mantener pipeta antipulgas', 9, 'MP-7890', 39),
-('2026-11-16', 'Aplicacion de vacuna anual', 'Refuerzo aplicado sin complicaciones', 'Proximo control en 1 ano', 10, 'MP-5678', 40),
-('2026-11-17', 'Evaluacion prequirurgica', 'Analisis clinicos dentro de parametros normales', 'Apto para intervencion', 1, 'MP-1234', 41),
-('2026-11-18', 'Consulta clinica general', 'Revision general de mucosas y apetito', 'Continuar dieta habitual', 2, 'MP-2345', 42),
-('2026-11-19', 'Consulta clinica general', 'Examen fisico sin novedades clinicas', 'Alta medica', 3, 'MP-3456', 43),
-('2026-11-24', 'Vacunacion de refuerzo', 'Dosis aplicada correctamente', 'Sin efectos secundarios', 4, 'MP-5578', 44),
-('2026-11-25', 'Revision de rutina', 'Buen estado corporal e hidratacion', 'Control de peso', 5, 'MP-5678', 45),
-('2026-11-26', 'Consulta por control de conducta', 'Sin alteracion organica detectable', 'Recomendaciones de enriquecimiento ambiental', 6, 'MP-3856', 46),
-('2026-11-27', 'Revision clinica general', 'Parametros fisiologicos estables', 'Mantener plan de alimentacion actual', 7, 'MP-1234', 47),
-('2026-11-30', 'Aplicacion de vacuna', 'Refuerzo de antirrabica aplicado sin complicaciones', 'Carnet actualizado', 8, 'MP-5578', 48),
-('2026-12-01', 'Evaluacion prequirurgica', 'Estudios de laboratorio en orden', 'Apto para cirugia', 9, 'MP-2345', 49),
-('2026-12-02', 'Consulta por desparasitacion', 'Sin signos de ecto o endoparasitos', 'Administracion de antiparasitario oral', 10, 'MP-7867', 50),
-('2026-12-03', 'Control clinico general', 'Evolucion favorable e hidratacion adecuada', 'Continuar con control periodico', 1, 'MP-1234', 51),
-('2026-12-04', 'Revision de rutina', 'Buen estado nutricional y denticion limpia', 'Control anual', 2, 'MP-4567', 52),
-('2026-12-07', 'Consulta dermatologica', 'Piel sana sin evidencias de dermatitis', 'Uso de jabon neutro en banos', 3, 'MP-3456', 53),
-('2026-12-08', 'Vacunacion anual', 'Refuerzo aplicado exitosamente', 'Carnet al dia', 4, 'MP-5578', 54),
-('2026-12-09', 'Consulta por control de peso', 'Indice de masa corporal adecuado', 'Mantener racion diaria', 5, 'MP-1234', 55),
-('2026-12-10', 'Control post-tratamiento', 'Recuperacion completa de lesion cutanea', 'Alta de tratamiento', 6, 'MP-2345', 56),
-('2026-12-11', 'Chequeo clinico general', 'Auscultacion y palpacion sin anomalias', 'Sin medicacion', 7, 'MP-3856', 57),
-('2026-12-14', 'Aplicacion de vacuna', 'Refuerzo quintuple administrado sin reacciones', 'Proximo control en 1 ano', 8, 'MP-4567', 58),
-('2026-12-15', 'Consulta de rutina', 'Excelente estado general e hidratacion', 'Continuar plan de vida saludable', 9, 'MP-7867', 59),
-('2026-12-16', 'Evaluacion prequirurgica', 'Analisis de laboratorio estables', 'Apto para procedimiento quirurgico', 10, 'MP-5578', 60),
-('2026-12-17', 'Revision pediatrica', 'Desarrollo corporal adecuado para la edad', 'Continuar con vacuna de refuerzo', 1, 'MP-1234', 61),
-('2026-12-18', 'Control oftalmologico', 'Reflejos pupilares y cornea sin alteraciones', 'Sin tratamiento necesario', 2, 'MP-3456', 62),
-('2026-12-21', 'Consulta clinica general', 'Examen fisico completo y auscultacion normal', 'Dieta equilibrada', 3, 'MP-5578', 63),
-('2026-12-22', 'Vacunacion anual', 'Aplicacion de dosis de refuerzo antirrabica', 'Carnet al dia', 4, 'MP-2345', 64),
-('2026-12-23', 'Consulta odontologica', 'Sarro dental moderado sin inflamacion de encias', 'Limpieza ultrasonica recomendada', 5, 'MP-3856', 65),
-('2026-12-28', 'Control clinico general', 'Evolucion favorable post-tratamiento', 'Alta medica definitiva', 6, 'MP-7867', 66),
-('2026-12-29', 'Chequeo dermatologico', 'Piel y pelaje en excelentes condiciones', 'Continuar pipeta mensual', 7, 'MP-1234', 67),
-('2026-12-30', 'Control nutricional', 'Peso estable dentro del rango ideal', 'Mantener racion actual', 8, 'MP-3456', 68),
-('2027-01-04', 'Consulta clinica general', 'Examen fisico sin alteraciones', 'Sin medicacion', 9, 'MP-4567', 69),
-('2027-01-05', 'Vacunacion anual', 'Refuerzo aplicado correctamente', 'Proximo control anual', 10, 'MP-5578', 70),
-('2027-01-06', 'Revision post-operatoria', 'Cicatrizacion completa y sin inflamacion', 'Alta definitiva', 1, 'MP-2345', 71),
-('2027-01-07', 'Consulta geriatrica de rutina', 'Movilidad conservada y buen estado general', 'Suplementacion articular recomendada', 2, 'MP-3856', 72),
-('2027-01-08', 'Control de parasitos', 'Sin evidencias de parasitos externos', 'Desparasitacion interna al dia', 3, 'MP-7867', 73),
-('2027-01-11', 'Evaluacion general', 'Constantes fisiologicas normales', 'Control preventivo en 6 meses', 4, 'MP-1234', 74),
-('2027-01-12', 'Control clinico de cierre', 'Paciente en perfecto estado de salud', 'Alta medica general', 5, 'MP-5578', 75);
+('2026-10-14', 'Consulta clínica general', 'Cuadro de deshidratación leve', 'Suero oral y reposo', 9, 'MP-4567', 19),
+('2026-10-15', 'Vacunación de refuerzo', 'Aplicación exitosa', 'Ninguno', 10, 'MP-5678', 20),
+
+-- Turnos 71, 73, 74 y 75
+('2026-10-15', 'Control general', 'Buen estado de salud', 'Control anual', 11, 'MP-1234', 71),
+('2026-10-13', 'Control postoperatorio', 'Evolución favorable', 'Mantener reposo', 13, 'MP-2345', 73),
+('2026-10-14', 'Vacunación anual', 'Sin reacciones previas', 'Aplicar dosis anual', 14, 'MP-5578', 74),
+('2026-10-15', 'Control preventivo', 'Paciente estable', 'Nuevo control en seis meses', 15, 'MP-5678', 75);
