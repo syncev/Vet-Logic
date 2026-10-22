@@ -188,6 +188,10 @@ class TurneroPage(tk.Frame):
             font=("Arial", 10, "overstrike"),
         )
         self.appointments_table.tag_configure("cirugia", background="#EFE8F8")
+        self.appointments_table.tag_configure(
+            "cliente_inactivo",
+            foreground="#888888",
+        )
 
         self.appointments_table.heading("#0", text="Estado", anchor="center")
         self.appointments_table.heading("hora", text="Hora")
@@ -272,6 +276,7 @@ class TurneroPage(tk.Frame):
                 hc,
                 ult_turno,
                 estado_bd,
+                estado_cliente,
             ) = turno
 
             estado_normalizado = (estado_bd or "").strip().upper()
@@ -305,17 +310,21 @@ class TurneroPage(tk.Frame):
             )
             es_cancelado = estado_normalizado == "CANCELADO"
             self.appointments.append((id_turno, fila_visible, es_cancelado))
+            self.appointments.append((id_turno, fila_visible, estado_cliente))
 
         for item in self.appointments_table.get_children():
             self.appointments_table.delete(item)
 
         for id_turno, valores, es_cancelado in self.appointments:
+        for id_turno, valores, estado_cliente in self.appointments:
             motivo = str(valores[5]).casefold()
             tags = []
             if motivo in ("cirugia", "cirugía"):
                 tags.append("cirugia")
             if es_cancelado:
                 tags.append("cancelado")
+            if (estado_cliente or "").upper() == "INACTIVO":
+                tags.append("cliente_inactivo")
             self.appointments_table.insert(
                 "",
                 "end",
@@ -985,6 +994,19 @@ class TurneroPage(tk.Frame):
         motivo   = valores[5]
         hc       = valores[6]
         fecha    = self.selected_date.strftime("%d/%m/%Y")
+        estado_cliente = next(
+            (
+                estado
+                for id_turno, _, estado in self.appointments
+                if str(id_turno) == iid
+            ),
+            None,
+        )
+        color_hc = (
+            "#888888"
+            if (estado_cliente or "").upper() == "INACTIVO"
+            else "#111111"
+        )
 
         modal = tk.Toplevel(self)
         modal.geometry("700x400")
@@ -1013,10 +1035,34 @@ class TurneroPage(tk.Frame):
 
         card_hc = tk.Frame(tarjetas, bg="#D2C2ED", padx=20, pady=20)
         card_hc.pack(side="left", fill="both", expand=True, padx=(0, 10))
-        tk.Label(card_hc, text="Datos de HC", font=("Arial", 13, "bold"), bg="#D2C2ED").pack(pady=(0, 10))
-        tk.Label(card_hc, text=f"Paciente: {paciente}", font=("Arial", 11), bg="#D2C2ED").pack(anchor="w")
-        tk.Label(card_hc, text=f"Cliente: {cliente}", font=("Arial", 11), bg="#D2C2ED").pack(anchor="w")
-        tk.Label(card_hc, text=f"\nHC: {hc}", font=("Arial", 12, "bold"), bg="#D2C2ED").pack(anchor="w")
+        tk.Label(
+            card_hc,
+            text="Datos de HC",
+            font=("Arial", 13, "bold"),
+            bg="#D2C2ED",
+            fg=color_hc,
+        ).pack(pady=(0, 10))
+        tk.Label(
+            card_hc,
+            text=f"Paciente: {paciente}",
+            font=("Arial", 11),
+            bg="#D2C2ED",
+            fg=color_hc,
+        ).pack(anchor="w")
+        tk.Label(
+            card_hc,
+            text=f"Cliente: {cliente}",
+            font=("Arial", 11),
+            bg="#D2C2ED",
+            fg=color_hc,
+        ).pack(anchor="w")
+        tk.Label(
+            card_hc,
+            text=f"\nHC: {hc}",
+            font=("Arial", 12, "bold"),
+            bg="#D2C2ED",
+            fg=color_hc,
+        ).pack(anchor="w")
 
         card_turno = tk.Frame(tarjetas, bg="#F0C8A0", padx=20, pady=20)
         card_turno.pack(side="left", fill="both", expand=True, padx=(10, 0))
