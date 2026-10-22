@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import tkinter as tk
-import tkinter.font as tkfont
 from tkinter import messagebox, ttk
 
 from core.db import conectar
@@ -183,15 +182,10 @@ class TurneroPage(tk.Frame):
             ),
             show="tree headings",
         )
-        self.cancelled_font = tkfont.Font(
-            self.appointments_table,
-            font=("Arial", 10),
-            overstrike=True,
-        )
         self.appointments_table.tag_configure(
             "cancelado",
             foreground="black",
-            font=self.cancelled_font,
+            font=("Arial", 10, "overstrike"),
         )
         self.appointments_table.tag_configure("cirugia", background="#EFE8F8")
 
