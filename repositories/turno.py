@@ -65,13 +65,13 @@ def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
         return cursor.fetchall()
 
 def resolver_estado_visual(fecha_turno: date, hora_inicio_str: str, estado_bd: str) -> tuple[str, str]:
-    estado_normalizado = (estado_bd or "PENDIENTE").upper()
+    estado_normalizado = (estado_bd or "PENDIENTE").strip().upper()
 
     if estado_normalizado in ("ATENDIDO", "COMPLETADO"):
         return ("Completado", "🟢")
     
     if estado_normalizado == "CANCELADO":
-        return ("Cancelado", "🔴")
+        return ("Cancelado", "⚫")
 
     if estado_normalizado == "AUSENTE":
         return ("Ausente", "🔴")

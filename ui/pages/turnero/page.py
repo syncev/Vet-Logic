@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import tkinter as tk
+import tkinter.font as tkfont
 from tkinter import messagebox, ttk
 
 from core.db import conectar
@@ -182,6 +183,16 @@ class TurneroPage(tk.Frame):
             ),
             show="tree headings",
         )
+        self.cancelled_font = tkfont.Font(
+            self.appointments_table,
+            font=("Arial", 10),
+            overstrike=True,
+        )
+        self.appointments_table.tag_configure(
+            "cancelado",
+            foreground="black",
+            font=self.cancelled_font,
+        )
         self.appointments_table.tag_configure("cirugia", background="#EFE8F8")
 
         self.appointments_table.heading("#0", text="Estado", anchor="center")
@@ -210,6 +221,7 @@ class TurneroPage(tk.Frame):
             "🔴": self._crear_imagen_estado("#D16B70"),
             "🟡": self._crear_imagen_estado("#F3DA58"),
             "⚪": self._crear_imagen_estado("#D3D3D3"),
+            "⚫": self._crear_imagen_estado("#000000"),
         }
 
         self.appointments = []
@@ -268,10 +280,11 @@ class TurneroPage(tk.Frame):
                 estado_bd,
             ) = turno
 
+            estado_normalizado = (estado_bd or "").strip().upper()
             nombre_estado, icono = resolver_estado_visual(self.selected_date, hora, estado_bd)
 
             es_cancelable = False
-            if (estado_bd or "").upper() == "PENDIENTE":
+            if estado_normalizado == "PENDIENTE":
                 try:
                     hora_dt = datetime.strptime(hora, "%H:%M").time()
                     dt_turno = datetime.combine(self.selected_date, hora_dt).replace(
@@ -296,14 +309,19 @@ class TurneroPage(tk.Frame):
                 ult_turno,
                 accion_icono,
             )
-            self.appointments.append((id_turno, fila_visible))
+            es_cancelado = estado_normalizado == "CANCELADO"
+            self.appointments.append((id_turno, fila_visible, es_cancelado))
 
         for item in self.appointments_table.get_children():
             self.appointments_table.delete(item)
 
-        for id_turno, valores in self.appointments:
+        for id_turno, valores, es_cancelado in self.appointments:
             motivo = str(valores[5]).casefold()
-            tag = ("cirugia",) if motivo in ("cirugia", "cirugía") else ()
+            tags = []
+            if motivo in ("cirugia", "cirugía"):
+                tags.append("cirugia")
+            if es_cancelado:
+                tags.append("cancelado")
             self.appointments_table.insert(
                 "",
                 "end",
@@ -311,7 +329,7 @@ class TurneroPage(tk.Frame):
                 text="",
                 image=self.estado_images[valores[0]],
                 values=valores,
-                tags=tag,
+                tags=tuple(tags),
             )
 
     def _on_table_click(self, event):
