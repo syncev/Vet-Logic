@@ -63,6 +63,7 @@ class UsuariosPage(tk.Frame):
                 "Apellido",
                 "Matrícula",
             ],
+            on_search=self._buscar_profesionales,
         )
         self.searchbar.pack(
             pady=(0, 10),
@@ -681,3 +682,46 @@ class UsuariosPage(tk.Frame):
                 except:
                     pass
             tk.messagebox.showerror("Error", f"No se pudieron guardar los cambios: {error}")
+
+    def _buscar_profesionales(self, texto, filtro):
+        texto = texto.strip().casefold()
+
+        for item_id in self.tabla.get_children():
+            self.tabla.delete(item_id)
+
+        for matricula, datos in self.veterinarios_por_matricula.items():
+            nombre = str(datos.get("nombre") or "")
+            apellido = str(datos.get("apellido") or "")
+            matricula_texto = str(matricula)
+
+            if filtro == "Todos":
+                coincide = (
+                    texto in nombre.casefold()
+                    or texto in apellido.casefold()
+                    or texto in matricula_texto.casefold()
+                )
+            elif filtro == "Nombre":
+                coincide = texto in nombre.casefold()
+            elif filtro == "Apellido":
+                coincide = texto in apellido.casefold()
+            elif filtro == "Matrícula":
+                coincide = texto in matricula_texto.casefold()
+            else:
+                coincide = False
+
+            if coincide:
+                estado = "Activo" if datos["estado"] == "ACTIVO" else "Inactivo"
+
+                self.tabla.insert(
+                    "",
+                    "end",
+                    values=(
+                        f"{nombre} {apellido}",
+                        matricula_texto,
+                        estado,
+                        "Veterinario",
+                        datos.get("contacto") or "No disponible",
+                        "No disponible",
+                    ),
+                    tags=("activo" if estado == "Activo" else "inactivo",),
+                )
