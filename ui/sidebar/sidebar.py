@@ -47,7 +47,7 @@ class Sidebar(tk.Frame):
 
         self.usuario_button = tk.Button(
             self.nav_frame,
-            text="Usuarios",
+            text="Veterinarios",
             relief="flat",
             bg="#E0E0E0",
             command=lambda: self.navegar_y_pintar("usuarios", self.usuario_button)
