@@ -81,7 +81,7 @@ class UsuariosPage(tk.Frame):
         )
 
         # Encabezados
-        self.tabla.heading("profesional", text="Profeesionales", anchor="w")
+        self.tabla.heading("profesional", text="Profesionales", anchor="w")
         self.tabla.heading("matricula", text="Matricula", anchor="w")
         self.tabla.heading("estado", text="Activo/Inactivo", anchor="center")
         self.tabla.heading("rol", text="Rol", anchor="w")
