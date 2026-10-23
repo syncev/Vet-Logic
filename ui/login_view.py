@@ -124,7 +124,7 @@ class LoginView(tk.Frame):
 
             relwidth=0.48,
 
-            relheight=0.55,
+            relheight=0.35,
 
             anchor="center",
 
