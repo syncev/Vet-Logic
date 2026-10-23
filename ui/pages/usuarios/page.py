@@ -1,8 +1,10 @@
 import tkinter as tk
 import psycopg
 from tkinter import messagebox, ttk
+from core.db import conectar
 
 from core.db import conectar
+from repositories.usuarios import obtener_profesionales_activos
 from ui.widgets.searchbar import Searchbar
 
 
@@ -104,19 +106,9 @@ class UsuariosPage(tk.Frame):
         self.tabla.bind("<Double-1>", self._open_profile_detail)
 
     def cargar_profesionales(self):
-        consulta = """
-            SELECT matricula_veterinario, nombre, apellido, estado, contacto,
-                especialidad, domicilio, correo, contacto_emergencia
-            FROM veterinario
-            WHERE estado = 'ACTIVO'
-            ORDER BY apellido, nombre, matricula_veterinario
-        """
-
         try:
             with conectar() as conexion:
-                with conexion.cursor() as cursor:
-                    cursor.execute(consulta)
-                    filas = cursor.fetchall()
+                filas = obtener_profesionales_activos(conexion)
         except (psycopg.Error, OSError, ValueError) as error:
             messagebox.showerror(
                 "Error al cargar profesionales",
@@ -644,25 +636,24 @@ class UsuariosPage(tk.Frame):
 
         conexion = None
         try:
-            # Usamos la función conectar() que ya importaste arriba
             conexion = conectar()
             cursor = conexion.cursor()
-            
+
             query = """
-                UPDATE veterinario 
-                SET nombre = %s, 
-                    domicilio = %s, 
-                    contacto = %s, 
-                    correo = %s, 
+                UPDATE veterinario
+                SET nombre = %s,
+                    domicilio = %s,
+                    contacto = %s,
+                    correo = %s,
                     contacto_emergencia = %s
                 WHERE matricula_veterinario = %s;
             """
             cursor.execute(query, (
-                nuevo_nombre, 
-                nuevo_domicilio, 
-                nuevo_contacto, 
-                nuevo_correo, 
-                nuevo_emergencia, 
+                nuevo_nombre,
+                nuevo_domicilio,
+                nuevo_contacto,
+                nuevo_correo,
+                nuevo_emergencia,
                 self.matricula_actual
             ))
             conexion.commit()
