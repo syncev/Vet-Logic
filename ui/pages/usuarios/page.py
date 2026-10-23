@@ -1,6 +1,7 @@
 import tkinter as tk
 import psycopg
 from tkinter import messagebox, ttk
+from core.db import conectar
 
 from core.db import conectar
 from repositories.usuarios import obtener_profesionales_activos
