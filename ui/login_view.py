@@ -117,29 +117,14 @@ class LoginView(tk.Frame):
         self.subtitle.pack()
 
         self.frame_inputs.place(
-
             relx=0.5,
-
             rely=0.58,
-
-            relwidth=0.48,
-
-            relheight=0.35,
-
             anchor="center",
-
         )
+  # Evita que el frame se ajuste al tamaño de sus hijos
 
-        self.frame_inputs.pack_propagate(
-
-            False
-
-        )  # Evita que el frame se ajuste al tamaño de sus hijos
-
-        self.name_label.pack(pady=(77, 0))
-
-        
-        self.login_button.pack(pady=(78, 0))
+        self.name_label.pack(padx=70, pady=(50, 0))
+        self.login_button.pack(padx=70, pady=(40, 50))
 
 
 
