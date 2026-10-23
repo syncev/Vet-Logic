@@ -70,7 +70,7 @@ class LoginView(tk.Frame):
 
             self.frame_inputs,
 
-            text="Usuario",
+            text="Hola de nuevo!",
 
             font=("Inter", -32, "bold"),
 
@@ -78,35 +78,7 @@ class LoginView(tk.Frame):
 
         )
 
-        self.name_entry = tk.Entry(
-            self.frame_inputs,
-            bd=0,
-            width=45,
-            bg="white",
-
-        )
-        self.password_label = tk.Label(
-
-            self.frame_inputs,
-
-            text="Contraseña",
-
-            font=("Inter", -32, "bold"),
-
-            bg="#D9D9D9",
-
-        )
-
-       # self.password_entry = tk.Entry(
-
-         #   self.frame_inputs,
-          #  bd=0,
-          #  width=45,
-          #  bg="white",
-          #  show="*",
-
-       # )
-
+    
         # login button
 
         self.login_button = tk.Button(
@@ -166,12 +138,7 @@ class LoginView(tk.Frame):
 
         self.name_label.pack(pady=(77, 0))
 
-        self.name_entry.pack()
-
-        #self.password_label.pack(pady=(31, 0))
-
-        #self.password_entry.pack()
-
+        
         self.login_button.pack(pady=(78, 0))
 
 
