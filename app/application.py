@@ -25,6 +25,7 @@ class App(tk.Tk):
         # basicas de ventana principal
         self.geometry(f"{app_width}x{app_height}")
         self.resizable(True, True)
+        self.minsize(700, 600)
         self.configure(bg="white")
         self.title("Vet Logic")
 
