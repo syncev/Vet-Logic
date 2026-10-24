@@ -42,7 +42,7 @@ class AgregarHC(tk.Frame):
         )
         self.btn_eliminar = tk.Button(
             self,
-            text="🗑  Eliminar\nHC",
+            text="⛔  Inhabilitar\nHC",
             font=("Arial", 11, "bold"),
             bg="#F7A84B",
             fg="#1F1F1F",
