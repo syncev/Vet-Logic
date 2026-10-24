@@ -25,6 +25,7 @@ def obtener_horarios_ocupados(conexion, fecha_base: date):
         for fecha, hora in filas
     }
 
+
 def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
     """
     Recupera los turnos de una fecha para poblar la tabla del turnero.
@@ -33,9 +34,9 @@ def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
     estado_turno, estado_cliente)
     """
     marcar_turnos_ausentes(conexion)
-    
+
     consulta = """
-        SELECT 
+        SELECT
             t.id_turno,
             TO_CHAR(t.hora_inicio, 'HH24:MI') AS hora,
             CONCAT(c.nombre, ' ', c.apellido) AS cliente,
@@ -66,18 +67,19 @@ def obtener_turnos_por_fecha(conexion, fecha_consulta: date) -> list[tuple]:
         cursor.execute(consulta, (fecha_consulta,))
         return cursor.fetchall()
 
+
 def resolver_estado_visual(fecha_turno: date, hora_inicio_str: str, estado_bd: str) -> tuple[str, str]:
-    estado_normalizado = (estado_bd or "PENDIENTE").upper()
+    estado_normalizado = (estado_bd or "PENDIENTE").strip().upper()
 
     if estado_normalizado in ("ATENDIDO", "COMPLETADO"):
         return ("Completado", "🟢")
-    
+
     if estado_normalizado == "CANCELADO":
-        return ("Cancelado", "🔴")
+        return ("Cancelado", "⚫")
 
     if estado_normalizado == "AUSENTE":
         return ("Ausente", "🔴")
-    
+
     ahora = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
     hoy = ahora.date()
 
@@ -94,6 +96,7 @@ def resolver_estado_visual(fecha_turno: date, hora_inicio_str: str, estado_bd: s
             pass
 
     return ("Pendiente", "⚪")
+
 
 def actualizar_estado_turno(conexion, id_turno: int, nuevo_estado: str):
     """
@@ -115,6 +118,7 @@ def actualizar_estado_turno(conexion, id_turno: int, nuevo_estado: str):
     with conexion.cursor() as cursor:
         cursor.execute(consulta, (estado_limpio, id_turno))
     conexion.commit()
+
 
 def registrar_turno_con_paciente_nuevo(conexion, datos: dict) -> dict:
     """
@@ -193,7 +197,7 @@ def registrar_turno_con_paciente_nuevo(conexion, datos: dict) -> dict:
     conexion.commit()
 
     return {
-        "id_paciente": id_paciente,  # Este es el número de Historia Clínica (HC)
+        "id_paciente": id_paciente,
         "id_turno": id_turno,
     }
 
@@ -220,6 +224,7 @@ def cancelar_turno(conexion, id_turno: int) -> bool:
     conexion.commit()
     return resultado is not None
 
+
 SQL_MARCAR_AUSENTES = """
     UPDATE turno
     SET estado = 'AUSENTE'
@@ -227,6 +232,7 @@ SQL_MARCAR_AUSENTES = """
       AND (fecha + hora_inicio + INTERVAL '40 minutes') < (now() AT TIME ZONE %s)
     RETURNING id_turno;
 """
+
 
 def marcar_turnos_ausentes(conexion, tz_name: str = "America/Argentina/Buenos_Aires") -> int:
     """
@@ -239,6 +245,7 @@ def marcar_turnos_ausentes(conexion, tz_name: str = "America/Argentina/Buenos_Ai
     conexion.commit()
     return afectados
 
+
 def buscar_turnos(
     conexion,
     fecha_consulta: date,
@@ -250,7 +257,7 @@ def buscar_turnos(
     término de búsqueda y columna esto chicos provoca que la tabla del turnero se actualice con los resultados.
     """
     consulta_base = """
-        SELECT 
+        SELECT
             t.id_turno,
             TO_CHAR(t.hora_inicio, 'HH24:MI') AS hora,
             CONCAT(c.nombre, ' ', c.apellido) AS cliente,

@@ -182,6 +182,11 @@ class TurneroPage(tk.Frame):
             ),
             show="tree headings",
         )
+        self.appointments_table.tag_configure(
+            "cancelado",
+            foreground="black",
+            font=("Arial", 10, "overstrike"),
+        )
         self.appointments_table.tag_configure("cirugia", background="#EFE8F8")
         self.appointments_table.tag_configure(
             "cliente_inactivo",
@@ -214,6 +219,7 @@ class TurneroPage(tk.Frame):
             "🔴": self._crear_imagen_estado("#D16B70"),
             "🟡": self._crear_imagen_estado("#F3DA58"),
             "⚪": self._crear_imagen_estado("#D3D3D3"),
+            "⚫": self._crear_imagen_estado("#000000"),
         }
 
         self.appointments = []
@@ -273,10 +279,11 @@ class TurneroPage(tk.Frame):
                 estado_cliente,
             ) = turno
 
+            estado_normalizado = (estado_bd or "").strip().upper()
             nombre_estado, icono = resolver_estado_visual(self.selected_date, hora, estado_bd)
 
             es_cancelable = False
-            if (estado_bd or "").upper() == "PENDIENTE":
+            if estado_normalizado == "PENDIENTE":
                 try:
                     hora_dt = datetime.strptime(hora, "%H:%M").time()
                     dt_turno = datetime.combine(self.selected_date, hora_dt).replace(
@@ -301,18 +308,25 @@ class TurneroPage(tk.Frame):
                 ult_turno,
                 accion_icono,
             )
-            self.appointments.append((id_turno, fila_visible, estado_cliente))
+            es_cancelado = estado_normalizado == "CANCELADO"
+            self.appointments.append(
+                (id_turno, fila_visible, es_cancelado, estado_cliente)
+            )
 
         for item in self.appointments_table.get_children():
             self.appointments_table.delete(item)
 
-        for id_turno, valores, estado_cliente in self.appointments:
+        for id_turno, valores, es_cancelado, estado_cliente in self.appointments:
+       
             motivo = str(valores[5]).casefold()
             tags = []
             if motivo in ("cirugia", "cirugía"):
-                tags.append("cirugia")
+               tags.append("cirugia")
+            if es_cancelado:
+                tags.append("cancelado")
             if (estado_cliente or "").upper() == "INACTIVO":
                 tags.append("cliente_inactivo")
+
             self.appointments_table.insert(
                 "",
                 "end",
@@ -985,7 +999,7 @@ class TurneroPage(tk.Frame):
         estado_cliente = next(
             (
                 estado
-                for id_turno, _, estado in self.appointments
+                for id_turno, _, _, estado in self.appointments
                 if str(id_turno) == iid
             ),
             None,
