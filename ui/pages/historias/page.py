@@ -35,8 +35,8 @@ class HistoriasPage(tk.Frame):
         self.show_section("buscar_hc")
 
     def show_section(self, section):
-        if section == "eliminar_hc":
-            self._abrir_modal_eliminar_hc()
+        if section == "inhabilitar_hc":
+            self._abrir_modal_inhabilitar_hc()
             return
         elif section == "eliminar_cliente":
             self._abrir_modal_eliminar_cliente()
@@ -1176,7 +1176,7 @@ class HistoriasPage(tk.Frame):
         ):
             getattr(self, f"var_{nombre_variable}").set("")
 
-    def _abrir_modal_eliminar_hc(self):
+    def _abrir_modal_inhabilitar_hc(self):
         if self.historia_clinica_frame.winfo_manager():
             id_paciente = self.id_paciente_seleccionado
         else:
