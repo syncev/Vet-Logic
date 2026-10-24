@@ -52,7 +52,8 @@ def obtener_historias(conexion, texto="", filtro="Todos"):
             cl.telefono AS contacto,
             MIN(co.fecha) AS primera_consulta,
             MAX(co.fecha) AS ultima_visita,
-            cl.estado AS estado_cliente
+            cl.estado AS estado_cliente,
+            p.estado AS estado_paciente
         FROM paciente AS p
         JOIN cliente AS cl
             ON cl.dni = p.dni
@@ -66,7 +67,8 @@ def obtener_historias(conexion, texto="", filtro="Todos"):
             cl.nombre,
             cl.apellido,
             cl.telefono,
-            cl.estado
+            cl.estado,
+            p.estado
         ORDER BY
             MAX(co.fecha) DESC NULLS LAST,
             cl.apellido,
@@ -158,7 +160,8 @@ def obtener_detalle_paciente(conexion, id_paciente):
             p.fecha_nacimiento,
             p.sexo,
             p.castrado,
-            p.peso
+            p.peso,
+            p.estado
         FROM paciente AS p
         JOIN cliente AS cl
             ON cl.dni = p.dni
@@ -291,6 +294,19 @@ def inhabilitar_paciente(conexion, id_paciente):
         )
         return cursor.fetchone() is not None
 
+
+def activar_paciente(conexion, id_paciente):
+    with conexion.cursor() as cursor:
+        cursor.execute(
+            """
+            UPDATE paciente
+            SET estado = 'ACTIVO'
+            WHERE id_paciente = %s
+            RETURNING id_paciente
+            """,
+            (id_paciente,),
+        )
+        return cursor.fetchone() is not None
 
 def inhabilitar_cliente_de_paciente(conexion, id_paciente):
     with conexion.cursor() as cursor:
