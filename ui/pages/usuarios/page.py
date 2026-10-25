@@ -3,7 +3,6 @@ import psycopg
 from tkinter import messagebox, ttk
 from core.db import conectar
 
-from core.db import conectar
 from repositories.usuarios import obtener_profesionales_activos
 from ui.widgets.searchbar import Searchbar
 
