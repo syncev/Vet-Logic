@@ -3,7 +3,12 @@ import psycopg
 from tkinter import messagebox, ttk
 from core.db import conectar
 
-from repositories.usuarios import obtener_profesionales_activos
+from repositories.usuarios import (
+    actualizar_profesional,
+    crear_profesional,
+    inhabilitar_profesional,
+    obtener_profesionales_activos,
+)
 from ui.widgets.searchbar import Searchbar
 
 
@@ -473,28 +478,20 @@ class UsuariosPage(tk.Frame):
             )
             return
 
-        sql = """
-            INSERT INTO veterinario
-            (matricula_veterinario, nombre, apellido, contacto, estado,
-             especialidad, domicilio, correo, contacto_emergencia)
-            VALUES (%s, %s, %s, %s, 'ACTIVO', %s, %s, %s, %s)
-        """
-        valores = (
-            matricula,
-            nombre,
-            apellido,
-            contacto,
-            especialidad,
-            domicilio,
-            correo,
-            contacto_emergencia,
-        )
-
         try:
             with conectar() as conexion:
-                with conexion.cursor() as cursor:
-                    cursor.execute(sql, valores)
-        except Exception as error:
+                crear_profesional(
+                    conexion,
+                    matricula,
+                    nombre,
+                    apellido,
+                    contacto,
+                    especialidad,
+                    domicilio,
+                    correo,
+                    contacto_emergencia,
+                )
+        except (psycopg.Error, OSError, ValueError, KeyError) as error:
             messagebox.showerror(
                 "Error de Base de Datos",
                 f"Ocurrió un error al guardar: {error}",
@@ -583,17 +580,9 @@ class UsuariosPage(tk.Frame):
     def _ejecutar_inhabilitacion(self, modal):
         try:
             with conectar() as conexion:
-                with conexion.cursor() as cursor:
-                    cursor.execute(
-                        """
-                        UPDATE veterinario
-                        SET estado = 'INACTIVO'
-                        WHERE matricula_veterinario = %s
-                        AND estado = 'ACTIVO'
-                        """,
-                        (self.matricula_actual,),
-                    )
-                    filas_actualizadas = cursor.rowcount
+                filas_actualizadas = inhabilitar_profesional(
+                    conexion, self.matricula_actual
+                )
         except (psycopg.Error, OSError, ValueError, KeyError) as error:
             messagebox.showerror(
                 "Error al inhabilitar el perfil",
@@ -624,7 +613,7 @@ class UsuariosPage(tk.Frame):
             entry.config(state="normal")
 
     def _guardar_cambios_bd(self):
-        """Toma los valores ingresados y realiza el UPDATE en la base de datos."""
+        """Toma los valores ingresados y actualiza el profesional en la base de datos."""
         print("Usuario actual intentando guardar:", self.username_actual)
         
         nuevo_nombre = self.profile_detail_entries["name"].get()
@@ -633,31 +622,25 @@ class UsuariosPage(tk.Frame):
         nuevo_correo = self.profile_detail_entries["email"].get()
         nuevo_emergencia = self.profile_detail_entries["emergency_contact"].get()
 
-        conexion = None
         try:
-            conexion = conectar()
-            cursor = conexion.cursor()
+            with conectar() as conexion:
+                filas_actualizadas = actualizar_profesional(
+                    conexion,
+                    self.matricula_actual,
+                    nuevo_nombre,
+                    nuevo_domicilio,
+                    nuevo_contacto,
+                    nuevo_correo,
+                    nuevo_emergencia,
+                )
 
-            query = """
-                UPDATE veterinario
-                SET nombre = %s,
-                    domicilio = %s,
-                    contacto = %s,
-                    correo = %s,
-                    contacto_emergencia = %s
-                WHERE matricula_veterinario = %s;
-            """
-            cursor.execute(query, (
-                nuevo_nombre,
-                nuevo_domicilio,
-                nuevo_contacto,
-                nuevo_correo,
-                nuevo_emergencia,
-                self.matricula_actual
-            ))
-            conexion.commit()
-            cursor.close()
-            conexion.close()
+            if filas_actualizadas != 1:
+                messagebox.showwarning(
+                    "Perfil no actualizado",
+                    "No se encontró el veterinario que se intentó actualizar.",
+                    parent=self,
+                )
+                return
 
             tk.messagebox.showinfo("Éxito", "¡Datos actualizados correctamente en la base de datos!")
 
@@ -665,12 +648,7 @@ class UsuariosPage(tk.Frame):
             for entry in self.profile_detail_entries.values():
                 entry.config(state="disabled")
 
-        except Exception as error:
-            if conexion:
-                try:
-                    conexion.rollback()
-                except:
-                    pass
+        except (psycopg.Error, OSError, ValueError, KeyError) as error:
             tk.messagebox.showerror("Error", f"No se pudieron guardar los cambios: {error}")
 
     def _buscar_profesionales(self, texto, filtro):
