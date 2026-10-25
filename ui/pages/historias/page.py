@@ -16,8 +16,8 @@ from repositories.historias import (
     registrar_consulta,
     obtener_turnos_pendientes_hoy,
     inhabilitar_cliente_de_paciente,
-    eliminar_historia_clinica,
-    inhabilitar_cliente_de_paciente,
+    activar_paciente,
+    inhabilitar_paciente,
 )
 
 class HistoriasPage(tk.Frame):
@@ -35,8 +35,8 @@ class HistoriasPage(tk.Frame):
         self.show_section("buscar_hc")
 
     def show_section(self, section):
-        if section == "eliminar_hc":
-            self._abrir_modal_eliminar_hc()
+        if section == "inhabilitar_hc":
+            self._abrir_modal_inhabilitar_hc()
             return
         elif section == "eliminar_cliente":
             self._abrir_modal_eliminar_cliente()
@@ -98,6 +98,10 @@ class HistoriasPage(tk.Frame):
         )
         self.hc_table.tag_configure(
             "cliente_inactivo",
+            foreground="#888888",
+        )
+        self.hc_table.tag_configure(
+            "paciente_inactivo",
             foreground="#888888",
         )
 
@@ -162,16 +166,16 @@ class HistoriasPage(tk.Frame):
             for indice in (5, 6):
                 if valores[indice] is None:
                     valores[indice] = "Sin consultas"
-            tags = (
-                ("cliente_inactivo",)
-                if (fila[7] or "").upper() == "INACTIVO"
-                else ()
-            )
+            tags = []
+            if (fila[7] or "").upper() == "INACTIVO":
+                tags.append("cliente_inactivo")
+            if len(fila) > 8 and (fila[8] or "").upper() == "INACTIVO":
+                tags.append("paciente_inactivo")
             self.hc_table.insert(
                 "",
                 "end",
                 values=valores,
-                tags=tags,
+                tags=tuple(tags),
             )
 
     def _cargar_veterinarios_activos(self):
@@ -251,7 +255,15 @@ class HistoriasPage(tk.Frame):
             sexo,
             castrado,
             peso,
+            estado_paciente,
         ) = detalle
+
+        self.estado_paciente = estado_paciente
+
+        if estado_paciente == "INACTIVO":
+            self.HC_status_label.config(text="INHABILITADA")
+        else:
+            self.HC_status_label.config(text="")
 
         if fecha_nacimiento is None:
             edad_texto = "No informada"
@@ -289,6 +301,7 @@ class HistoriasPage(tk.Frame):
         self._cargar_veterinarios_activos()
         self._cargar_textos_historial()
         self._limpiar_consulta_actual()
+        self._actualizar_estado_edicion_hc()
 
         self.historial_listbox.delete(0, "end")
         for consulta in self.consultas_historial:
@@ -335,7 +348,95 @@ class HistoriasPage(tk.Frame):
 
     def _limpiar_consulta_actual(self):
         for campo in self.consulta_textos.values():
+            campo.configure(state="normal")
             campo.delete("1.0", "end")
+
+    def _actualizar_estado_edicion_hc(self):
+        inhabilitada = self.estado_paciente == "INACTIVO"
+
+        estado_texto = "disabled" if inhabilitada else "normal"
+
+        for campo in self.consulta_textos.values():
+            campo.configure(state=estado_texto)
+
+        estado_selector = "disabled" if inhabilitada else "readonly"
+
+        self.veterinario_selector.configure(state=estado_selector)
+        self.turno_selector.configure(state=estado_selector)
+
+        if inhabilitada:
+            self.btn_finalizar_consulta.configure(
+                text="Recuperar HC",
+                command=self._recuperar_hc,
+                bg="#C4B5FD",
+                state="normal",
+            )
+        else:
+            self.btn_finalizar_consulta.configure(
+                text="✓ Finalizar consulta",
+                command=self._finalizar_consulta,
+                bg="#8FD694",
+                state="normal",
+            )
+
+    def _recuperar_hc(self):
+        id_paciente = self.id_paciente_seleccionado
+
+        if id_paciente is None:
+            messagebox.showwarning(
+                "Historia clínica no seleccionada",
+                "No se pudo identificar la historia clínica que se quiere recuperar.",
+                parent=self,
+            )
+            return
+
+        confirmar = messagebox.askyesno(
+            "Recuperar Historia clínica",
+            "¿Querés recuperar esta historia clínica?\n\n"
+            "El paciente volverá a estar ACTIVO y se podrán "
+            "registrar nuevas consultas.",
+            parent=self,
+        )
+
+        if not confirmar:
+            return
+
+        try:
+            with conectar() as conexion:
+                activado = activar_paciente(conexion, id_paciente)
+
+                historias = obtener_historias(
+                    conexion,
+                    self.searchbar.get_search_text(),
+                    self.searchbar.filter_options.get(),
+                )
+
+        except (psycopg.Error, OSError, ValueError, KeyError) as error:
+            messagebox.showerror(
+                "Error al recuperar la historia clínica",
+                f"No se pudo recuperar la historia clínica:\n{error}",
+                parent=self,
+            )
+            return
+
+        if not activado:
+            messagebox.showwarning(
+                "Historia clínica no recuperada",
+                "No se encontró el paciente o ya no se encuentra disponible.",
+                parent=self,
+            )
+            return
+
+        self.estado_paciente = "ACTIVO"
+        self.HC_status_label.config(text="")
+        self._actualizar_estado_edicion_hc()
+        self._actualizar_tabla_historias(historias)
+
+        messagebox.showinfo(
+            "Historia clínica recuperada",
+            "La historia clínica volvió a estar ACTIVA.",
+            parent=self,
+        )
 
     def _finalizar_consulta(self):
         dialog = tk.Toplevel(self)
@@ -399,6 +500,14 @@ class HistoriasPage(tk.Frame):
         dialog.grab_set()
 
     def _guardar_consulta_confirmada(self, dialog):
+        if getattr(self, "estado_paciente", None) == "INACTIVO":
+            messagebox.showwarning(
+                "Historia clínica inhabilitada",
+                "No se puede registrar una consulta en una historia clínica inhabilitada.",
+                parent=self,
+            )
+            dialog.destroy()
+            return
         opcion_veterinario = self.veterinario_var.get().strip()
         matricula = self.veterinarios_por_opcion.get(opcion_veterinario)
 
@@ -542,6 +651,13 @@ class HistoriasPage(tk.Frame):
             font=("Inter", -24),
             bg="white"
         )
+        self.HC_status_label = tk.Label(
+            self.hc_header_frame,
+            text="",
+            font=("Arial", 10, "bold"),
+            bg="white",
+            fg="#7C3AED",
+        )
         self.btn_cerrar_historia = tk.Button(
             self.hc_header_frame,
             text="x",
@@ -648,7 +764,8 @@ class HistoriasPage(tk.Frame):
         self.btn_finalizar_consulta.pack(side="right")
         self.btn_cerrar_historia.pack(side="left", padx=(0, 8))
         self.HC_title_label.pack(side="left", padx=(30, 0))
-        self.HC_number_label.pack(side="left", padx=(6, 20))
+        self.HC_number_label.pack(side="left", padx=(6, 8))
+        self.HC_status_label.pack(side="left", padx=(0, 12))
         self.HC_client_label.pack(side="left")
 
         self.hc_patient_info_frame.pack(fill="x", padx=12, pady=6)
@@ -1059,78 +1176,45 @@ class HistoriasPage(tk.Frame):
         ):
             getattr(self, f"var_{nombre_variable}").set("")
 
-    def _abrir_modal_eliminar_hc(self):
-        id_paciente = self._obtener_id_paciente_seleccionado()
-        if id_paciente is None:
-            return
-
-        # 1. Ventana emergente limpia sin barra de Windows
-        if not self.search_view.winfo_manager():
-            messagebox.showwarning(
-                "Sección no disponible",
-                "Volvé a la búsqueda de historias clínicas para eliminar una HC.",
-                parent=self,
-            )
-            return
-
+    def _abrir_modal_inhabilitar_hc(self):
         if self.historia_clinica_frame.winfo_manager():
             id_paciente = self.id_paciente_seleccionado
         else:
-            seleccion = self.hc_table.selection()
-            if not seleccion:
-                messagebox.showwarning(
-                    "Seleccioná una historia clínica",
-                    "Seleccioná una fila de la lista antes de eliminar.",
-                    parent=self,
-                )
-                return
+            id_paciente = self._obtener_id_paciente_seleccionado()
 
-            valores = self.hc_table.item(seleccion[0], "values")
-            try:
-                id_paciente = int(valores[3])
-            except (IndexError, TypeError, ValueError):
-                messagebox.showerror(
-                    "Selección inválida",
-                    "No se pudo identificar la historia clínica seleccionada.",
-                    parent=self,
-                )
-                return
+        if id_paciente is None:
+            return
+
         dialog = tk.Toplevel(self)
         dialog.transient(self.winfo_toplevel())
         dialog.configure(
             bg="white",
             highlightbackground="#333333",
-            highlightthickness=1       # Borde fino oscuro exacto a la foto
+            highlightthickness=1,
         )
 
-        # 2. Título ATENCION!!
         tk.Label(
             dialog,
-            text="ATENCION!!",
+            text="ATENCIÓN",
             font=("Arial", 14, "bold"),
             bg="white",
             fg="#1F1F1F",
         ).pack(padx=50, pady=(32, 16))
 
-        # 3. Mensaje de advertencia
         tk.Label(
             dialog,
-            text=(
-                "Se eliminarán permanentemente el paciente,\n"
-                "sus consultas y todos sus turnos,\n"
-                "incluidos los cancelados. El cliente se conservará."
-            ),
+            text="Esta acción INHABILITA la historia clínica "
+                 "del paciente actual.",
             font=("Arial", 10),
             justify="center",
+            wraplength=320,
             bg="white",
             fg="#1F1F1F",
-        ).pack(padx=50, pady=(0, 30))
+        ).pack(padx=35, pady=(0, 30))
 
-        # 4. Contenedor de botones
         buttons_frame = tk.Frame(dialog, bg="white")
         buttons_frame.pack(fill="x", padx=50, pady=(0, 32))
 
-        # Botón CANCELAR (Gris más grande)
         btn_cancelar = tk.Button(
             buttons_frame,
             text="CANCELAR",
@@ -1146,7 +1230,6 @@ class HistoriasPage(tk.Frame):
         )
         btn_cancelar.pack(side="left", expand=True, padx=(0, 12))
 
-        # Botón CONTINUAR (Naranja más grande)
         btn_continuar = tk.Button(
             buttons_frame,
             text="CONTINUAR",
@@ -1158,34 +1241,53 @@ class HistoriasPage(tk.Frame):
             padx=28,
             pady=12,
             cursor="hand2",
-            command=lambda: self._confirmar_eliminar_hc(dialog, id_paciente),
+            command=lambda: self._confirmar_inhabilitar_hc(
+                dialog,
+                id_paciente,
+            ),
         )
         btn_continuar.pack(side="right", expand=True, padx=(12, 0))
 
-        # 5. Centrar sobre la ventana principal
         dialog.update_idletasks()
         parent = self.winfo_toplevel()
         parent.update_idletasks()
-        x = parent.winfo_rootx() + (parent.winfo_width() - dialog.winfo_width()) // 2
-        y = parent.winfo_rooty() + (parent.winfo_height() - dialog.winfo_height()) // 2
-        dialog.geometry(f"+{x}+{y}")
 
+        x = parent.winfo_rootx() + (
+            parent.winfo_width() - dialog.winfo_width()
+        ) // 2
+        y = parent.winfo_rooty() + (
+            parent.winfo_height() - dialog.winfo_height()
+        ) // 2
+
+        dialog.geometry(f"+{x}+{y}")
         dialog.grab_set()
 
-    def _confirmar_eliminar_hc(self, dialog, id_paciente):
+    def _confirmar_inhabilitar_hc(self, dialog, id_paciente):
         try:
             with conectar() as conexion:
-                eliminado = eliminar_historia_clinica(conexion, id_paciente)
+                inhabilitado = inhabilitar_paciente(
+                    conexion,
+                    id_paciente,
+                )
+
+                historias = obtener_historias(
+                    conexion,
+                    self.searchbar.get_search_text(),
+                    self.searchbar.filter_options.get(),
+                )
+
         except (psycopg.Error, OSError, ValueError, KeyError) as error:
+            dialog.destroy()
             messagebox.showerror(
-                "Error al eliminar la historia clínica",
-                f"No se pudo eliminar la historia clínica:\n{error}",
+                "Error al inhabilitar la historia clínica",
+                f"No se pudo inhabilitar la historia clínica:\n{error}",
                 parent=self,
             )
             return
 
-        if not eliminado:
-            dialog.destroy()
+        dialog.destroy()
+
+        if not inhabilitado:
             messagebox.showwarning(
                 "Historia clínica no encontrada",
                 "No se encontró el paciente seleccionado en la base de datos.",
@@ -1193,29 +1295,20 @@ class HistoriasPage(tk.Frame):
             )
             return
 
-        dialog.destroy()
+        if (
+            self.historia_clinica_frame.winfo_manager()
+            and self.id_paciente_seleccionado == id_paciente
+        ):
+            self.estado_paciente = "INACTIVO"
+            self.HC_status_label.config(text="INHABILITADA")
+            self._actualizar_estado_edicion_hc()
 
-        if self.historia_clinica_frame.winfo_manager():
-            self._cerrar_historia_clinica()
-
-        for item_id in self.hc_table.get_children():
-            self.hc_table.delete(item_id)
-
-        try:
-            self._cargar_historias()
-        except (psycopg.Error, OSError, ValueError, KeyError) as error:
-            messagebox.showwarning(
-                "Historia eliminada, lista no actualizada",
-                "La historia se eliminó de la base de datos, "
-                f"pero no se pudo actualizar el listado:\n{error}",
-                parent=self,
-            )
-            return
+        self._actualizar_tabla_historias(historias)
 
         messagebox.showinfo(
-            "Historia clínica eliminada",
-            "Se eliminaron el paciente, sus consultas y sus turnos. "
-            "El cliente se conservó.",
+            "Historia clínica inhabilitada",
+            "La historia clínica quedó INACTIVA. "
+            "Se conservaron el paciente, sus consultas y sus turnos.",
             parent=self,
         )
     

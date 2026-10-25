@@ -42,7 +42,7 @@ class AgregarHC(tk.Frame):
         )
         self.btn_eliminar = tk.Button(
             self,
-            text="🗑  Eliminar\nHC",
+            text="⛔  Inhabilitar\nHC",
             font=("Arial", 11, "bold"),
             bg="#F7A84B",
             fg="#1F1F1F",
@@ -51,7 +51,7 @@ class AgregarHC(tk.Frame):
             padx=16,
             pady=16,             # Más alto y grande
             cursor="hand2",
-            command=lambda: self._select_section("eliminar_hc")
+            command=lambda: self._select_section("inhabilitar_hc")
         )
    # Botón Eliminar Cliente (Rojo / Coral de la captura)
         self.btn_eliminar_cliente = tk.Button(self,
