@@ -619,6 +619,63 @@ class HistoriasPage(tk.Frame):
         )
 
     def _cerrar_historia_clinica(self):
+        # 1. Verificamos si hay cambios realizados en la HC
+        if getattr(self, "cambios_realizados", True):
+            # 2. Si hay cambios, abrimos la ventana modal de advertencia
+            dialog = tk.Toplevel(self)
+            dialog.title("Atención")
+            dialog.configure(bg="white")
+            dialog.transient(self)
+            dialog.grab_set()
+            
+            # Mensaje de advertencia
+            lbl_aviso = tk.Label(
+            dialog,
+            text="¡ATENCIÓN!\n\nSi realizó cambios en esta historia clínica,\nal salir, no se guardarán.\n\n¿Está seguro de que desea salir?",
+            font=("Arial", 11),
+            bg="white",
+            justify="center"
+        )
+            lbl_aviso.pack(padx=30, pady=25)
+            
+            # Contenedor de botones
+            buttons_frame = tk.Frame(dialog, bg="white")
+            buttons_frame.pack(fill="x", padx=30, pady=(0, 20))
+            
+            # Botón CANCELAR (solo cierra el diálogo de aviso y te deja en la HC)
+            btn_cancelar = tk.Button(
+                buttons_frame,
+                text="CANCELAR",
+                font=("Arial", 11, "bold"),
+                bg="#D1D5DB",
+                relief="flat",
+                cursor="hand2",
+                command=dialog.destroy
+            )
+            btn_cancelar.pack(side="left", expand=True, padx=5)
+            
+            # Función interna para confirmar la salida
+            def confirmar_salida():
+                dialog.destroy()
+                self._ejecutar_cierre_real()
+
+            # Botón CONTINUAR (cierra el diálogo y procede a salir)
+            btn_continuar = tk.Button(
+                buttons_frame,
+                text="CONTINUAR",
+                font=("Arial", 11, "bold"),
+                bg="#EF4444",
+                fg="white",
+                relief="flat",
+                cursor="hand2",
+                command=confirmar_salida
+            )
+            btn_continuar.pack(side="left", expand=True, padx=5)
+        else:
+            # 3. Si NO hay cambios, sale directamente
+            self._ejecutar_cierre_real()
+
+    def _ejecutar_cierre_real(self):
         self._limpiar_consulta_actual()
         self.historia_clinica_frame.pack_forget()
         self.hc_table_frame.pack(
