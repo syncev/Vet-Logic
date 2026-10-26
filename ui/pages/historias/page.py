@@ -47,8 +47,9 @@ class HistoriasPage(tk.Frame):
 
         if section == "buscar_hc":
             if self.historia_clinica_frame.winfo_manager():
-                self._cerrar_historia_clinica()
+               self._ejecutar_cierre_real()
             self.search_view.pack(fill="both", expand=True)
+
         elif section == "nueva_hc":
             self.add_hc_view.pack(fill="both", expand=True)
         else:
@@ -619,9 +620,8 @@ class HistoriasPage(tk.Frame):
         )
 
     def _cerrar_historia_clinica(self):
-        # 1. Verificamos si hay cambios realizados en la HC
-        if getattr(self, "cambios_realizados", True):
-            # 2. Si hay cambios, abrimos la ventana modal de advertencia
+
+            # 1. Si hay cambios, abrimos la ventana modal de advertencia
             dialog = tk.Toplevel(self)
             dialog.title("Atención")
             dialog.configure(bg="white")
@@ -671,10 +671,7 @@ class HistoriasPage(tk.Frame):
                 command=confirmar_salida
             )
             btn_continuar.pack(side="left", expand=True, padx=5)
-        else:
-            # 3. Si NO hay cambios, sale directamente
-            self._ejecutar_cierre_real()
-
+         
     def _ejecutar_cierre_real(self):
         self._limpiar_consulta_actual()
         self.historia_clinica_frame.pack_forget()
@@ -1535,4 +1532,5 @@ class HistoriasPage(tk.Frame):
         self._actualizar_tabla_historias(historias)
         self.id_paciente_seleccionado = None
         if self.historia_clinica_frame.winfo_manager():
-            self._cerrar_historia_clinica()
+            self._ejecutar_cierre_real()
+
