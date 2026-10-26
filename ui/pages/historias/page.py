@@ -217,6 +217,16 @@ class HistoriasPage(tk.Frame):
         if not valores:
             return "break"
 
+         # Advertir si el cliente está inactivo, pero el paciente no.
+        tags = self.hc_table.item(item_id, "tags")
+        if "cliente_inactivo" in tags and "paciente_inactivo" not in tags:
+            messagebox.showwarning(
+                "Cliente inhabilitado",
+                "Estás por ingresar a la historia clínica de un cliente "
+                "inhabilitado, pero podrás cargar datos del paciente.",
+                parent=self,
+            )
+
         self.HC_number_label.config(text=str(valores[3]))
         self.id_paciente_seleccionado = int(valores[3])
 
