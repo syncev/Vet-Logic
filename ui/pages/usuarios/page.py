@@ -345,11 +345,11 @@ class UsuariosPage(tk.Frame):
 
         form_frame = tk.Frame(self.add_professional_view, bg="#F0F0F0")
         form_frame.place(
-            relx=0.5, rely=0.5, relwidth=0.9, relheight=0.7, anchor="center"
+            relx=0.5, rely=0.5, relwidth=0.9, relheight=0.9, anchor="center"
         )
 
         columnas = tk.Frame(form_frame, bg="#F0F0F0")
-        columnas.pack(fill="both", expand=True, padx=40, pady=(30, 10))
+        columnas.pack(side="top", fill="both", expand=True, padx=40, pady=(15, 5))
 
         left_frame = tk.Frame(columnas, bg="#FFFFFF")
         left_frame.pack(side="left", fill="both", expand=True, padx=(0, 12))
@@ -436,7 +436,7 @@ class UsuariosPage(tk.Frame):
             tk.Frame(entrada_frame, height=1, bg="#555555").pack(fill="x")
 
         botones_frame = tk.Frame(form_frame, bg="#F0F0F0")
-        botones_frame.pack(fill="x", padx=40, pady=(10, 30))
+        botones_frame.pack(side="bottom", fill="x", padx=40, pady=15)
 
         tk.Button(
             botones_frame,
@@ -445,8 +445,8 @@ class UsuariosPage(tk.Frame):
             bg="#F0F0F0",
             relief="flat",
             padx=10,
-            pady=8,
-            width=40,
+            pady=6,
+            width=30,
         ).pack(side="left", padx=(0, 5))
         tk.Button(
             botones_frame,
@@ -456,8 +456,8 @@ class UsuariosPage(tk.Frame):
             fg="white",
             relief="flat",
             padx=10,
-            pady=8,
-            width=40,
+            pady=6,
+            width=30,
         ).pack(side="right", padx=(5, 0))
 
     def guardar_profesional(self):
