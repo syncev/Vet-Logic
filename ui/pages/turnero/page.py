@@ -689,137 +689,19 @@ class TurneroPage(tk.Frame):
         for widget in self.new_appointment_modal.winfo_children():
             widget.destroy()
 
-        self.new_appointment_modal.title(f"Turno: {datos_paciente['paciente']}")
-        self.new_appointment_modal.geometry("780x640")
+        self.new_appointment_modal.title(
+            f"Turno: {datos_paciente['paciente']}"
+        )
+        self.new_appointment_modal.geometry("980x700")
         self._centrar_ventana(self.new_appointment_modal)
 
-        # Cabecera con datos del paciente
-        header = tk.Frame(self.new_appointment_modal, bg="#D2C2ED", height=48)
-        header.pack(fill="x")
-        header.pack_propagate(False)
-
-        tk.Button(
-            header,
-            text="←",
-            font=("Arial", 20, "bold"),
-            bg="#D2C2ED",
-            fg="#666666",
-            relief="flat",
-            bd=0,
-            cursor="hand2",
-            command=self._volver_al_buscador_pacientes,
-        ).pack(side="left", padx=16)
-
-        tk.Label(
-            header,
-            text=f"Turno: {datos_paciente['paciente']} (HC: {datos_paciente['id_paciente']}) - Cliente: {datos_paciente['cliente']}",
-            font=("Arial", 13, "bold"),
-            bg="#D2C2ED",
-            fg="#111111",
-        ).pack(side="left", padx=10)
-
-        cuerpo = tk.Frame(self.new_appointment_modal, bg="white", padx=24, pady=16)
-        cuerpo.pack(fill="both", expand=True)
-
-        # Motivo y Calendario
-        top_row = tk.Frame(cuerpo, bg="white")
-        top_row.pack(fill="x", pady=(0, 10))
-
-        tk.Label(
-            top_row,
-            text="Motivo:",
-            font=("Arial", 11, "bold"),
-            bg="white",
-        ).pack(side="left", padx=(0, 6))
-        motivo_var = tk.StringVar(value="Clinica")
-        motivo_cb = ttk.Combobox(
-            top_row,
-            textvariable=motivo_var,
-            values=("Clinica", "Vacunacion", "Cirugia", "Otros"),
-            state="readonly",
-            width=16,
+        form = NewAppointmentPage(
+            self.new_appointment_modal,
+            on_save=self._mostrar_datos_turno_nuevo,
+            paciente_existente=datos_paciente,
+            on_back=self._volver_al_buscador_pacientes,
         )
-        motivo_cb.pack(side="left", padx=(0, 30))
-
-        fecha_sel = [datetime.now(ZoneInfo("America/Argentina/Buenos_Aires")).date()]
-        horario_sel = [None]
-
-        # Selector de Horarios
-        tk.Label(
-            cuerpo,
-            text="Horarios disponibles:",
-            font=("Arial", 11, "bold"),
-            bg="white",
-        ).pack(anchor="w", pady=(8, 4))
-
-        from ui.pages.turnero.horarios_selector import HorariosSelector
-
-        selector_horarios = HorariosSelector(
-            cuerpo,
-            fecha_base=fecha_sel[0],
-            horarios_ocupados=set(),
-        )
-        selector_horarios.pack(fill="both", expand=True, pady=(0, 10))
-
-        def on_horario(dia, hora):
-            horario_sel[0] = (dia, hora)
-            btn_agendar.config(state="normal")
-
-        selector_horarios.on_horario_seleccionado = on_horario
-
-        def confirmar_y_guardar():
-            if not horario_sel[0]:
-                return
-
-            dia, hora = horario_sel[0]
-            datos_turno = {
-                "id_paciente": datos_paciente["id_paciente"],
-                "paciente": datos_paciente["paciente"],
-                "cliente": datos_paciente["cliente"],
-                "contacto": datos_paciente["contacto"],
-                "hc": datos_paciente["id_paciente"],
-                "fecha": dia,
-                "hora": hora,
-                "motivo": motivo_var.get(),
-            }
-
-            try:
-                with conectar() as conexion:
-                    id_turno = registrar_turno_paciente_existente(
-                        conexion,
-                        datos_turno,
-                    )
-                    datos_turno["id_turno"] = id_turno
-            except ClienteInhabilitadoError as error:
-                messagebox.showwarning(
-                    "Cliente inhabilitado",
-                    str(error),
-                    parent=self.new_appointment_modal,
-                )
-                return
-            except Exception as error:
-                messagebox.showerror(
-                    "Error al registrar turno",
-                    f"No se pudo guardar el turno:\n{error}",
-                    parent=self.new_appointment_modal,
-                )
-                return
-
-            self._mostrar_datos_turno_nuevo(datos_turno)
-
-        btn_agendar = tk.Button(
-            cuerpo,
-            text="Agendar Turno",
-            bg="#61D161",
-            font=("Arial", 12, "bold"),
-            relief="flat",
-            cursor="hand2",
-            state="disabled",
-            padx=20,
-            pady=8,
-            command=confirmar_y_guardar,
-        )
-        btn_agendar.pack(pady=10)
+        form.pack(fill="both", expand=True)
 
     def _volver_al_buscador_pacientes(self):
         self.new_appointment_modal.destroy()

@@ -9,21 +9,30 @@ from ui.widgets.calendar_picker import CalendarPicker
 from core.db import conectar
 from repositories.turno import (
     ClienteInhabilitadoError,
+    obtener_horarios_ocupados,
     registrar_turno_con_paciente_nuevo,
+    registrar_turno_paciente_existente,
+
 )
 
 import psycopg
+
 # from core.db import conectar
 from repositories.turno import obtener_horarios_ocupados
+
 
 
 class NewAppointmentPage(tk.Frame):
     REASONS = ("Clinica", "Vacunacion", "Cirugia", "Otros")
 
-    def __init__(self, master, on_save=None, **kwargs):
+    def __init__(
+        self, master, on_save=None, paciente_existente=None, on_back=None, **kwargs
+    ):
         super().__init__(master, bg="white", **kwargs)
 
         self.on_save = on_save
+        self.paciente_existente = paciente_existente
+        self.on_back = on_back
         self.entries = {}
         # Esta fecha se comparte entre el calendario y el selector de horarios.
         self.fecha_seleccionada = datetime.now(
@@ -64,12 +73,16 @@ class NewAppointmentPage(tk.Frame):
             relief="flat",
             bd=0,
             cursor="hand2",
-            command=self._close,
+            command=self.on_back or self._close,
         ).pack(side="left", padx=18)
 
         tk.Label(
             header,
-            text="Registrar Paciente nuevo",
+            text=(
+                "Agendar turno"
+                if self.paciente_existente is not None
+                else "Registrar Paciente nuevo"
+            ),
             font=("Arial", 16),
             bg="#D2C2ED",
             fg="#111111",
@@ -105,9 +118,7 @@ class NewAppointmentPage(tk.Frame):
         # El scrollregion sigue el tamaño del contenido; el contenido sigue el ancho visible.
         self.form_content.bind(
             "<Configure>",
-            lambda event: self.canvas.configure(
-                scrollregion=self.canvas.bbox("all")
-            ),
+            lambda event: self.canvas.configure(scrollregion=self.canvas.bbox("all")),
         )
         self.canvas.bind(
             "<Configure>",
@@ -120,23 +131,69 @@ class NewAppointmentPage(tk.Frame):
     def _build_form(self):
         for column in range(3):
             self.form_content.columnconfigure(column, weight=1, uniform="fields")
+#checkeamos si el paciente existe o es nuevo, y en base a eso mostramos los campos correspondientes
 
-        self._add_section_title("Datos del Cliente", row=0)
-        self._add_field("Nombre", "client_name", row=1, column=0)
-        self._add_field("Apellido", "client_lastname", row=1, column=1)
-        self._add_field("DNI", "dni", row=1, column=2)
-        self._add_field("Telefono", "phone", row=2, column=0)
+        if self.paciente_existente is None:
+            self._add_section_title("Datos del Cliente", row=0)
+            self._add_field("Nombre", "client_name", row=1, column=0)
+            self._add_field("Apellido", "client_lastname", row=1, column=1)
+            self._add_field("DNI", "dni", row=1, column=2)
+            self._add_field("Telefono", "phone", row=2, column=0)
 
-        self._add_section_title("Datos del Paciente", row=3)
-        self._add_field("Nombre", "pet_name", row=4, column=0)
-        self._add_field(
-            "Especie",
-            "species",
-            row=4,
-            column=1,
-            values=("Perro", "Gato", "Otro"),
-        )
-        self._add_field("Raza", "breed", row=4, column=2)
+            self._add_section_title("Datos del Paciente", row=3)
+            self._add_field("Nombre", "pet_name", row=4, column=0)
+            self._add_field(
+                "Especie",
+                "species",
+                row=4,
+                column=1,
+                values=("Perro", "Gato", "Otro"),
+            )
+            self._add_field("Raza", "breed", row=4, column=2)
+        else:
+            paciente = self.paciente_existente
+
+            self._add_section_title("Datos del Cliente", row=0)
+            self._add_readonly_field(
+                "Cliente",
+                paciente.get("cliente"),
+                row=1,
+                column=0,
+                columnspan=2,
+            )
+            self._add_readonly_field(
+                "DNI",
+                paciente.get("dni"),
+                row=1,
+                column=2,
+            )
+            self._add_readonly_field(
+                "Teléfono",
+                paciente.get("contacto"),
+                row=2,
+                column=0,
+                columnspan=2,
+            )
+
+            self._add_section_title("Datos del Paciente", row=3)
+            self._add_readonly_field(
+                "Paciente",
+                paciente.get("paciente"),
+                row=4,
+                column=0,
+            )
+            self._add_readonly_field(
+                "Especie",
+                paciente.get("especie"),
+                row=4,
+                column=1,
+            )
+            self._add_readonly_field(
+                "HC",
+                paciente.get("id_paciente"),
+                row=4,
+                column=2,
+            )
 
         tk.Label(
             self.form_content,
@@ -223,6 +280,41 @@ class NewAppointmentPage(tk.Frame):
         widget.pack(side="left", fill="x", expand=True)
         self.entries[key] = widget
 
+    def _add_readonly_field(
+        self,
+        label,
+        value,
+        row,
+        column,
+        columnspan=1,
+    ):
+        field = tk.Frame(self.form_content, bg="white")
+        field.grid(
+            row=row,
+            column=column,
+            columnspan=columnspan,
+            sticky="ew",
+            padx=(0, 18),
+            pady=7,
+        )
+
+        tk.Label(
+            field,
+            text=f"{label}:",
+            bg="white",
+            width=12,
+            anchor="w",
+        ).pack(side="left")
+
+        tk.Label(
+            field,
+            text=value or "No informado",
+            bg="#EEEEEE",
+            anchor="w",
+            padx=8,
+            pady=6,
+        ).pack(side="left", fill="x", expand=True)
+
     def _build_schedule(self):
         tk.Label(
             self.form_content,
@@ -249,9 +341,7 @@ class NewAppointmentPage(tk.Frame):
         self.horarios_selector = HorariosSelector(
             self.form_content,
             fecha_base=self.fecha_seleccionada,
-            horarios_ocupados=self._get_occupied_slots(
-                self.fecha_seleccionada
-            ),
+            horarios_ocupados=self._get_occupied_slots(self.fecha_seleccionada),
             on_fecha_base_change=self._on_schedule_date_change,
             on_horario_seleccionado=self._on_time_selected,
         )
@@ -332,51 +422,65 @@ class NewAppointmentPage(tk.Frame):
             command=dialog.destroy,
         ).pack(side="left", padx=10)
 
+
         def continuar():
-            dni = self.entries["dni"].get().strip()
-            if not dni:
-                from tkinter import messagebox
-
-                messagebox.showwarning(
-                    "DNI requerido",
-                    "Por favor ingrese el DNI del cliente para poder registrar "
-                    "el turno y generar la Historia Clínica.",
-                    parent=dialog,
-                )
-                return
-
             fecha, hora = self.horario_seleccionado
-            cliente_nombre = self.entries["client_name"].get().strip()
-            cliente_apellido = self.entries["client_lastname"].get().strip()
-            cliente_completo = f"{cliente_nombre} {cliente_apellido}".strip()
-            paciente = self.entries["pet_name"].get().strip()
-            contacto = self.entries["phone"].get().strip()
             motivo = self.reason.get()
-            especie = self.entries["species"].get()
-            raza = self.entries["breed"].get().strip()
-
-            datos = {
-                "dni": dni,
-                "cliente_nombre": cliente_nombre,
-                "cliente_apellido": cliente_apellido,
-                "cliente": cliente_completo,
-                "paciente": paciente,
-                "especie": especie,
-                "raza": raza,
-                "contacto": contacto,
-                "fecha": fecha,
-                "hora": hora,
-                "motivo": motivo,
-            }
 
             try:
                 with conectar() as conexion:
-                    resultado = registrar_turno_con_paciente_nuevo(
-                        conexion,
-                        datos,
-                    )
-                    datos["hc"] = resultado["id_paciente"]
-                    datos["id_turno"] = resultado["id_turno"]
+                    if self.paciente_existente is not None:
+                        paciente = self.paciente_existente
+                        datos = {
+                            "id_paciente": paciente["id_paciente"],
+                            "paciente": paciente["paciente"],
+                            "cliente": paciente["cliente"],
+                            "contacto": paciente["contacto"],
+                            "hc": paciente["id_paciente"],
+                            "fecha": fecha,
+                            "hora": hora,
+                            "motivo": motivo,
+                        }
+                        datos["id_turno"] = registrar_turno_paciente_existente(
+                            conexion,
+                            datos,
+                        )
+                    else:
+                        dni = self.entries["dni"].get().strip()
+                        if not dni:
+                            messagebox.showwarning(
+                                "DNI requerido",
+                                "Por favor ingrese el DNI del cliente para poder "
+                                "registrar el turno y generar la Historia Clínica.",
+                                parent=dialog,
+                            )
+                            return
+
+                        cliente_nombre = self.entries["client_name"].get().strip()
+                        cliente_apellido = self.entries["client_lastname"].get().strip()
+                        cliente_completo = f"{cliente_nombre} {cliente_apellido}".strip()
+
+                        datos = {
+                            "dni": dni,
+                            "cliente_nombre": cliente_nombre,
+                            "cliente_apellido": cliente_apellido,
+                            "cliente": cliente_completo,
+                            "paciente": self.entries["pet_name"].get().strip(),
+                            "especie": self.entries["species"].get(),
+                            "raza": self.entries["breed"].get().strip(),
+                            "contacto": self.entries["phone"].get().strip(),
+                            "fecha": fecha,
+                            "hora": hora,
+                            "motivo": motivo,
+                        }
+
+                        resultado = registrar_turno_con_paciente_nuevo(
+                            conexion,
+                            datos,
+                        )
+                        datos["hc"] = resultado["id_paciente"]
+                        datos["id_turno"] = resultado["id_turno"]
+
             except ClienteInhabilitadoError as error:
                 messagebox.showwarning(
                     "Cliente inhabilitado",
@@ -410,12 +514,8 @@ class NewAppointmentPage(tk.Frame):
         parent.update_idletasks()
         dialog.update_idletasks()
 
-        x = parent.winfo_rootx() + (
-            parent.winfo_width() - dialog.winfo_width()
-        ) // 2
-        y = parent.winfo_rooty() + (
-            parent.winfo_height() - dialog.winfo_height()
-        ) // 2
+        x = parent.winfo_rootx() + (parent.winfo_width() - dialog.winfo_width()) // 2
+        y = parent.winfo_rooty() + (parent.winfo_height() - dialog.winfo_height()) // 2
         dialog.geometry(f"+{x}+{y}")
 
     def _on_calendar_date_selected(self, selected_date):
